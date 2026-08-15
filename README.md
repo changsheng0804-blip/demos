@@ -7,7 +7,7 @@
 | 演示 | 说明 | 打开 |
 |------|------|------|
 | 3D 物理游戏平台 | 中文 3D 物理游戏单页应用 | [打开](3d-physics-playground/立体物理游戏平台.html) |
-| 意图与承诺可视化文档 | 让意图和承诺的关系可见的交互文档（4 页） | [打开](agent-readable-documents/index.html) |
+| 意图与承诺可视化文档 | 让意图和承诺的关系可见的交互文档（demo v2） | [打开](agent-readable-documents/demo-v2.html) |
 | 锻造力量私教 | 本地单文件演示 | [打开](forge-strength-local-demo/index.html) |
 | Pascal 场景查看器 | 单户两层住宅 3D 场景查看器 | [打开](pascal-scene-viewer/viewer/v1/) |
 | 一夜鱼龙舞 | 参数方程粒子光流动画 | [打开](yeyulongwu/index.html) |

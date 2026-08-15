@@ -13,7 +13,7 @@
 | 目录 | 内容 | 主入口 |
 |------|------|--------|
 | `3d-physics-playground/` | 3D 物理游戏平台 | `立体物理游戏平台.html` |
-| `agent-readable-documents/` | 意图与承诺可视化文档（4 页） | `index.html`（子导航） |
+| `agent-readable-documents/` | 意图与承诺可视化文档（demo v2） | `demo-v2.html` |
 | `forge-strength-local-demo/` | 锻造力量私教单文件演示 | `index.html` |
 | `pascal-scene-viewer/` | Pascal 场景查看器（构建产物） | `viewer/v1/` |
 | `yeyulongwu/` | 一夜鱼龙舞粒子动画（多版本） | `index.html` |
