@@ -1,0 +1,924 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>没有人知道</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600;700;900&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #16120e;
+      --paper: #f7f3ec;
+      --paper-2: #eeead f;
+      --paper-2: #eee9df;
+      --paper-3: #e3ddd3;
+      --line: #cdc6b8;
+      --muted: #8a8070;
+      --faint: #b8b0a0;
+      --red: #b83a20;
+      --red-soft: rgba(184,58,32,.08);
+      --green: #2a6040;
+      --blue: #1e3d6e;
+      --serif: 'Noto Serif SC', Georgia, serif;
+      --sans: 'Noto Sans SC', sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--paper);
+      color: var(--ink);
+      font-family: var(--serif);
+      overflow-x: hidden;
+    }
+
+    /* 纸张横线 */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: repeating-linear-gradient(
+        0deg,
+        transparent, transparent 31px,
+        rgba(160,148,130,.12) 31px, rgba(160,148,130,.12) 32px
+      );
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* 滚动进度 */
+    #progress {
+      position: fixed; top: 0; left: 0;
+      height: 2px; background: var(--red);
+      z-index: 200; transition: width .08s;
+    }
+
+    /* ── 通用节 ── */
+    .chapter {
+      position: relative; z-index: 1;
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      padding: 100px 24px;
+    }
+
+    .w { max-width: 640px; width: 100%; }
+    .w-wide { max-width: 860px; width: 100%; }
+
+    /* ── 动画基础 ── */
+    .fade { opacity: 0; transform: translateY(22px); transition: opacity .7s, transform .7s; }
+    .fade.in { opacity: 1; transform: translateY(0); }
+    .fade-slow { opacity: 0; transition: opacity 1.2s; }
+    .fade-slow.in { opacity: 1; }
+
+    /* ══════════════════════════
+       开场
+    ══════════════════════════ */
+    #open {
+      background: var(--ink);
+      min-height: 100vh;
+    }
+
+    .open-inner { text-align: center; }
+
+    .open-line {
+      font-size: clamp(13px, 2vw, 16px);
+      font-weight: 300;
+      line-height: 2.2;
+      color: rgba(247,243,236,.5);
+      letter-spacing: .04em;
+      margin-bottom: 60px;
+      opacity: 0;
+      animation: riseIn .9s .3s forwards;
+    }
+
+    .open-main {
+      font-size: clamp(26px, 5vw, 44px);
+      font-weight: 700;
+      line-height: 1.45;
+      color: rgba(247,243,236,.95);
+      letter-spacing: -.01em;
+      margin-bottom: 48px;
+      opacity: 0;
+      animation: riseIn .9s .8s forwards;
+    }
+
+    .open-main em {
+      font-style: normal;
+      color: #d4614a;
+    }
+
+    .open-sub {
+      font-family: var(--sans);
+      font-size: 15px;
+      font-weight: 300;
+      color: rgba(247,243,236,.35);
+      letter-spacing: .06em;
+      opacity: 0;
+      animation: riseIn .8s 1.4s forwards;
+    }
+
+    @keyframes riseIn {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ══════════════════════════
+       第一幕：装修
+    ══════════════════════════ */
+    #act1 { background: var(--paper); }
+
+    .chapter-label {
+      font-family: var(--sans);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: var(--faint);
+      margin-bottom: 36px;
+    }
+
+    .prose {
+      font-size: clamp(16px, 2.2vw, 19px);
+      line-height: 1.95;
+      color: var(--ink);
+      margin-bottom: 24px;
+      font-weight: 400;
+    }
+
+    .prose-muted {
+      font-size: 15px;
+      line-height: 1.9;
+      color: var(--muted);
+      margin-bottom: 20px;
+      font-family: var(--sans);
+      font-weight: 300;
+    }
+
+    /* 文件堆叠 */
+    .doc-pile {
+      position: relative;
+      margin: 48px 0;
+      height: 220px;
+    }
+
+    .doc {
+      position: absolute;
+      width: 72%;
+      background: #fffef9;
+      border: 1px solid var(--line);
+      border-radius: 2px;
+      padding: 14px 18px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.06);
+      font-family: var(--sans);
+      font-size: 12px;
+      color: var(--muted);
+      opacity: 0;
+      transition: opacity .5s, transform .5s;
+    }
+
+    .doc .doc-title {
+      font-weight: 500;
+      color: var(--ink);
+      margin-bottom: 4px;
+      font-size: 13px;
+    }
+
+    .doc.visible { opacity: 1; }
+
+    .doc:nth-child(1) { top: 0;   left: 0;   transform: rotate(-2.5deg); z-index: 1; }
+    .doc:nth-child(2) { top: 20px; left: 30px; transform: rotate(1.2deg);  z-index: 2; }
+    .doc:nth-child(3) { top: 44px; left: 12px; transform: rotate(-1deg);   z-index: 3; }
+    .doc:nth-child(4) { top: 68px; left: 40px; transform: rotate(2deg);    z-index: 4; }
+    .doc:nth-child(5) { top: 92px; left: 8px;  transform: rotate(-.8deg);  z-index: 5; }
+    .doc:nth-child(6) { top: 116px;left: 35px; transform: rotate(1.5deg);  z-index: 6; }
+    .doc:nth-child(7) { top: 140px;left: 15px; transform: rotate(-1.8deg); z-index: 7; }
+
+    /* 小本子 */
+    .notebook {
+      background: #fffef9;
+      border: 1px solid var(--line);
+      border-left: 4px solid var(--red);
+      border-radius: 2px;
+      padding: 24px 28px;
+      margin: 36px 0;
+      box-shadow: 3px 3px 0 var(--paper-3);
+      position: relative;
+    }
+
+    .nb-label {
+      font-family: var(--sans);
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--faint);
+      margin-bottom: 16px;
+    }
+
+    .nb-row {
+      display: flex;
+      gap: 12px;
+      padding: 9px 0;
+      border-bottom: 1px solid rgba(205,198,184,.4);
+      font-size: 14px;
+      line-height: 1.6;
+      opacity: 0;
+      transform: translateX(-8px);
+      transition: opacity .4s, transform .4s;
+    }
+
+    .nb-row.in { opacity: 1; transform: translateX(0); }
+    .nb-row:last-child { border-bottom: none; }
+
+    .nb-n {
+      font-family: var(--sans);
+      font-size: 11px;
+      color: var(--faint);
+      min-width: 18px;
+      padding-top: 2px;
+      flex-shrink: 0;
+    }
+
+    .nb-text { color: var(--ink); }
+
+    .nb-tag {
+      display: inline-block;
+      background: var(--paper-3);
+      border: 1px solid var(--line);
+      border-radius: 2px;
+      padding: 0 5px;
+      font-family: var(--sans);
+      font-size: 10px;
+      color: var(--muted);
+      margin-left: 5px;
+      vertical-align: middle;
+    }
+
+    .nb-flag {
+      color: var(--red);
+      font-weight: 600;
+      font-size: 13px;
+    }
+
+    /* 三份关键文件对比 */
+    .three-files {
+      margin: 40px 0;
+      display: grid;
+      gap: 0;
+    }
+
+    .tf-row {
+      display: grid;
+      grid-template-columns: 130px 1fr;
+      gap: 0;
+      border-bottom: 1px solid var(--line);
+      opacity: 0;
+      transition: opacity .5s;
+    }
+
+    .tf-row.in { opacity: 1; }
+    .tf-row:first-child { border-top: 1px solid var(--line); }
+
+    .tf-label {
+      padding: 14px 16px;
+      border-right: 1px solid var(--line);
+      background: var(--paper-2);
+      font-family: var(--sans);
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+    }
+
+    .tf-content {
+      padding: 14px 18px;
+      font-size: 14px;
+      line-height: 1.7;
+      color: var(--ink);
+    }
+
+    .tf-content.conflict {
+      background: var(--red-soft);
+      color: var(--red);
+      font-weight: 600;
+    }
+
+    /* 矛盾揭示 */
+    .gap-reveal {
+      border: 1px solid var(--red);
+      border-radius: 3px;
+      background: var(--red-soft);
+      padding: 20px 24px;
+      margin: 32px 0;
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity .6s, transform .6s;
+    }
+
+    .gap-reveal.in { opacity: 1; transform: translateY(0); }
+
+    .gap-title {
+      font-family: var(--sans);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--red);
+      margin-bottom: 10px;
+    }
+
+    .gap-text {
+      font-size: 14px;
+      line-height: 1.8;
+      color: var(--ink);
+    }
+
+    .gap-text strong { color: var(--red); }
+
+    /* ══════════════════════════
+       第二幕：这不只是装修
+    ══════════════════════════ */
+    #act2 { background: var(--paper-2); }
+
+    .scene-grid {
+      display: grid;
+      gap: 2px;
+      margin: 40px 0;
+    }
+
+    .scene {
+      background: #fffef9;
+      border: 1px solid var(--line);
+      padding: 0;
+      overflow: hidden;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity .5s, transform .5s;
+    }
+
+    .scene.in { opacity: 1; transform: translateY(0); }
+
+    .scene-header {
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--line);
+      background: var(--paper-2);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .scene-icon {
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .scene-domain {
+      font-family: var(--sans);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .scene-body {
+      padding: 20px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .scene-voice {
+      font-size: 13px;
+      line-height: 1.7;
+      padding: 10px 14px;
+      border-left: 3px solid var(--line);
+      color: var(--ink);
+      background: var(--paper);
+    }
+
+    .scene-voice .who {
+      font-family: var(--sans);
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--faint);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .scene-voice.voice-a { border-left-color: var(--blue); }
+    .scene-voice.voice-b { border-left-color: var(--green); }
+    .scene-voice.voice-c { border-left-color: var(--red); }
+
+    .scene-gap {
+      font-family: var(--sans);
+      font-size: 12px;
+      color: var(--red);
+      padding: 8px 14px;
+      background: var(--red-soft);
+      border-radius: 2px;
+      line-height: 1.6;
+    }
+
+    /* ══════════════════════════
+       第三幕：想象空间
+    ══════════════════════════ */
+    #act3 { background: var(--paper); }
+
+    .imagine-block {
+      margin: 48px 0;
+    }
+
+    .imagine-row {
+      display: grid;
+      grid-template-columns: 3px 1fr;
+      gap: 0 24px;
+      margin-bottom: 40px;
+      opacity: 0;
+      transform: translateX(-12px);
+      transition: opacity .6s, transform .6s;
+    }
+
+    .imagine-row.in { opacity: 1; transform: translateX(0); }
+
+    .imagine-bar {
+      background: var(--line);
+      border-radius: 2px;
+      transition: background .4s;
+    }
+
+    .imagine-row.in .imagine-bar { background: var(--red); }
+
+    .imagine-title {
+      font-size: clamp(15px, 2vw, 18px);
+      font-weight: 700;
+      line-height: 1.4;
+      color: var(--ink);
+      margin-bottom: 10px;
+    }
+
+    .imagine-desc {
+      font-family: var(--sans);
+      font-size: 14px;
+      line-height: 1.8;
+      color: var(--muted);
+      font-weight: 300;
+    }
+
+    /* ══════════════════════════
+       结尾
+    ══════════════════════════ */
+    #ending {
+      background: var(--ink);
+      min-height: 90vh;
+      text-align: center;
+    }
+
+    .end-label {
+      font-family: var(--sans);
+      font-size: 11px;
+      font-weight: 400;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: rgba(247,243,236,.25);
+      margin-bottom: 48px;
+    }
+
+    .end-main {
+      font-size: clamp(22px, 4vw, 38px);
+      font-weight: 700;
+      line-height: 1.55;
+      color: rgba(247,243,236,.9);
+      letter-spacing: -.01em;
+      margin-bottom: 32px;
+    }
+
+    .end-main em {
+      font-style: normal;
+      color: #d4614a;
+    }
+
+    .end-divider {
+      width: 32px; height: 1px;
+      background: rgba(247,243,236,.2);
+      margin: 40px auto;
+    }
+
+    .end-sub {
+      font-family: var(--sans);
+      font-size: 15px;
+      line-height: 2;
+      color: rgba(247,243,236,.4);
+      font-weight: 300;
+      max-width: 480px;
+      margin: 0 auto 48px;
+    }
+
+    .end-tag {
+      font-family: var(--sans);
+      font-size: 11px;
+      color: rgba(247,243,236,.18);
+      letter-spacing: .12em;
+    }
+
+    /* 章节导航 */
+    .ch-nav {
+      position: fixed; right: 20px; top: 50%;
+      transform: translateY(-50%);
+      display: flex; flex-direction: column; gap: 10px;
+      z-index: 100;
+    }
+
+    .ch-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--line);
+      cursor: pointer;
+      transition: all .3s;
+    }
+
+    .ch-dot.on { background: var(--red); transform: scale(1.6); }
+
+    @media (max-width: 580px) {
+      .ch-nav { display: none; }
+      .chapter { padding: 80px 20px; }
+      .doc-pile { height: 180px; }
+      .doc { width: 85%; }
+    }
+
+    /* 分割线 */
+    .rule {
+      width: 32px; height: 2px;
+      background: var(--red);
+      margin: 32px 0;
+    }
+  </style>
+</head>
+<body>
+
+<div id="progress"></div>
+
+<nav class="ch-nav" id="chNav"></nav>
+
+<!-- ══════════════════════════
+     开场
+══════════════════════════ -->
+<section class="chapter" id="open" style="background:var(--ink);">
+  <div class="w open-inner">
+    <p class="open-line">
+      每当一件事<br>
+      需要多个人，在不同的时间，<br>
+      分别说出"这件事应该是这样的"——
+    </p>
+    <h1 class="open-main">
+      矛盾，就已经<em>埋下了</em>。<br>
+      只是没有人知道。
+    </h1>
+    <p class="open-sub">向下滚动</p>
+  </div>
+</section>
+
+<!-- ══════════════════════════
+     第一幕：装修
+══════════════════════════ -->
+<section class="chapter" id="act1">
+  <div class="w">
+    <div class="chapter-label fade">一个你可能经历过的场景</div>
+
+    <p class="prose fade">装修开始的时候，文件也开始了。</p>
+
+    <!-- 文件堆 -->
+    <div class="doc-pile fade" id="docPile">
+      <div class="doc"><div class="doc-title">装修合同.pdf</div>所有材料以甲方书面确认清单为准</div>
+      <div class="doc"><div class="doc-title">材料确认清单.xlsx</div>客厅地砖：马可波罗 800×800</div>
+      <div class="doc"><div class="doc-title">水电施工图.jpg</div>热水管走顶，PPR管25mm</div>
+      <div class="doc"><div class="doc-title">材料采购单.pdf</div>地砖：同等品质，单价低15%</div>
+      <div class="doc"><div class="doc-title">木工进场单.pdf</div>柜体材料 E0级多层板</div>
+      <div class="doc"><div class="doc-title">隐蔽工程验收单.pdf</div>水电隐蔽工程已验收 ✓</div>
+      <div class="doc"><div class="doc-title">质保书.pdf</div>防水工程质保5年</div>
+    </div>
+
+    <p class="prose-muted fade">
+      一份一份地出现。你努力记住它们之间的关系——用小本子，用记忆，用经验。
+    </p>
+
+    <div class="notebook fade" id="notebook">
+      <div class="nb-label">小本子</div>
+      <div class="nb-row" data-d="0">
+        <span class="nb-n">1</span>
+        <span class="nb-text">合同要求材料按确认清单品牌来 <span class="nb-tag">合同.pdf</span></span>
+      </div>
+      <div class="nb-row" data-d="180">
+        <span class="nb-n">2</span>
+        <span class="nb-text">设计师确认地砖：马可波罗 MP-8806 <span class="nb-tag">清单.xlsx</span></span>
+      </div>
+      <div class="nb-row" data-d="360">
+        <span class="nb-n">3</span>
+        <span class="nb-text">水电走顶，热水管PPR，接头间距记得验收 <span class="nb-tag">施工图.jpg</span></span>
+      </div>
+      <div class="nb-row" data-d="540">
+        <span class="nb-n">4</span>
+        <span class="nb-text">采购单写的"同等品质"——<span class="nb-flag">这和第2条一样吗？谁去确认？</span> <span class="nb-tag">采购单.pdf</span></span>
+      </div>
+      <div class="nb-row" data-d="720">
+        <span class="nb-n">5</span>
+        <span class="nb-text">柜体E0板，记得要原厂证明 <span class="nb-tag">进场单.pdf</span></span>
+      </div>
+      <div class="nb-row" data-d="900">
+        <span class="nb-n">⋯</span>
+        <span class="nb-text" style="color:var(--faint);font-style:italic;">还有更多，记不过来了……</span>
+      </div>
+    </div>
+
+    <p class="prose fade">
+      没有人告诉你第2条和第4条需要对照看。你也没有意识到，在你不知道的某个时刻，它们之间已经出现了矛盾。
+    </p>
+
+    <div class="rule fade"></div>
+
+    <p class="prose-muted fade">就是这三句话，由三个人，在三个不同的时间说出来的：</p>
+
+    <div class="three-files fade" id="threeFiles">
+      <div class="tf-row" data-d="0">
+        <div class="tf-label">合同 · 第4.2条</div>
+        <div class="tf-content">所有材料品牌及型号，以甲方书面确认清单为准，不得擅自替换。</div>
+      </div>
+      <div class="tf-row" data-d="300">
+        <div class="tf-label">材料确认清单</div>
+        <div class="tf-content">客厅地砖：马可波罗 800×800 哑光米白，货号 MP-8806，甲方签字确认。</div>
+      </div>
+      <div class="tf-row" data-d="600">
+        <div class="tf-label">材料采购单</div>
+        <div class="tf-content conflict">800×800 哑光米白，同等品质，单价比原定低15%。</div>
+      </div>
+    </div>
+
+    <div class="gap-reveal fade" id="gapReveal">
+      <div class="gap-title">矛盾在这里</div>
+      <div class="gap-text">
+        合同说"以确认清单为准"。清单说"马可波罗 MP-8806"。采购单说"同等品质"。<br><br>
+        这三句话从来没有被放在一起比较过。<strong>瓷砖已经贴完了。</strong><br><br>
+        不是因为没有人负责，不是因为没有文件——而是因为看到这个矛盾，需要同时记住所有相关的话，还要知道它们之间应该保持一致。这超出了任何人能做到的范围。
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════
+     第二幕：这不只是装修
+══════════════════════════ -->
+<section class="chapter" id="act2">
+  <div class="w">
+    <div class="chapter-label fade">同一件事，在每个地方都在发生</div>
+
+    <p class="prose fade">
+      这不是装修特有的问题。任何需要多个人、在不同时间、分别说出"这件事应该是这样的"的地方——矛盾就已经埋下了。
+    </p>
+
+    <div class="scene-grid fade" id="sceneGrid">
+
+      <div class="scene" data-d="0">
+        <div class="scene-header">
+          <span class="scene-icon">🏥</span>
+          <span class="scene-domain">医疗</span>
+        </div>
+        <div class="scene-body">
+          <div class="scene-voice voice-a">
+            <span class="who">心内科医生 · 住院第一天</span>
+            给患者开了阿司匹林，每日100mg。
+          </div>
+          <div class="scene-voice voice-b">
+            <span class="who">外科医生 · 术前评估</span>
+            手术前必须停用所有抗凝血药物至少7天。
+          </div>
+          <div class="scene-voice voice-c">
+            <span class="who">护士执行单 · 手术前一天</span>
+            按医嘱继续给药：阿司匹林100mg。
+          </div>
+          <div class="scene-gap">
+            两张医嘱从来没有被放在一起看过。阿司匹林是抗凝血药。
+          </div>
+        </div>
+      </div>
+
+      <div class="scene" data-d="150">
+        <div class="scene-header">
+          <span class="scene-icon">📋</span>
+          <span class="scene-domain">合同</span>
+        </div>
+        <div class="scene-body">
+          <div class="scene-voice voice-a">
+            <span class="who">采购合同 · 供应商A</span>
+            交货延迟超过7天，供应商赔偿合同金额5%。
+          </div>
+          <div class="scene-voice voice-b">
+            <span class="who">服务协议 · 客户B</span>
+            交付延迟超过3天，公司赔偿客户合同金额10%。
+          </div>
+          <div class="scene-gap">
+            供应商7天才赔偿，公司3天就要赔客户。中间4天的损失，没有任何人注意到这个缺口。两份合同由不同律师起草，从来没有被放在一起读过。
+          </div>
+        </div>
+      </div>
+
+      <div class="scene" data-d="300">
+        <div class="scene-header">
+          <span class="scene-icon">🏗</span>
+          <span class="scene-domain">工程</span>
+        </div>
+        <div class="scene-body">
+          <div class="scene-voice voice-a">
+            <span class="who">结构设计图 · 原始版本</span>
+            北侧第三轴承重墙，禁止拆除或开洞。
+          </div>
+          <div class="scene-voice voice-b">
+            <span class="who">施工变更单 · 第14周</span>
+            业主要求，北侧打通为开放空间，已现场确认。
+          </div>
+          <div class="scene-voice voice-c">
+            <span class="who">竣工验收报告</span>
+            所有施工符合设计图纸要求。✓
+          </div>
+          <div class="scene-gap">
+            设计图没有更新。验收报告对照的是旧图。三份文件，三个人，没有人同时看过它们。
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <p class="prose-muted fade" style="margin-top:32px;">
+      每一个场景里，矛盾被发现的时机几乎是一样的——出事之后。然后有人把所有的文件翻出来，才发现矛盾一直都在，只是从来没有人同时看过它们。
+    </p>
+  </div>
+</section>
+
+<!-- ══════════════════════════
+     第三幕：想象空间
+══════════════════════════ -->
+<section class="chapter" id="act3">
+  <div class="w">
+    <div class="chapter-label fade">如果这件事能改变</div>
+
+    <p class="prose fade">
+      这些矛盾有一个共同的结构：某个人说了"这件事应该是这样的"，另一个人在另一个时间也说了，但这两句话从来没有被放在一起比较过。
+    </p>
+
+    <p class="prose fade">
+      如果这些"应该是这样的"，第一次有了可以被追踪的结构——
+    </p>
+
+    <div class="imagine-block">
+
+      <div class="imagine-row fade">
+        <div class="imagine-bar"></div>
+        <div>
+          <div class="imagine-title">矛盾可以在发生之前被看见</div>
+          <div class="imagine-desc">
+            采购单出现的那一刻，而不是瓷砖贴完之后。医嘱下达的那一刻，而不是手术出了问题之后。合同签订的那一刻，而不是纠纷发生之后。
+          </div>
+        </div>
+      </div>
+
+      <div class="imagine-row fade">
+        <div class="imagine-bar"></div>
+        <div>
+          <div class="imagine-title">那些只存在于老员工脑子里的知识，第一次有了载体</div>
+          <div class="imagine-desc">
+            "改这个参数，记得同步那份文件。""这两份合同是配套的，不能单独修改。"这些话今天靠口耳相传，随人离职而消失。如果它们变成可以被追踪的连接，就不再依赖某个人是否还在。
+          </div>
+        </div>
+      </div>
+
+      <div class="imagine-row fade">
+        <div class="imagine-bar"></div>
+        <div>
+          <div class="imagine-title">知识的老化，第一次变得可见</div>
+          <div class="imagine-desc">
+            这份三年没有更新的施工规范，它所依赖的国家标准已经修订了两次。今天没有任何系统会告诉你这件事。如果每一个"应该是这样的"都有时间戳，老化就第一次发出声音。
+          </div>
+        </div>
+      </div>
+
+      <div class="imagine-row fade">
+        <div class="imagine-bar"></div>
+        <div>
+          <div class="imagine-title">组织不再依赖特定的人来守住一致性</div>
+          <div class="imagine-desc">
+            今天所有组织的知识一致性，都依赖那个同时记得最多的人，那个恰好在场的人，那个还没有离职的人。这是一个极其脆弱的基础。数千份文件之间的关系，人无法同时守住。
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <p class="prose-muted fade">
+      这不需要更聪明的人，也不需要更多的文件。需要的是：这些"应该是这样的"之间的关系，第一次变成一种可以被追踪的东西，而不是只存在于人的记忆里。
+    </p>
+  </div>
+</section>
+
+<!-- ══════════════════════════
+     结尾
+══════════════════════════ -->
+<section class="chapter" id="ending" style="background:var(--ink);text-align:center;">
+  <div class="w">
+    <div class="end-label fade">尾声</div>
+
+    <p class="end-main fade">
+      这个方向不承诺<em>解决</em>这些问题。<br>
+      它只做一件事——
+    </p>
+
+    <p class="end-main fade" style="font-size:clamp(28px,5vw,48px);margin-bottom:0;">
+      让那些本来<em>看不见</em>的矛盾，<br>第一次变得<em>可见</em>。
+    </p>
+
+    <div class="end-divider fade"></div>
+
+    <p class="end-sub fade">
+      解决问题的前提，是先看到问题。<br>
+      今天，我们连看到它都做不到。<br><br>
+      这是一个正在验证中的方向。<br>
+      从一次装修开始想起的实验。
+    </p>
+
+    <p class="end-tag fade">2026 · 一个不懂代码的个人开发者的实验</p>
+  </div>
+</section>
+
+<script>
+// 进度条
+window.addEventListener('scroll', () => {
+  const p = window.scrollY / (document.body.scrollHeight - window.innerHeight);
+  document.getElementById('progress').style.width = (p * 100) + '%';
+});
+
+// 章节导航
+const chapters = ['open','act1','act2','act3','ending'];
+const nav = document.getElementById('chNav');
+chapters.forEach((id, i) => {
+  const d = document.createElement('div');
+  d.className = 'ch-dot';
+  d.onclick = () => document.getElementById(id).scrollIntoView({ behavior:'smooth' });
+  nav.appendChild(d);
+});
+
+function updateNav() {
+  chapters.forEach((id, i) => {
+    const r = document.getElementById(id).getBoundingClientRect();
+    const on = r.top <= window.innerHeight * .5 && r.bottom >= window.innerHeight * .5;
+    nav.children[i].classList.toggle('on', on);
+  });
+}
+window.addEventListener('scroll', updateNav);
+updateNav();
+
+// IntersectionObserver
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (!e.isIntersecting) return;
+    const el = e.target;
+    el.classList.add('in');
+
+    // 文件堆：逐个出现
+    if (el.id === 'docPile') {
+      el.querySelectorAll('.doc').forEach((d, i) => {
+        setTimeout(() => d.classList.add('visible'), i * 160);
+      });
+    }
+
+    // 小本子：逐行出现
+    if (el.id === 'notebook') {
+      el.querySelectorAll('.nb-row').forEach(r => {
+        setTimeout(() => r.classList.add('in'), parseInt(r.dataset.d) || 0);
+      });
+    }
+
+    // 三份文件：逐行出现
+    if (el.id === 'threeFiles') {
+      el.querySelectorAll('.tf-row').forEach(r => {
+        setTimeout(() => r.classList.add('in'), parseInt(r.dataset.d) || 0);
+      });
+      setTimeout(() => {
+        document.getElementById('gapReveal').classList.add('in');
+      }, 1200);
+    }
+
+    // 场景网格
+    if (el.id === 'sceneGrid') {
+      el.querySelectorAll('.scene').forEach(s => {
+        setTimeout(() => s.classList.add('in'), parseInt(s.dataset.d) || 0);
+      });
+    }
+  });
+}, { threshold: 0.12 });
+
+document.querySelectorAll('.fade, #docPile, #notebook, #threeFiles, #sceneGrid').forEach(el => io.observe(el));
+</script>
+
+</body>
+</html>

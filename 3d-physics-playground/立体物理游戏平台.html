@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#eef6ff">
+  <title>立体物理乐园</title>
+  <link rel="stylesheet" href="./界面样式.css">
+  <!-- 固定版本导入映射：Three.js 0.185.1 与附加控制器必须保持同源同版本。 -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.185.1/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.185.1/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body data-drawer="">
+  <!-- 加载状态：脚本完成初始化后会自动移除。 -->
+  <div id="loadingOverlay" class="loading-overlay" role="status" aria-live="polite">
+    <div class="loading-card">
+      <div class="brand-mark brand-mark-large" aria-hidden="true"><span></span><span></span><span></span></div>
+      <p class="eyebrow">立体物理乐园</p>
+      <h1>正在搭建物理世界……</h1>
+      <div class="loading-bar" aria-hidden="true"><span></span></div>
+      <p id="loadingDetail">正在准备立体场景和碰撞规则</p>
+    </div>
+  </div>
+
+  <!-- 错误状态：网络资源或浏览器图形能力不足时给出中文处理建议。 -->
+  <div id="errorOverlay" class="error-overlay is-hidden" role="alert" aria-live="assertive">
+    <div class="error-card">
+      <div class="error-icon" aria-hidden="true">!</div>
+      <p class="eyebrow">需要一点帮助</p>
+      <h1 id="errorTitle">立体画面暂时没有准备好</h1>
+      <p id="errorMessage">资源加载失败，请检查网络后刷新页面。</p>
+      <button id="errorRetry" class="button button-primary button-wide" type="button">重新加载</button>
+    </div>
+  </div>
+
+  <div id="app" class="app-shell is-hidden">
+    <!-- 顶部信息栏 -->
+    <header class="app-header">
+      <div class="brand-block">
+        <div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></div>
+        <div>
+          <p class="eyebrow">玩具实验室 · 物理实验</p>
+          <h1>立体物理乐园</h1>
+        </div>
+      </div>
+      <div class="header-actions">
+        <div class="object-counter" aria-label="当前物体数量">
+          <span class="counter-dot" aria-hidden="true"></span>
+          <span id="objectCount">物体：0 / 60</span>
+        </div>
+        <div id="physicsStatus" class="status-pill"><span class="status-dot" aria-hidden="true"></span><span id="statusText">场景准备好了</span></div>
+        <button id="towerPushHeader" class="button button-coral header-push" type="button" title="推动场上较低的物体，让碰撞传遍整座塔">
+          <span class="button-icon" aria-hidden="true">↗</span>
+          <span>推倒塔</span>
+        </button>
+        <button id="restartButton" class="button button-soft" type="button" title="清空物体并恢复默认参数">
+          <span class="button-icon" aria-hidden="true">↺</span>
+          <span>重新开始</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="app-main">
+      <!-- 左侧：添加物体 -->
+      <aside id="objectPanel" class="side-panel object-panel" aria-label="添加物体面板">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">第一步</p>
+            <h2>添加物体</h2>
+          </div>
+          <span class="panel-badge">3 种</span>
+        </div>
+        <p class="panel-intro">选择一个形状，它会从空中落到地台上。</p>
+        <div class="shape-list">
+          <button class="shape-button shape-button-sphere" data-shape="sphere" type="button" title="添加球体">
+            <span class="shape-icon shape-icon-sphere" aria-hidden="true"><span></span></span>
+            <span class="shape-copy"><strong>添加球体</strong><small>圆滚滚，容易滚动</small></span>
+            <span class="shape-arrow" aria-hidden="true">＋</span>
+          </button>
+          <button class="shape-button shape-button-box" data-shape="box" type="button" title="添加立方体">
+            <span class="shape-icon shape-icon-box" aria-hidden="true"><span></span></span>
+            <span class="shape-copy"><strong>添加立方体</strong><small>平平稳稳，适合堆塔</small></span>
+            <span class="shape-arrow" aria-hidden="true">＋</span>
+          </button>
+          <button class="shape-button shape-button-cylinder" data-shape="cylinder" type="button" title="添加圆柱体">
+            <span class="shape-icon shape-icon-cylinder" aria-hidden="true"><span></span></span>
+            <span class="shape-copy"><strong>添加圆柱体</strong><small>站起来，也能横着滚</small></span>
+            <span class="shape-arrow" aria-hidden="true">＋</span>
+          </button>
+        </div>
+
+        <div class="panel-divider"></div>
+        <div class="tip-card">
+          <div class="tip-card-heading"><span class="tip-spark" aria-hidden="true">✦</span><strong>快速提示</strong></div>
+          <ul>
+            <li><span>拖动物体</span><small>按住形状移动它</small></li>
+            <li><span>旋转镜头</span><small>拖动空白区域</small></li>
+            <li><span>缩放画面</span><small>滚轮或双指张合</small></li>
+          </ul>
+        </div>
+        <button id="helpButton" class="text-button help-button" type="button"><span aria-hidden="true">？</span> 操作帮助</button>
+      </aside>
+
+      <!-- 中央：Three.js 立体互动场景 -->
+      <section id="stagePanel" class="stage-panel" aria-label="立体互动场景">
+        <div class="stage-header">
+          <div class="stage-title-group">
+            <span class="live-indicator"><span aria-hidden="true"></span>实时物理</span>
+            <p>拖动、碰撞、堆叠，看看会发生什么</p>
+          </div>
+          <div id="selectionHint" class="selection-hint">点击物体开始实验</div>
+        </div>
+        <div id="sceneHost" class="scene-host">
+          <div class="scene-vignette" aria-hidden="true"></div>
+          <div class="scene-empty-mark" aria-hidden="true"><span></span><span></span><span></span></div>
+          <div id="guideCard" class="guide-card">
+            <button id="closeGuideButton" class="guide-close" type="button" aria-label="关闭操作引导">×</button>
+            <div class="guide-icon" aria-hidden="true">✦</div>
+            <p class="eyebrow">第一次来这里？</p>
+            <h2>四步开始玩</h2>
+            <ol>
+              <li><span>1</span><p>点击左侧按钮，添加一个物体</p></li>
+              <li><span>2</span><p>按住物体并拖到想要的位置</p></li>
+              <li><span>3</span><p>松开后，重力会让它落下</p></li>
+              <li><span>4</span><p>堆好后，点击“推倒塔”</p></li>
+            </ol>
+          </div>
+          <div id="compactHelp" class="compact-help is-hidden"><span aria-hidden="true">✦</span> 拖动物体，空白处转镜头</div>
+          <div id="impactFx" class="impact-fx is-hidden" aria-hidden="true"><span class="impact-ring"></span><span class="impact-arrow">➜</span><strong>冲击！</strong></div>
+          <div id="sceneToast" class="scene-toast is-hidden" role="status" aria-live="polite"></div>
+        </div>
+        <div class="stage-footer-note"><span class="mouse-icon" aria-hidden="true">⌁</span><span>物体会真实碰撞，松手后交给物理规则</span></div>
+
+        <!-- 选中物体后的操作栏 -->
+        <div id="selectionBar" class="selection-bar is-hidden" aria-hidden="true">
+          <div class="selection-info"><span class="selection-orb" aria-hidden="true"></span><span id="selectedObjectName">未选择物体</span></div>
+          <div class="selection-actions">
+            <button class="selection-button" data-action="rotate-left" type="button"><span aria-hidden="true">↶</span><span>左转</span></button>
+            <button class="selection-button" data-action="rotate-right" type="button"><span aria-hidden="true">↷</span><span>右转</span></button>
+            <button class="selection-button" data-action="flip" type="button"><span aria-hidden="true">↕</span><span>翻转</span></button>
+            <button class="selection-button selection-push" data-action="push" type="button"><span aria-hidden="true">↗</span><span>推一把</span></button>
+            <button class="selection-button selection-delete" data-action="delete" type="button"><span aria-hidden="true">⌫</span><span>删除</span></button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 右侧：物理实验台 -->
+      <aside id="physicsPanel" class="side-panel physics-panel" aria-label="物理实验台">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">第二步</p>
+            <h2>物理实验台</h2>
+          </div>
+          <span class="panel-badge panel-badge-blue">实时</span>
+        </div>
+        <p class="panel-intro">调整参数，观察每一次碰撞的变化。</p>
+        <div class="slider-stack">
+          <div class="slider-card" data-param-card="gravity">
+            <div class="slider-title-row"><label for="gravitySlider">重力</label><output id="gravityValue" for="gravitySlider">9.8</output></div>
+            <div class="slider-row"><span>轻</span><input id="gravitySlider" type="range" min="0" max="20" step="0.1" value="9.8"><span>重</span></div>
+            <p>数值越大，物体下落越快</p>
+          </div>
+          <div class="slider-card" data-param-card="restitution">
+            <div class="slider-title-row"><label for="restitutionSlider">弹力</label><output id="restitutionValue" for="restitutionSlider">0.25</output></div>
+            <div class="slider-row"><span>软</span><input id="restitutionSlider" type="range" min="0" max="1" step="0.05" value="0.25"><span>弹</span></div>
+            <p>数值越大，碰撞后弹得越高</p>
+          </div>
+          <div class="slider-card" data-param-card="friction">
+            <div class="slider-title-row"><label for="frictionSlider">摩擦力</label><output id="frictionValue" for="frictionSlider">0.60</output></div>
+            <div class="slider-row"><span>滑</span><input id="frictionSlider" type="range" min="0" max="1" step="0.05" value="0.60"><span>稳</span></div>
+            <p>数值越大，接触后越难滑动</p>
+          </div>
+        </div>
+        <button id="resetPhysicsButton" class="button button-outline button-wide" type="button"><span class="button-icon" aria-hidden="true">⟲</span><span>恢复默认参数</span></button>
+        <div class="physics-callout"><span class="callout-icon" aria-hidden="true">☼</span><p>小实验建议：低弹力、高摩擦力，更容易堆出稳定高塔。</p></div>
+        <button id="drawerCloseButton" class="text-button drawer-close-button" type="button">收起实验台</button>
+      </aside>
+    </main>
+
+    <!-- 移动端底部抽屉入口；桌面端隐藏。 -->
+    <nav class="mobile-drawer-bar" aria-label="移动端工具抽屉">
+      <button class="drawer-tab" data-drawer-target="objects" type="button"><span aria-hidden="true">◆</span><span>物体</span></button>
+      <button id="mobileTowerPush" class="drawer-tower-button" type="button"><span aria-hidden="true">↗</span><span>推倒塔</span></button>
+      <button class="drawer-tab" data-drawer-target="physics" type="button"><span aria-hidden="true">◌</span><span>物理</span></button>
+    </nav>
+  </div>
+
+  <script type="module" src="./场景物理.js"></script>
+</body>
+</html>

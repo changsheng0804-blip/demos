@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>文件二：审核规则文件</title>
+  <style>
+    body { font-family: monospace; padding: 24px; background: #0d1525; color: #c8d8f0; min-height: 100vh; }
+    h2 { color: #38d5ff; margin-bottom: 8px; }
+    p  { color: #5a7799; margin-bottom: 6px; font-size: 13px; }
+    ul { color: #9dbce0; line-height: 2.2; font-size: 13px; padding-left: 20px; }
+    code { color: #ffe066; }
+    hr { border-color: #1e2e47; margin: 20px 0; }
+    .key { color: #ff6b6b; }
+    .note { color: #ff9a3c; font-size: 12px; margin-top: 16px; }
+  </style>
+</head>
+<body>
+  <h2>文件二：审核规则文件</h2>
+  <p>policy-review-rules.html · assetId: policy-review-rules-v1</p>
+  <hr>
+  <p>Agent 可读层：</p>
+  <ul>
+    <li><code>agent-media-manifest</code> — 文件基本信息</li>
+    <li><code>agent-media-state</code> — 节点、边结构</li>
+    <li><code>agent-media-crossrefs</code> — 反向引用声明 ★</li>
+    <li><code>agent-media-validation</code> — 本文件自身校验</li>
+  </ul>
+  <hr>
+  <p class="key">关键差异：</p>
+  <p>节点 <code>human-audit-trigger</code> 的触发条件：</p>
+  <ul>
+    <li><code style="color:#4eff9e;">riskLevel === high</code></li>
+    <li><code style="color:#ff6b6b;">AND amount &gt; 10000</code> ← 文件一没有这个条件</li>
+  </ul>
+  <p class="note">请打开 agent-validator.html 执行跨文件校验。</p>
+</body>
+
+<script type="application/json" id="agent-media-manifest">
+{
+  "assetId": "policy-review-rules-v1",
+  "assetType": "structured-policy",
+  "title": "人工审核触发规则",
+  "version": 1,
+  "agentReadableLayer": [
+    "agent-media-manifest",
+    "agent-media-state",
+    "agent-media-crossrefs",
+    "agent-media-validation"
+  ]
+}
+</script>
+
+<script type="application/json" id="agent-media-state">
+{
+  "nodes": [
+    {
+      "seq": "N-001", "id": "human-audit-trigger", "label": "触发人工审核", "type": "rule", "role": "审核入口规则",
+      "triggerConditions": [
+        { "field": "riskLevel", "op": "===", "value": "high" },
+        { "field": "amount",    "op": ">",   "value": 10000  }
+      ],
+      "conditionLogic": "AND",
+      "note": "两个条件必须同时满足才触发人工审核"
+    },
+    { "seq": "N-002", "id": "assign-reviewer", "label": "分配审核员",   "type": "process", "role": "指派负责人" },
+    { "seq": "N-003", "id": "sla-check",       "label": "SLA 时限检查", "type": "process", "role": "确保响应时间合规", "slaHours": 4 },
+    { "seq": "N-004", "id": "audit-complete",  "label": "审核完成",     "type": "end",     "role": "审核流程终点" }
+  ],
+  "edges": [
+    { "seq": "E-001", "id": "e-trigger-assign", "from": "human-audit-trigger", "to": "assign-reviewer" },
+    { "seq": "E-002", "id": "e-assign-sla",     "from": "assign-reviewer",     "to": "sla-check" },
+    { "seq": "E-003", "id": "e-sla-complete",   "from": "sla-check",           "to": "audit-complete" }
+  ]
+}
+</script>
+
+<script type="application/json" id="agent-media-crossrefs">
+{
+  "version": "0.4",
+  "incomingRefs": [
+    {
+      "refId": "ref-001-incoming",
+      "fromFile": "diagram-ticket-flow.html",
+      "fromAssetId": "diagram-ticket-flow-v1",
+      "fromNode": "manual-review",
+      "relationType": "expandsTo",
+      "localNode": "human-audit-trigger",
+      "verifiedBy": "author-b",
+      "verifiedAt": "2026-05-29",
+      "description": "本文件的 human-audit-trigger 是工单流程图 manual-review 节点的展开。触发条件必须与引用方保持一致或更严格。"
+    }
+  ]
+}
+</script>
+
+<script type="application/json" id="agent-media-validation">
+{
+  "valid": true,
+  "checks": { "allEdgesHaveValidNodes": true, "allPathsResolve": true, "crossRefsFormatValid": true },
+  "errors": [], "warnings": []
+}
+</script>
+
+</html>

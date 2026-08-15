@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>意图与承诺可视化文档</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #0f172a;
+    color: #e2e8f0;
+    min-height: 100vh;
+    padding: 3rem 1.5rem;
+  }
+  .wrap { max-width: 640px; margin: 0 auto; }
+  h1 { font-size: 1.5rem; font-weight: 600; margin-bottom: 0.5rem; }
+  .desc { color: #94a3b8; margin-bottom: 2rem; font-size: 0.95rem; }
+  ul { list-style: none; }
+  li { margin-bottom: 0.75rem; }
+  a {
+    display: block;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    padding: 0.9rem 1.1rem;
+    color: #e2e8f0;
+    text-decoration: none;
+    transition: background 0.15s ease;
+  }
+  a:hover { background: rgba(255,255,255,0.1); }
+  a .fname { font-weight: 600; font-size: 0.95rem; }
+  a .fdesc { color: #94a3b8; font-size: 0.8rem; margin-top: 0.25rem; }
+  .back { margin-top: 2rem; }
+  .back a { background: none; border: none; padding: 0; color: #7dd3fc; font-size: 0.85rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>意图与承诺可视化文档</h1>
+  <div class="desc">让意图和承诺之间的关系，第一次变得可见。以下为各独立演示页面：</div>
+  <ul>
+    <li><a href="./agent-validator.html">
+      <div class="fname">Agent Validator</div>
+      <div class="fdesc">Agent 行为验证器</div>
+    </a></li>
+    <li><a href="./demo-v2.html">
+      <div class="fname">Demo v2</div>
+      <div class="fdesc">演示版本 v2</div>
+    </a></li>
+    <li><a href="./diagram-ticket-flow.html">
+      <div class="fname">Ticket Flow</div>
+      <div class="fdesc">票据流转图</div>
+    </a></li>
+    <li><a href="./policy-review-rules.html">
+      <div class="fname">Policy Review Rules</div>
+      <div class="fdesc">策略审查规则</div>
+    </a></li>
+  </ul>
+  <div class="back"><a href="../index.html">← 返回演示合集</a></div>
+</div>
+</body>
+</html>

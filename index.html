@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>演示合集 · changsheng0804-blip</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    color: #e2e8f0;
+    min-height: 100vh;
+    padding: 3rem 1.5rem;
+  }
+  .wrap { max-width: 960px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 2.5rem; }
+  h1 { font-size: 2rem; font-weight: 600; letter-spacing: 0.05em; margin-bottom: 0.5rem; }
+  .subtitle { color: #94a3b8; font-size: 0.95rem; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.25rem;
+  }
+  .card {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 14px;
+    padding: 1.5rem;
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+  .card:hover {
+    transform: translateY(-3px);
+    background: rgba(255,255,255,0.09);
+    border-color: rgba(255,255,255,0.25);
+  }
+  .card .title { font-size: 1.1rem; font-weight: 600; }
+  .card .desc { color: #94a3b8; font-size: 0.85rem; line-height: 1.5; flex: 1; }
+  .card .open {
+    align-self: flex-start;
+    font-size: 0.78rem;
+    color: #7dd3fc;
+    font-weight: 600;
+  }
+  footer { text-align: center; margin-top: 3rem; color: #64748b; font-size: 0.8rem; }
+  footer a { color: #64748b; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>演示合集</h1>
+    <div class="subtitle">changsheng0804-blip 的静态演示页面导航 · 统一收纳于此</div>
+  </header>
+
+  <div class="grid">
+    <a class="card" href="./3d-physics-playground/立体物理游戏平台.html">
+      <div class="title">3D 物理游戏平台</div>
+      <div class="desc">中文 3D 物理游戏平台，基于场景物理.js + 界面样式.css 的单页应用。</div>
+      <div class="open">打开 →</div>
+    </a>
+
+    <a class="card" href="./agent-readable-documents/">
+      <div class="title">意图与承诺可视化文档</div>
+      <div class="desc">让意图和承诺之间的关系变得可见的交互式文档集合。</div>
+      <div class="open">打开 →</div>
+    </a>
+
+    <a class="card" href="./forge-strength-local-demo/index.html">
+      <div class="title">锻造力量私教</div>
+      <div class="desc">锻造力量私教本地单文件演示页面。</div>
+      <div class="open">打开 →</div>
+    </a>
+
+    <a class="card" href="./pascal-scene-viewer/">
+      <div class="title">Pascal 场景查看器</div>
+      <div class="desc">单户两层住宅 v1 的 3D 场景查看器，支持多版本浏览。</div>
+      <div class="open">打开 →</div>
+    </a>
+
+    <a class="card" href="./yeyulongwu/index.html">
+      <div class="title">一夜鱼龙舞</div>
+      <div class="desc">基于参数方程的粒子光流动画，多版本迭代。</div>
+      <div class="open">打开 →</div>
+    </a>
+  </div>
+
+  <footer>
+    <a href="https://github.com/changsheng0804-blip/demos">GitHub 源码</a> · 由 changsheng0804-blip 维护
+  </footer>
+</div>
+</body>
+</html>
