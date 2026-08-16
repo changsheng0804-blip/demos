@@ -53,8 +53,14 @@
     transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
   }
   .card:hover { transform: translateY(-3px); background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.25); }
-  .card .c-name { font-size: 1.05rem; font-weight: 700; }
-  .card .c-verdict { font-size: 0.82rem; color: #94a3b8; flex: 1; }
+  .card .c-tag {
+    display: inline-block; align-self: flex-start;
+    font-size: 0.68rem; font-weight: 800; letter-spacing: 0.12em;
+    padding: 0.25rem 0.7rem; border-radius: 30px;
+    text-transform: uppercase;
+  }
+  .card .c-name { font-size: 1.15rem; font-weight: 800; color: #f8fafc; }
+  .card .c-verdict { font-size: 0.85rem; color: #cbd5e1; line-height: 1.7; flex: 1; }
   .card .open {
     align-self: flex-start; text-decoration: none;
     background: #7dd3fc; color: #0a0f1e;
@@ -63,9 +69,16 @@
     transition: background 0.15s, box-shadow 0.15s;
   }
   .card .open:hover { background: #a5e3ff; box-shadow: 0 0 20px rgba(125,211,252,0.4); }
-  .ds { border-top: 3px solid #5eead4; }
-  .g36 { border-top: 3px solid #a78bfa; }
-  .g37 { border-top: 3px solid #fbbf24; }
+  /* 三模型各自强调色：边框 + 徽标 + hover 光环，保证一眼可辨 */
+  .ds { border: 1.5px solid rgba(94,234,212,0.5); background: rgba(20,60,50,0.15); }
+  .ds:hover { border-color: #5eead4; box-shadow: 0 0 24px rgba(94,234,212,0.2); }
+  .ds .c-tag { background: rgba(94,234,212,0.15); color: #5eead4; }
+  .g36 { border: 1.5px solid rgba(167,139,250,0.5); background: rgba(60,40,90,0.15); }
+  .g36:hover { border-color: #a78bfa; box-shadow: 0 0 24px rgba(167,139,250,0.2); }
+  .g36 .c-tag { background: rgba(167,139,250,0.15); color: #a78bfa; }
+  .g37 { border: 1.5px solid rgba(251,191,36,0.5); background: rgba(90,70,25,0.15); }
+  .g37:hover { border-color: #fbbf24; box-shadow: 0 0 24px rgba(251,191,36,0.2); }
+  .g37 .c-tag { background: rgba(251,191,36,0.15); color: #fbbf24; }
   .note { color: #64748b; font-size: 0.78rem; margin-top: 2rem; line-height: 1.8; }
   footer { text-align: center; margin-top: 2.5rem; color: #64748b; font-size: 0.78rem; }
   footer a { color: #64748b; }
@@ -108,7 +121,7 @@
       </tr>
       <tr>
         <td>成本</td>
-        <td class="warn">V4 Pro API ≈ ¥4.8<br>+ 约 500 万 Token 免费额度</td>
+        <td class="warn">V4 Pro API ≈ ¥4.8<br>+ GLM 5.3 额度（500 万 Token）</td>
         <td class="win">¥0</td>
         <td>API ≈ $1.4（≈¥10）</td>
       </tr>
@@ -135,17 +148,20 @@
 
   <div class="cards">
     <a class="card ds" href="./deepseek-v4-pro/index.html">
-      <div class="c-name">DeepSeek V4 Pro</div>
+      <span class="c-tag">DEEPSEEK</span>
+      <div class="c-name">V4 Pro</div>
       <div class="c-verdict">最"工程师"：零依赖、自适应性能、无障碍拉满。贵但作品感强——"我住在你的 GPU 里"。</div>
       <span class="open">打开体验 →</span>
     </a>
     <a class="card g36" href="./gemini-36-flash/index.html">
-      <div class="c-name">Gemini 3.6 Flash</div>
+      <span class="c-tag">GEMINI</span>
+      <div class="c-name">3.6 Flash</div>
       <div class="c-verdict">性价比之王：5 秒、零成本、27KB。轻盈粒子流 + 空灵五声音阶，完成度惊人。</div>
       <span class="open">打开体验 →</span>
     </a>
     <a class="card g37" href="./gemini-37-flash/index.html">
-      <div class="c-name">Gemini 3.7 Flash</div>
+      <span class="c-tag">GEMINI</span>
+      <div class="c-name">3.7 Flash</div>
       <div class="c-verdict">视觉最华丽：HUD 生命体征、DNA 调谐台、多纪元滚动叙事。10 秒产出顶级审美。</div>
       <span class="open">打开体验 →</span>
     </a>
