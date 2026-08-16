@@ -12,11 +12,17 @@
 
 | 目录 | 内容 | 主入口 |
 |------|------|--------|
+| `prompt-showdown/` | 同提示词 · 三家模型对决（对比页 + 3 份模型产物） | `index.html` |
 | `3d-physics-playground/` | 3D 物理游戏平台 | `立体物理游戏平台.html` |
 | `agent-readable-documents/` | 意图与承诺可视化文档（demo v2） | `demo-v2.html` |
 | `forge-strength-local-demo/` | 锻造力量私教单文件演示 | `index.html` |
 | `pascal-scene-viewer/` | Pascal 场景查看器（构建产物） | `viewer/v1/` |
 | `yeyulongwu/` | 一夜鱼龙舞粒子动画（多版本） | `index.html` |
+
+**模型产物类演示的规则**（如 `prompt-showdown/`）：
+- 每个模型一个子目录（`deepseek-v4-pro/`、`gemini-36-flash/`、`gemini-37-flash/`），各放 `index.html` + 本地资源
+- 禁止依赖外部 CDN（three.js / gsap / 字体须本地化到 `lib/`），否则国内访问会失效
+- 对比页 `index.html` 是入口，含耗时/成本/体积对照表
 
 ## 新增演示的步骤（代理照做）
 

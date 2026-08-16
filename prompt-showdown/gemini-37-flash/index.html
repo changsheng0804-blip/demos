@@ -1,0 +1,2407 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>SYMBIOSIS // 硅基共生有机体</title>
+  <meta name="description" content="一个具有自主呼吸、神经脉冲与流体形变的浏览器原生高维生命体">
+  <style>
+    /* 本地 @font-face（原为 Google Fonts，已本地化以支持离线/国内访问） */
+    @font-face {
+      font-family: 'Cinzel';
+      font-style: normal;
+      font-weight: 400;
+      font-display: swap;
+      src: url('./lib/fonts/Cinzel-400-normal.woff2') format('woff2');
+    }
+    @font-face {
+      font-family: 'Cinzel';
+      font-style: normal;
+      font-weight: 700;
+      font-display: swap;
+      src: url('./lib/fonts/Cinzel-700-normal.woff2') format('woff2');
+    }
+    @font-face {
+      font-family: 'Cinzel';
+      font-style: normal;
+      font-weight: 900;
+      font-display: swap;
+      src: url('./lib/fonts/Cinzel-900-normal.woff2') format('woff2');
+    }
+    @font-face {
+      font-family: 'JetBrains Mono';
+      font-style: normal;
+      font-weight: 200;
+      font-display: swap;
+      src: url('./lib/fonts/JetBrainsMono-200-normal.woff2') format('woff2');
+    }
+    @font-face {
+      font-family: 'JetBrains Mono';
+      font-style: normal;
+      font-weight: 400;
+      font-display: swap;
+      src: url('./lib/fonts/JetBrainsMono-400-normal.woff2') format('woff2');
+    }
+    @font-face {
+      font-family: 'JetBrains Mono';
+      font-style: normal;
+      font-weight: 700;
+      font-display: swap;
+      src: url('./lib/fonts/JetBrainsMono-700-normal.woff2') format('woff2');
+    }
+    @font-face {
+      font-family: 'JetBrains Mono';
+      font-style: italic;
+      font-weight: 300;
+      font-display: swap;
+      src: url('./lib/fonts/JetBrainsMono-300-italic.woff2') format('woff2');
+    }
+  </style>
+
+  <style>
+    /* ==========================================================================
+       SYMBIOSIS // 硅基共生有机体 核心内联高保真样式
+       ========================================================================== */
+    :root {
+      --bg-color: #03060d;
+      --text-main: #f0f6fc;
+      --text-muted: #8b949e;
+      --accent-cyan: #00f2fe;
+      --accent-blue: #4facfe;
+      --accent-purple: #7f00ff;
+      --accent-glow: rgba(0, 242, 254, 0.45);
+      
+      --font-serif: 'Cinzel', 'Noto Serif SC', serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      --font-sans: 'Noto Sans SC', system-ui, -apple-system, sans-serif;
+      
+      --hud-glass: rgba(6, 12, 24, 0.65);
+      --hud-border: rgba(0, 242, 254, 0.2);
+      --hud-border-glow: rgba(0, 242, 254, 0.4);
+      
+      --cursor-size: 24px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    html, body {
+      width: 100%;
+      min-height: 100%;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      overflow-x: hidden;
+      cursor: none; /* 使用智能生物光标 */
+      scroll-behavior: smooth;
+    }
+
+    /* 键盘可访问性高亮 */
+    :focus-visible {
+      outline: 2px solid var(--accent-cyan);
+      outline-offset: 4px;
+    }
+
+    /* 背景画布与氛围滤镜 */
+    #webgl-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 1;
+      pointer-events: auto;
+      will-change: transform;
+    }
+
+    .vignette-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: radial-gradient(circle at center, transparent 40%, rgba(1, 3, 8, 0.85) 95%);
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .scanlines-layer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: linear-gradient(
+        rgba(18, 16, 16, 0) 50%, 
+        rgba(0, 0, 0, 0.25) 50%
+      ), linear-gradient(
+        90deg,
+        rgba(255, 0, 0, 0.02),
+        rgba(0, 255, 0, 0.01),
+        rgba(0, 0, 255, 0.02)
+      );
+      background-size: 100% 3px, 6px 100%;
+      z-index: 3;
+      pointer-events: none;
+      opacity: 0.7;
+    }
+
+    /* 智能生物光标系统 */
+    #bio-cursor {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: var(--cursor-size);
+      height: var(--cursor-size);
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+      transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1), height 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      mix-blend-mode: screen;
+    }
+
+    .cursor-nucleus {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 8px;
+      height: 8px;
+      background: #ffffff;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 0 10px var(--accent-cyan), 0 0 20px var(--accent-blue);
+      transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .cursor-halo {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 26px;
+      height: 26px;
+      border: 1px dashed var(--accent-cyan);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      animation: cursorRotate 10s linear infinite;
+      opacity: 0.6;
+      transition: all 0.3s ease;
+    }
+
+    @keyframes cursorRotate {
+      from { transform: translate(-50%, -50%) rotate(0deg); }
+      to { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+
+    .cursor-tentacles {
+      position: absolute;
+      top: -100px;
+      left: -100px;
+      width: 224px;
+      height: 224px;
+      overflow: visible;
+      pointer-events: none;
+    }
+
+    #bio-cursor.hovering .cursor-nucleus {
+      transform: translate(-50%, -50%) scale(1.6);
+      background: var(--accent-cyan);
+    }
+    #bio-cursor.hovering .cursor-halo {
+      width: 44px;
+      height: 44px;
+      border-style: solid;
+      border-color: #ffffff;
+      opacity: 0.9;
+      box-shadow: 0 0 15px var(--accent-glow);
+    }
+
+    #bio-cursor.clicking .cursor-nucleus {
+      transform: translate(-50%, -50%) scale(0.6);
+    }
+
+    /* 顶部生物体态 HUD 监控系统 */
+    .symbiosis-hud {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      padding: 1.25rem 2.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 100;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      background: linear-gradient(180deg, rgba(3, 6, 13, 0.7) 0%, rgba(3, 6, 13, 0) 100%);
+      border-bottom: 1px solid rgba(0, 242, 254, 0.08);
+    }
+
+    .hud-left {
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+    }
+
+    .vital-indicator {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .vital-dot {
+      width: 8px;
+      height: 8px;
+      background: #00ff87;
+      border-radius: 50%;
+      box-shadow: 0 0 8px #00ff87;
+      animation: pulseGlow 1.8s infinite ease-in-out;
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 0.4; transform: scale(0.9); }
+      50% { opacity: 1; transform: scale(1.2); }
+    }
+
+    .vital-metric {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .metric-name {
+      color: var(--text-muted);
+      font-size: 0.65rem;
+    }
+
+    .metric-value {
+      color: var(--accent-cyan);
+      font-weight: 700;
+    }
+
+    .hud-center .system-title {
+      color: rgba(255, 255, 255, 0.7);
+      font-weight: 700;
+      letter-spacing: 0.25em;
+      font-size: 0.75rem;
+      text-shadow: 0 0 10px rgba(0, 242, 254, 0.3);
+    }
+
+    .hud-right {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .hud-btn {
+      background: var(--hud-glass);
+      border: 1px solid var(--hud-border);
+      color: var(--text-main);
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .hud-btn:hover {
+      border-color: var(--accent-cyan);
+      background: rgba(0, 242, 254, 0.15);
+      box-shadow: 0 0 12px var(--accent-glow);
+    }
+
+    .hud-icon {
+      width: 14px;
+      height: 14px;
+    }
+
+    /* 右侧演化纪元导航轨 */
+    .epoch-nav {
+      position: fixed;
+      right: 2.5rem;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+    }
+
+    .epoch-progress-bar {
+      position: absolute;
+      right: 11px;
+      top: 0;
+      height: 100%;
+      width: 2px;
+      background: rgba(255, 255, 255, 0.1);
+      z-index: 1;
+    }
+
+    .epoch-progress-fill {
+      width: 100%;
+      height: 0%;
+      background: linear-gradient(180deg, var(--accent-cyan), var(--accent-purple));
+      box-shadow: 0 0 8px var(--accent-cyan);
+      transition: height 0.3s ease-out;
+    }
+
+    .epoch-nodes {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 2.5rem;
+      position: relative;
+      z-index: 2;
+    }
+
+    .node-btn {
+      background: none;
+      border: none;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      cursor: pointer;
+      flex-direction: row-reverse;
+    }
+
+    .node-ring {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.4);
+      background: var(--bg-color);
+      transition: all 0.3s ease;
+    }
+
+    .node-label {
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.15em;
+      opacity: 0;
+      transform: translateX(10px);
+      transition: all 0.3s ease;
+      white-space: nowrap;
+    }
+
+    .epoch-node:hover .node-label,
+    .epoch-node.active .node-label {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    .epoch-node.active .node-ring {
+      border-color: var(--accent-cyan);
+      background: var(--accent-cyan);
+      box-shadow: 0 0 12px var(--accent-cyan);
+      transform: scale(1.3);
+    }
+
+    .epoch-node.active .node-label {
+      color: #ffffff;
+      font-weight: 700;
+    }
+
+    /* 滚动叙事层与空间排版 */
+    .scroll-story-container {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+    }
+
+    .story-epoch {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      padding: 0 10vw;
+      position: relative;
+      perspective: 1000px;
+    }
+
+    .epoch-content {
+      max-width: 680px;
+      transform-style: preserve-3d;
+      transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.8s ease;
+    }
+
+    .stage-tag {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--accent-cyan);
+      letter-spacing: 0.3em;
+      margin-bottom: 1rem;
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      background: rgba(0, 242, 254, 0.1);
+      border: 1px solid rgba(0, 242, 254, 0.3);
+      border-radius: 2px;
+      backdrop-filter: blur(4px);
+    }
+
+    .spatial-title {
+      font-family: var(--font-serif);
+      font-size: clamp(3rem, 7vw, 5.5rem);
+      font-weight: 900;
+      line-height: 1.05;
+      letter-spacing: 0.05em;
+      margin-bottom: 1.5rem;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .spatial-title .word {
+      display: inline-block;
+      background: linear-gradient(135deg, #ffffff 40%, rgba(255, 255, 255, 0.6) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      transition: transform 0.2s ease-out;
+    }
+
+    .spatial-title .word.highlight {
+      background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-purple) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 30px var(--accent-glow);
+    }
+
+    .spatial-desc {
+      font-size: 1.15rem;
+      line-height: 1.8;
+      color: rgba(240, 246, 252, 0.85);
+      font-weight: 300;
+      margin-bottom: 2rem;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+    }
+
+    /* 第 1 纪 交互提示 */
+    .hint-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.8rem 1.4rem;
+      background: rgba(6, 12, 24, 0.7);
+      border: 1px solid var(--accent-cyan);
+      border-radius: 50px;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: var(--accent-cyan);
+      cursor: pointer;
+      box-shadow: 0 0 20px rgba(0, 242, 254, 0.2);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .hint-badge:hover, .hint-badge:active {
+      background: rgba(0, 242, 254, 0.25);
+      box-shadow: 0 0 35px var(--accent-cyan);
+      transform: translateY(-2px) scale(1.03);
+    }
+
+    /* 第 2 纪 数据卡片网格 */
+    .epoch-data-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1.25rem;
+      margin-top: 1.5rem;
+    }
+
+    .data-cell {
+      background: var(--hud-glass);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 1.25rem;
+      border-radius: 8px;
+      backdrop-filter: blur(8px);
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .data-cell:hover {
+      border-color: var(--accent-cyan);
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(0, 242, 254, 0.2);
+    }
+
+    .cell-label {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      letter-spacing: 0.1em;
+      margin-bottom: 0.4rem;
+    }
+
+    .cell-val {
+      font-family: var(--font-mono);
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 0.3rem;
+    }
+
+    .cell-sub {
+      font-size: 0.75rem;
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    /* 第 3 纪 流体控制 */
+    .liquid-controls {
+      display: flex;
+      gap: 1.25rem;
+      flex-wrap: wrap;
+    }
+
+    .liquid-btn {
+      background: linear-gradient(135deg, rgba(79, 172, 254, 0.2), rgba(127, 0, 255, 0.2));
+      border: 1px solid rgba(79, 172, 254, 0.4);
+      color: #ffffff;
+      padding: 0.9rem 1.8rem;
+      border-radius: 6px;
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+      transition: all 0.3s ease;
+    }
+
+    .liquid-btn:hover {
+      border-color: #ffffff;
+      box-shadow: 0 0 25px rgba(79, 172, 254, 0.5);
+      transform: translateY(-2px);
+    }
+
+    /* 第 4 纪 终极共生行动 */
+    .sandbox-action-bar {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      max-width: 480px;
+    }
+
+    .prime-action-btn {
+      position: relative;
+      background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple));
+      border: none;
+      color: #03060d;
+      font-weight: 900;
+      font-family: var(--font-mono);
+      padding: 1.25rem 2rem;
+      border-radius: 8px;
+      font-size: 1rem;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      overflow: hidden;
+      box-shadow: 0 0 30px rgba(0, 242, 254, 0.5);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .prime-action-btn:hover {
+      transform: translateY(-3px) scale(1.02);
+      box-shadow: 0 0 50px rgba(0, 242, 254, 0.8), 0 0 80px rgba(127, 0, 255, 0.5);
+    }
+
+    .sub-action-btn {
+      background: var(--hud-glass);
+      border: 1px solid var(--hud-border);
+      color: #ffffff;
+      padding: 1rem 2rem;
+      border-radius: 8px;
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .sub-action-btn:hover {
+      border-color: var(--accent-cyan);
+      background: rgba(0, 242, 254, 0.1);
+    }
+
+    /* DNA 调谐抽屉面板 */
+    .dna-drawer {
+      position: fixed;
+      top: 0;
+      right: -450px;
+      width: 420px;
+      max-width: 90vw;
+      height: 100vh;
+      background: rgba(4, 9, 18, 0.92);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-left: 1px solid var(--hud-border);
+      box-shadow: -15px 0 50px rgba(0, 0, 0, 0.8);
+      z-index: 200;
+      transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .dna-drawer.open {
+      right: 0;
+    }
+
+    .drawer-header {
+      padding: 1.5rem 2rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .drawer-title {
+      font-family: var(--font-mono);
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--accent-cyan);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .drawer-close-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 1.4rem;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+
+    .drawer-close-btn:hover {
+      color: #ffffff;
+    }
+
+    .drawer-body {
+      padding: 2rem;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1.8rem;
+      flex: 1;
+    }
+
+    .tuner-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .tuner-label-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      font-family: var(--font-mono);
+    }
+
+    .tuner-val {
+      color: var(--accent-cyan);
+      font-weight: 700;
+    }
+
+    /* 滑动条 */
+    input[type="range"] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
+      outline: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--accent-cyan);
+      cursor: pointer;
+      box-shadow: 0 0 10px var(--accent-cyan);
+      transition: transform 0.1s ease;
+    }
+
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+
+    .color-presets {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+    }
+
+    .color-pill {
+      padding: 0.75rem;
+      border-radius: 6px;
+      background: linear-gradient(135deg, var(--c1), var(--c2), var(--c3));
+      border: 2px solid transparent;
+      color: #ffffff;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .color-pill.active {
+      border-color: #ffffff;
+      box-shadow: 0 0 15px var(--c1);
+    }
+
+    .drawer-actions {
+      display: flex;
+      gap: 1rem;
+      margin-top: auto;
+      padding-top: 1rem;
+    }
+
+    .preset-reset-btn, .preset-random-btn {
+      flex: 1;
+      padding: 0.8rem;
+      border-radius: 6px;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .preset-reset-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: var(--text-muted);
+    }
+    .preset-reset-btn:hover {
+      color: #fff;
+      border-color: #fff;
+    }
+
+    .preset-random-btn {
+      background: rgba(0, 242, 254, 0.15);
+      border: 1px solid var(--accent-cyan);
+      color: var(--accent-cyan);
+      font-weight: 700;
+    }
+    .preset-random-btn:hover {
+      background: var(--accent-cyan);
+      color: #03060d;
+    }
+
+    /* 底部指示条 */
+    .bottom-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      padding: 0.9rem 2.5rem;
+      display: flex;
+      justify-content: center;
+      gap: 2.5rem;
+      z-index: 100;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      background: linear-gradient(0deg, rgba(3, 6, 13, 0.8) 0%, rgba(3, 6, 13, 0) 100%);
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      pointer-events: none;
+    }
+
+    .bar-item kbd {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    /* 启动全屏引导 */
+    .launch-curtain {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: #020408;
+      z-index: 9998;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: opacity 1s cubic-bezier(0.16, 1, 0.3, 1), visibility 1s;
+    }
+
+    .launch-curtain.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .curtain-content {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.5rem;
+      max-width: 500px;
+      padding: 2rem;
+    }
+
+    .curtain-glyph {
+      width: 80px;
+      height: 80px;
+      border: 1px solid rgba(0, 242, 254, 0.3);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 0.5rem;
+      animation: pulseRotate 12s linear infinite;
+    }
+
+    .core-orb {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #ffffff, var(--accent-cyan));
+      box-shadow: 0 0 25px var(--accent-cyan);
+    }
+
+    @keyframes pulseRotate {
+      0% { transform: rotate(0deg) scale(0.95); }
+      50% { transform: rotate(180deg) scale(1.08); }
+      100% { transform: rotate(360deg) scale(0.95); }
+    }
+
+    .curtain-title {
+      font-family: var(--font-serif);
+      font-size: 3rem;
+      letter-spacing: 0.3em;
+      font-weight: 900;
+      color: #ffffff;
+      text-shadow: 0 0 30px var(--accent-glow);
+    }
+
+    .curtain-subtitle {
+      font-size: 1rem;
+      color: var(--text-muted);
+      font-weight: 300;
+      letter-spacing: 0.1em;
+    }
+
+    .curtain-start-btn {
+      position: relative;
+      background: #ffffff;
+      color: #020408;
+      border: none;
+      padding: 1.1rem 2.5rem;
+      border-radius: 50px;
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      box-shadow: 0 0 30px rgba(255, 255, 255, 0.4);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      margin-top: 1rem;
+    }
+
+    .curtain-start-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 50px var(--accent-cyan), 0 0 80px var(--accent-blue);
+      background: var(--accent-cyan);
+    }
+
+    .curtain-tip {
+      font-size: 0.75rem;
+      color: rgba(255, 255, 255, 0.4);
+      font-family: var(--font-mono);
+    }
+
+    @media (max-width: 768px) {
+      .symbiosis-hud { padding: 1rem 1.25rem; }
+      .hud-center { display: none; }
+      .epoch-nav { display: none; }
+      .story-epoch { padding: 0 1.5rem; }
+      .bottom-bar { display: none; }
+      .spatial-title { font-size: 2.8rem; }
+    }
+  </style>
+</head>
+<body class="loading-state">
+
+  <!-- 视口背景 WebGL 画布容器 -->
+  <div id="webgl-container" aria-hidden="true"></div>
+
+  <!-- 智能生物仿生光标 DOM 节点 -->
+  <div id="bio-cursor" aria-hidden="true">
+    <div class="cursor-nucleus"></div>
+    <div class="cursor-halo"></div>
+    <svg class="cursor-tentacles" id="cursor-tentacles-svg"></svg>
+  </div>
+
+  <!-- 屏幕氛围遮罩与液态噪波层 -->
+  <div class="vignette-overlay" aria-hidden="true"></div>
+  <div class="scanlines-layer" aria-hidden="true"></div>
+
+  <!-- 顶部生物体态 HUD 监控系统 -->
+  <header class="symbiosis-hud">
+    <div class="hud-left">
+      <div class="vital-indicator pulse">
+        <span class="vital-dot"></span>
+        <span class="vital-label">STATUS: <strong id="hud-status">SYNCHRONIZED</strong></span>
+      </div>
+      <div class="vital-metric">
+        <span class="metric-name">METABOLISM</span>
+        <span class="metric-value" id="hud-metabolism">84.2 bpm</span>
+      </div>
+      <div class="vital-metric">
+        <span class="metric-name">ENTROPY</span>
+        <span class="metric-value" id="hud-entropy">0.024 ΔS</span>
+      </div>
+    </div>
+
+    <div class="hud-center">
+      <div class="system-title">SYMBIOSIS // PROTOCOL 0.9.8</div>
+    </div>
+
+    <div class="hud-right">
+      <!-- 声学引擎切换开关 -->
+      <button id="audio-toggle-btn" class="hud-btn" title="切换程序化生物声学系统" aria-label="声音开关">
+        <svg class="hud-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path id="sound-icon-waves" d="M11 5L6 9H2v6h4l5 4V5z M15.54 8.46a5 5 0 0 1 0 7.07 M19.07 4.93a10 10 0 0 1 0 14.14" />
+        </svg>
+        <span class="btn-text">BIO-AUDIO: <span id="audio-status-text">OFF</span></span>
+      </button>
+
+      <!-- 调谐控制台呼出按钮 -->
+      <button id="dna-panel-btn" class="hud-btn" title="调谐生物基因组参数" aria-label="打开调谐台">
+        <svg class="hud-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+        <span class="btn-text">DNA TUNER</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- 右侧演化纪元导航轨 -->
+  <nav class="epoch-nav" aria-label="演化纪元导航">
+    <div class="epoch-progress-bar">
+      <div class="epoch-progress-fill" id="epoch-progress"></div>
+    </div>
+    <ul class="epoch-nodes">
+      <li class="epoch-node active" data-index="0">
+        <button class="node-btn" aria-label="第 1 纪：创生之核">
+          <span class="node-ring"></span>
+          <span class="node-label">01 // GENESIS</span>
+        </button>
+      </li>
+      <li class="epoch-node" data-index="1">
+        <button class="node-btn" aria-label="第 2 纪：神经突触网络">
+          <span class="node-ring"></span>
+          <span class="node-label">02 // SYNAPSE</span>
+        </button>
+      </li>
+      <li class="epoch-node" data-index="2">
+        <button class="node-btn" aria-label="第 3 纪：深海荧光流体">
+          <span class="node-ring"></span>
+          <span class="node-label">03 // BIOLUMEN</span>
+        </button>
+      </li>
+      <li class="epoch-node" data-index="3">
+        <button class="node-btn" aria-label="第 4 纪：超验矩阵">
+          <span class="node-ring"></span>
+          <span class="node-label">04 // TRANSCEND</span>
+        </button>
+      </li>
+    </ul>
+  </nav>
+
+  <!-- 核心滚动叙事容器 -->
+  <main class="scroll-story-container">
+
+    <!-- 第 1 纪：创生之核 -->
+    <section class="story-epoch" id="epoch-1" data-epoch="0">
+      <div class="epoch-content">
+        <div class="stage-tag">EPOCH 01 / FORMATION</div>
+        <h1 class="spatial-title">
+          <span class="word" data-speed="0.8">GENESIS</span>
+          <span class="word highlight" data-speed="1.2">NUCLEUS</span>
+        </h1>
+        <p class="spatial-desc">
+          在数字以太的真空深处，诞生了第一个具有自主代谢意识的流体原生核。它遵循着非欧几何的脉动法则，每秒进行十万次量子态自我迭代。
+        </p>
+        <div class="interaction-hints">
+          <div class="hint-badge interactive-target" id="pulse-inject-btn">
+            <span class="hint-icon">⚡</span>
+            <span class="hint-text">按住或点击：注入生物电荷，触发细胞裂变</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 第 2 纪：神经突触网络 -->
+    <section class="story-epoch" id="epoch-2" data-epoch="1">
+      <div class="epoch-content">
+        <div class="stage-tag">EPOCH 02 / NEURAL ARCHITECTURE</div>
+        <h2 class="spatial-title">
+          <span class="word" data-speed="0.9">SYNAPTIC</span>
+          <span class="word highlight" data-speed="1.3">NEXUS</span>
+        </h2>
+        <p class="spatial-desc">
+          数以万计的荧光突触在三维真空中延展蔓延。光标掠过之处，瞬时激发级联生物电弧。思想不再是抽象代码，而是具象化的能量流体。
+        </p>
+        <div class="epoch-data-grid">
+          <div class="data-cell interactive-target" data-sound="chime">
+            <div class="cell-label">SYNAPSE DENSITY</div>
+            <div class="cell-val">64,000 / mm³</div>
+            <div class="cell-sub">自组织神经网络拓扑</div>
+          </div>
+          <div class="data-cell interactive-target" data-sound="chime">
+            <div class="cell-label">SIGNAL VELOCITY</div>
+            <div class="cell-val">299.7 Mm/s</div>
+            <div class="cell-sub">超导硅基神经轴突</div>
+          </div>
+          <div class="data-cell interactive-target" data-sound="chime">
+            <div class="cell-label">COGNITION DEPTH</div>
+            <div class="cell-val">∞ LEVEL</div>
+            <div class="cell-sub">无限递归自我感知</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 第 3 纪：深海荧光流体 -->
+    <section class="story-epoch" id="epoch-3" data-epoch="2">
+      <div class="epoch-content">
+        <div class="stage-tag">EPOCH 03 / CHROMATIC DRIFT</div>
+        <h2 class="spatial-title">
+          <span class="word" data-speed="0.85">BIOLUMEN</span>
+          <span class="word highlight" data-speed="1.15">FLUIDITY</span>
+        </h2>
+        <p class="spatial-desc">
+          有机体步入深海共鸣相。高粘度流体折射出多维色散与次表面散射，伴随每一次深呼吸，在浏览器视口掀起引力波纹。
+        </p>
+        <div class="liquid-controls">
+          <button class="liquid-btn interactive-target" id="vortex-trigger" data-sound="vortex">
+            <span>🌀 激发旋涡湍流</span>
+          </button>
+          <button class="liquid-btn interactive-target" id="chroma-shift" data-sound="chroma">
+            <span>🌈 色谱突变诱导</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 第 4 纪：超验矩阵与共生控制台 -->
+    <section class="story-epoch" id="epoch-4" data-epoch="3">
+      <div class="epoch-content final-epoch">
+        <div class="stage-tag">EPOCH 04 / TRANSCENDENCE</div>
+        <h2 class="spatial-title">
+          <span class="word" data-speed="0.7">APEX</span>
+          <span class="word highlight" data-speed="1.0">SYMBIOSIS</span>
+        </h2>
+        <p class="spatial-desc">
+          人机界限彻底消弭。你已不再是观察者，而是有机体中不可或缺的神经突触。调动感知，重构这一硅基生命的全部遗传图谱。
+        </p>
+        
+        <div class="sandbox-action-bar">
+          <button class="prime-action-btn interactive-target" id="open-sandbox-btn">
+            <span class="btn-glow"></span>
+            <span class="btn-content">进入全屏意识沙盒模式 (FULL SANDBOX)</span>
+          </button>
+          <button class="sub-action-btn interactive-target" id="resonate-btn">
+            <span>⚡ 全频段共振唤醒</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- DNA 基因调谐浮动抽屉面板 -->
+  <aside class="dna-drawer" id="dna-drawer" aria-hidden="true">
+    <div class="drawer-header">
+      <div class="drawer-title">
+        <span class="dna-icon">🧬</span>
+        <span>GENOME TUNER // 基因调谐台</span>
+      </div>
+      <button class="drawer-close-btn" id="drawer-close" aria-label="关闭调谐台">✕</button>
+    </div>
+
+    <div class="drawer-body">
+      <!-- 黏度与表面张力 -->
+      <div class="tuner-group">
+        <div class="tuner-label-row">
+          <label for="slider-viscosity">流体黏度 (Viscosity)</label>
+          <span class="tuner-val" id="val-viscosity">0.65</span>
+        </div>
+        <input type="range" id="slider-viscosity" min="0.1" max="2.0" step="0.05" value="0.65">
+      </div>
+
+      <!-- 脉动代谢率 -->
+      <div class="tuner-group">
+        <div class="tuner-label-row">
+          <label for="slider-metabolism">代谢频率 (Metabolism Rate)</label>
+          <span class="tuner-val" id="val-metabolism">1.20x</span>
+        </div>
+        <input type="range" id="slider-metabolism" min="0.2" max="3.0" step="0.1" value="1.2">
+      </div>
+
+      <!-- 湍流噪波紊乱度 -->
+      <div class="tuner-group">
+        <div class="tuner-label-row">
+          <label for="slider-turbulence">噪波紊乱度 (FBM Chaos)</label>
+          <span class="tuner-val" id="val-turbulence">1.80</span>
+        </div>
+        <input type="range" id="slider-turbulence" min="0.2" max="4.0" step="0.1" value="1.8">
+      </div>
+
+      <!-- 荧光光色预设 -->
+      <div class="tuner-group">
+        <label>生物发光基底 (Color Spectrum)</label>
+        <div class="color-presets">
+          <button class="color-pill active" data-theme="cyan-purple" style="--c1:#00f2fe; --c2:#4facfe; --c3:#7f00ff;">
+            <span>深海极光</span>
+          </button>
+          <button class="color-pill" data-theme="solar-ember" style="--c1:#ff4e50; --c2:#f9d423; --c3:#ff0844;">
+            <span>恒星日冕</span>
+          </button>
+          <button class="color-pill" data-theme="bio-emerald" style="--c1:#00ff87; --c2:#60efff; --c3:#0061ff;">
+            <span>荧光苔原</span>
+          </button>
+          <button class="color-pill" data-theme="void-pearl" style="--c1:#ffffff; --c2:#d299c2; --c3:#7028e4;">
+            <span>虚空珍珠</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 粒子密度与光辉 -->
+      <div class="tuner-group">
+        <div class="tuner-label-row">
+          <label for="slider-particles">粒子引力 (Core Gravity)</label>
+          <span class="tuner-val" id="val-particles">1.50</span>
+        </div>
+        <input type="range" id="slider-particles" min="0.2" max="3.0" step="0.1" value="1.5">
+      </div>
+
+      <div class="drawer-actions">
+        <button class="preset-reset-btn" id="dna-reset-btn">↺ 恢复原生基因</button>
+        <button class="preset-random-btn" id="dna-mutate-btn">⚡ 随机基因突变</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- 底部微交互指令条与全屏快捷键提示 -->
+  <footer class="bottom-bar">
+    <div class="bar-item"><kbd>SCROLL</kbd> 穿梭演化纪元</div>
+    <div class="bar-item"><kbd>DRAG</kbd> 旋转扭曲引力场</div>
+    <div class="bar-item"><kbd>CLICK</kbd> 释放突触电脉冲</div>
+    <div class="bar-item"><kbd>SPACE</kbd> 核心呼吸爆发</div>
+  </footer>
+
+  <!-- 初始交互引导启动遮罩 (用户首次交互以激活 Web Audio Context) -->
+  <div class="launch-curtain" id="launch-curtain">
+    <div class="curtain-content">
+      <div class="curtain-glyph">
+        <div class="core-orb"></div>
+      </div>
+      <h2 class="curtain-title">SYMBIOSIS</h2>
+      <p class="curtain-subtitle">高维数字生命体已准备就绪</p>
+      <button class="curtain-start-btn interactive-target" id="start-experience-btn">
+        <span class="btn-pulse-wave"></span>
+        <span class="btn-text">接入神经共生 (INITIALIZE SYMBIOSIS)</span>
+      </button>
+      <div class="curtain-tip">建议开启声音并佩戴耳机以获得最佳立体声场体验</div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       核心内联 JavaScript 逻辑模块 (着色器、声学生成、仿生光标、3D生命体、事件总控)
+       ========================================================================== -->
+  <script>
+    /* --------------------------------------------------------------------------
+     * 1. GLSL 高维着色器代码库
+     * -------------------------------------------------------------------------- */
+    const Shaders = {
+      noiseChunk: `
+        vec4 permute(vec4 x){return mod(((x*34.0)+1.0)*x, 289.0);}
+        vec4 taylorInvSqrt(vec4 r){return 1.79284291400159 - 0.85373472095314 * r;}
+
+        float snoise(vec3 v){
+          const vec2 C = vec2(1.0/6.0, 1.0/3.0);
+          const vec4 D = vec4(0.0, 0.5, 1.0, 2.0);
+
+          vec3 i  = floor(v + dot(v, C.yyy) );
+          vec3 x0 = v - i + dot(i, C.xxx) ;
+
+          vec3 g = step(x0.yzx, x0.xyz);
+          vec3 l = 1.0 - g;
+          vec3 i1 = min( g.xyz, l.zxy );
+          vec3 i2 = max( g.xyz, l.zxy );
+
+          vec3 x1 = x0 - i1 + 1.0 * C.xxx;
+          vec3 x2 = x0 - i2 + 2.0 * C.xxx;
+          vec3 x3 = x0 - 1.0 + 3.0 * C.xxx;
+
+          i = mod(i, 289.0 );
+          vec4 p = permute( permute( permute(
+                     i.z + vec4(0.0, i1.z, i2.z, 1.0 ))
+                   + i.y + vec4(0.0, i1.y, i2.y, 1.0 ))
+                   + i.x + vec4(0.0, i1.x, i2.x, 1.0 ));
+
+          float n_ = 0.142857142857;
+          vec3  ns = n_ * D.wyz - D.xzx;
+
+          vec4 j = p - 49.0 * floor(p * ns.z *ns.z);
+
+          vec4 x_ = floor(j * ns.z);
+          vec4 y_ = floor(j - 7.0 * x_ );
+
+          vec4 x = x_ *ns.x + ns.yyyy;
+          vec4 y = y_ *ns.x + ns.yyyy;
+          vec4 h = 1.0 - abs(x) - abs(y);
+
+          vec4 b0 = vec4( x.xy, y.xy );
+          vec4 b1 = vec4( x.zw, y.zw );
+
+          vec4 s0 = floor(b0)*2.0 + 1.0;
+          vec4 s1 = floor(b1)*2.0 + 1.0;
+          vec4 sh = -step(h, vec4(0.0));
+
+          vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy ;
+          vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww ;
+
+          vec3 p0 = vec3(a0.xy,h.x);
+          vec3 p1 = vec3(a0.zw,h.y);
+          vec3 p2 = vec3(a1.xy,h.z);
+          vec3 p3 = vec3(a1.zw,h.w);
+
+          vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2, p2), dot(p3,p3)));
+          p0 *= norm.x;
+          p1 *= norm.y;
+          p2 *= norm.z;
+          p3 *= norm.w;
+
+          vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
+          m = m * m;
+          return 42.0 * dot( m*m, vec4( dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3) ) );
+        }
+
+        float fbm(vec3 p, float freq, float chaos) {
+          float v = 0.0;
+          float a = 0.5;
+          vec3 shift = vec3(100.0);
+          for (int i = 0; i < 4; ++i) {
+            v += a * snoise(p * freq);
+            p = p * 2.0 + shift;
+            a *= 0.5 * chaos;
+          }
+          return v;
+        }
+      `,
+
+      organismVertex: `
+        uniform float uTime;
+        uniform float uMetabolism;
+        uniform float uViscosity;
+        uniform float uTurbulence;
+        uniform float uPulseBurst;
+        uniform vec3 uMousePos;
+        uniform float uMouseDistort;
+
+        varying vec3 vNormal;
+        varying vec3 vPosition;
+        varying vec3 vWorldPosition;
+        varying float vDisplacement;
+        varying float vFresnel;
+
+        __NOISE_CHUNK__
+
+        void main() {
+          vNormal = normal;
+          vec3 pos = position;
+
+          float t = uTime * uMetabolism * 0.7;
+          float heartScale = sin(t * 3.0) * 0.08 * (1.0 + uPulseBurst * 1.5);
+          
+          vec3 noiseCoord = pos * (0.8 / uViscosity) + vec3(0.0, 0.0, t * 0.4);
+          float displacement = fbm(noiseCoord, 0.75, uTurbulence * 0.7) * (0.45 / uViscosity);
+          
+          displacement += sin(length(pos) * 12.0 - t * 8.0) * 0.1 * uPulseBurst;
+
+          float distToMouse = length(pos - uMousePos);
+          float mouseInfluence = exp(-distToMouse * 1.2) * uMouseDistort;
+          pos += normal * mouseInfluence * 0.6;
+
+          pos += normal * (displacement + heartScale);
+
+          vPosition = pos;
+          vDisplacement = displacement;
+
+          vec4 worldPosition = modelMatrix * vec4(pos, 1.0);
+          vWorldPosition = worldPosition.xyz;
+
+          vec3 worldNormal = normalize(mat3(modelMatrix) * normal);
+          vec3 viewDir = normalize(cameraPosition - worldPosition.xyz);
+          vFresnel = pow(1.0 - max(0.0, dot(viewDir, worldNormal)), 2.8);
+
+          gl_Position = projectionMatrix * viewMatrix * worldPosition;
+        }
+      `,
+
+      organismFragment: `
+        uniform float uTime;
+        uniform vec3 uColor1;
+        uniform vec3 uColor2;
+        uniform vec3 uColor3;
+        uniform float uPulseBurst;
+
+        varying vec3 vNormal;
+        varying vec3 vPosition;
+        varying vec3 vWorldPosition;
+        varying float vDisplacement;
+        varying float vFresnel;
+
+        void main() {
+          float depthFactor = smoothstep(-0.4, 0.6, vDisplacement);
+          vec3 baseColor = mix(uColor1, uColor2, depthFactor);
+
+          float irid = sin(vDisplacement * 8.0 + uTime * 2.0) * 0.5 + 0.5;
+          vec3 iridColor = mix(baseColor, uColor3, irid * 0.6);
+
+          vec3 finalColor = mix(iridColor, uColor3, vFresnel);
+          finalColor += vec3(0.3, 0.8, 1.0) * uPulseBurst * 0.9;
+
+          float innerCoreGlow = pow(vFresnel, 4.0) * 0.5;
+          finalColor += uColor1 * innerCoreGlow;
+
+          gl_FragColor = vec4(finalColor, 0.92);
+        }
+      `,
+
+      swarmVertex: `
+        uniform float uTime;
+        uniform float uMetabolism;
+        uniform float uGravity;
+        uniform vec3 uMousePos;
+
+        attribute float aScale;
+        attribute vec3 aRandomVec;
+
+        varying vec3 vColor;
+        varying float vAlpha;
+
+        __NOISE_CHUNK__
+
+        void main() {
+          vec3 pos = position;
+          float t = uTime * uMetabolism * 0.3;
+
+          vec3 noisePos = pos * 0.4 + vec3(t * 0.2, t * 0.3, 0.0);
+          vec3 displacement = vec3(
+            snoise(noisePos + vec3(0.0)),
+            snoise(noisePos + vec3(43.12)),
+            snoise(noisePos + vec3(115.4))
+          );
+
+          float r = length(pos);
+          pos += displacement * 0.6;
+          pos -= normalize(pos) * (r - 2.8) * 0.04 * uGravity;
+
+          float mouseDist = length(pos - uMousePos);
+          if (mouseDist < 2.5) {
+            pos += normalize(pos - uMousePos) * (2.5 - mouseDist) * 0.5;
+          }
+
+          vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
+          gl_Position = projectionMatrix * mvPosition;
+
+          gl_PointSize = (aScale * 35.0 / -mvPosition.z) * (1.0 + sin(t * 5.0 + aRandomVec.x * 10.0) * 0.3);
+
+          vAlpha = smoothstep(6.0, 1.5, r) * 0.85;
+          vColor = aRandomVec;
+        }
+      `,
+
+      swarmFragment: `
+        uniform vec3 uColor1;
+        uniform vec3 uColor2;
+
+        varying vec3 vColor;
+        varying float vAlpha;
+
+        void main() {
+          vec2 center = gl_PointCoord - vec2(0.5);
+          float dist = length(center);
+          if (dist > 0.5) discard;
+
+          float glow = exp(-dist * 5.5);
+          vec3 col = mix(uColor1, uColor2, vColor.x);
+          
+          gl_FragColor = vec4(col, glow * vAlpha);
+        }
+      `
+    };
+
+    Shaders.organismVertex = Shaders.organismVertex.replace('__NOISE_CHUNK__', Shaders.noiseChunk);
+    Shaders.swarmVertex = Shaders.swarmVertex.replace('__NOISE_CHUNK__', Shaders.noiseChunk);
+
+    /* --------------------------------------------------------------------------
+     * 2. 程序化自适应生物声学引擎 (Web Audio API)
+     * -------------------------------------------------------------------------- */
+    class OrganicAudioEngine {
+      constructor() {
+        this.ctx = null;
+        this.masterGain = null;
+        this.isEnabled = false;
+        this.metabolismBpm = 84;
+        this.heartbeatTimer = null;
+        this.intensity = 0.5;
+      }
+
+      async init() {
+        if (this.ctx) {
+          if (this.ctx.state === 'suspended') await this.ctx.resume();
+          this.isEnabled = true;
+          return true;
+        }
+        try {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          this.ctx = new AudioCtx();
+          
+          this.masterGain = this.ctx.createGain();
+          this.masterGain.gain.setValueAtTime(0.7, this.ctx.currentTime);
+          this.masterGain.connect(this.ctx.destination);
+
+          this.isEnabled = true;
+          this.startAmbientDrone();
+          this.startHeartbeatLoop();
+          return true;
+        } catch (e) {
+          console.warn('Web Audio error:', e);
+          return false;
+        }
+      }
+
+      toggle() {
+        if (!this.ctx) return this.init();
+        this.isEnabled = !this.isEnabled;
+        if (this.isEnabled) {
+          if (this.ctx.state === 'suspended') this.ctx.resume();
+          this.masterGain.gain.linearRampToValueAtTime(0.7, this.ctx.currentTime + 0.3);
+        } else {
+          this.masterGain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.3);
+        }
+        return this.isEnabled;
+      }
+
+      startAmbientDrone() {
+        if (!this.ctx) return;
+        this.droneOsc1 = this.ctx.createOscillator();
+        this.droneOsc2 = this.ctx.createOscillator();
+        this.droneFilter = this.ctx.createBiquadFilter();
+        this.droneGain = this.ctx.createGain();
+
+        this.droneOsc1.type = 'sawtooth';
+        this.droneOsc1.frequency.setValueAtTime(55, this.ctx.currentTime);
+
+        this.droneOsc2.type = 'sine';
+        this.droneOsc2.frequency.setValueAtTime(55.4, this.ctx.currentTime);
+
+        this.droneFilter.type = 'lowpass';
+        this.droneFilter.frequency.setValueAtTime(140, this.ctx.currentTime);
+        this.droneFilter.Q.setValueAtTime(4.0, this.ctx.currentTime);
+
+        this.droneGain.gain.setValueAtTime(0.18, this.ctx.currentTime);
+
+        this.droneOsc1.connect(this.droneFilter);
+        this.droneOsc2.connect(this.droneFilter);
+        this.droneFilter.connect(this.droneGain);
+        this.droneGain.connect(this.masterGain);
+
+        this.droneOsc1.start();
+        this.droneOsc2.start();
+      }
+
+      startHeartbeatLoop() {
+        if (this.heartbeatTimer) clearInterval(this.heartbeatTimer);
+        const intervalMs = (60 / this.metabolismBpm) * 1000;
+        this.heartbeatTimer = setInterval(() => {
+          if (this.isEnabled) this.playHeartbeat();
+        }, intervalMs);
+      }
+
+      setMetabolism(bpm) {
+        this.metabolismBpm = Math.max(30, Math.min(220, bpm));
+        this.startHeartbeatLoop();
+      }
+
+      playHeartbeat() {
+        if (!this.ctx || !this.isEnabled) return;
+        const now = this.ctx.currentTime;
+        this.createSubThump(now, 68, 38, 0.22);
+        this.createSubThump(now + 0.18, 56, 32, 0.16);
+      }
+
+      createSubThump(time, startFreq, endFreq, duration) {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        const filter = this.ctx.createBiquadFilter();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(startFreq, time);
+        osc.frequency.exponentialRampToValueAtTime(endFreq, time + duration);
+
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(120, time);
+
+        gain.gain.setValueAtTime(0.001, time);
+        gain.gain.exponentialRampToValueAtTime(0.45 * this.intensity, time + 0.03);
+        gain.gain.exponentialRampToValueAtTime(0.001, time + duration);
+
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.masterGain);
+
+        osc.start(time);
+        osc.stop(time + duration + 0.05);
+      }
+
+      playSynapseSpark(pitchMultiplier = 1.0) {
+        if (!this.ctx || !this.isEnabled) return;
+        const now = this.ctx.currentTime;
+
+        const carrier = this.ctx.createOscillator();
+        const modulator = this.ctx.createOscillator();
+        const modGain = this.ctx.createGain();
+        const gain = this.ctx.createGain();
+        const panner = this.ctx.createStereoPanner ? this.ctx.createStereoPanner() : null;
+
+        const baseFreq = (880 + Math.random() * 880) * pitchMultiplier;
+        carrier.type = 'sine';
+        carrier.frequency.setValueAtTime(baseFreq, now);
+
+        modulator.type = 'triangle';
+        modulator.frequency.setValueAtTime(baseFreq * 2.5, now);
+        modGain.gain.setValueAtTime(baseFreq * 1.5, now);
+        modGain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+
+        modulator.connect(modGain);
+        modGain.connect(carrier.frequency);
+
+        gain.gain.setValueAtTime(0.001, now);
+        gain.gain.linearRampToValueAtTime(0.18, now + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.28);
+
+        if (panner) {
+          panner.pan.setValueAtTime((Math.random() - 0.5) * 1.6, now);
+          carrier.connect(gain);
+          gain.connect(panner);
+          panner.connect(this.masterGain);
+        } else {
+          carrier.connect(gain);
+          gain.connect(this.masterGain);
+        }
+
+        modulator.start(now);
+        carrier.start(now);
+        modulator.stop(now + 0.3);
+        carrier.stop(now + 0.3);
+      }
+
+      playVortexSound() {
+        if (!this.ctx || !this.isEnabled) return;
+        const now = this.ctx.currentTime;
+        const duration = 1.2;
+
+        const bufferSize = this.ctx.sampleRate * duration;
+        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+
+        const noise = this.ctx.createBufferSource();
+        noise.buffer = buffer;
+
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.Q.setValueAtTime(5.0, now);
+        filter.frequency.setValueAtTime(200, now);
+        filter.frequency.exponentialRampToValueAtTime(1400, now + duration * 0.4);
+        filter.frequency.exponentialRampToValueAtTime(180, now + duration);
+
+        const gain = this.ctx.createGain();
+        gain.gain.setValueAtTime(0.001, now);
+        gain.gain.linearRampToValueAtTime(0.35, now + 0.2);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.masterGain);
+
+        noise.start(now);
+        noise.stop(now + duration + 0.05);
+      }
+
+      playMutationChord() {
+        if (!this.ctx || !this.isEnabled) return;
+        const notes = [261.63, 329.63, 392.00, 523.25, 659.25];
+        notes.forEach((freq, idx) => {
+          setTimeout(() => {
+            this.playSynapseSpark(freq / 440);
+          }, idx * 60);
+        });
+      }
+
+      updateScrollModulation(progress, velocity) {
+        if (!this.ctx || !this.droneFilter) return;
+        const targetFreq = 120 + progress * 400 + Math.min(velocity * 800, 600);
+        this.droneFilter.frequency.setTargetAtTime(targetFreq, this.ctx.currentTime, 0.1);
+      }
+    }
+
+    const organicAudio = new OrganicAudioEngine();
+
+    /* --------------------------------------------------------------------------
+     * 3. 智能生物仿生光标系统
+     * -------------------------------------------------------------------------- */
+    class BioCursor {
+      constructor() {
+        this.cursorEl = document.getElementById('bio-cursor');
+        this.svgEl = document.getElementById('cursor-tentacles-svg');
+        
+        this.mouse = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+        this.pos = { x: this.mouse.x, y: this.mouse.y };
+        this.target = { x: this.mouse.x, y: this.mouse.y };
+        
+        this.tentacles = [];
+        this.numTentacles = 4;
+        this.numJoints = 7;
+        this.jointDist = 10;
+
+        this.isHovering = false;
+        this.isClicking = false;
+        this.magneticTarget = null;
+
+        this.initTentacles();
+        this.setupEvents();
+        this.animate();
+      }
+
+      initTentacles() {
+        for (let t = 0; t < this.numTentacles; t++) {
+          const joints = [];
+          const baseAngle = (t / this.numTentacles) * Math.PI * 2;
+          for (let j = 0; j < this.numJoints; j++) {
+            joints.push({ x: this.pos.x, y: this.pos.y, vx: 0, vy: 0, angle: baseAngle });
+          }
+          this.tentacles.push({
+            baseAngle,
+            joints,
+            color: t % 2 === 0 ? '#00f2fe' : '#7f00ff'
+          });
+        }
+      }
+
+      setupEvents() {
+        window.addEventListener('pointermove', (e) => {
+          this.mouse.x = e.clientX;
+          this.mouse.y = e.clientY;
+        });
+
+        window.addEventListener('pointerdown', () => {
+          this.isClicking = true;
+          this.cursorEl.classList.add('clicking');
+        });
+
+        window.addEventListener('pointerup', () => {
+          this.isClicking = false;
+          this.cursorEl.classList.remove('clicking');
+        });
+
+        this.bindHoverTargets();
+      }
+
+      bindHoverTargets() {
+        const targets = document.querySelectorAll('.interactive-target, button, input, .epoch-node, .data-cell');
+        targets.forEach((target) => {
+          target.addEventListener('pointerenter', (e) => {
+            this.isHovering = true;
+            this.cursorEl.classList.add('hovering');
+            const rect = target.getBoundingClientRect();
+            this.magneticTarget = {
+              x: rect.left + rect.width / 2,
+              y: rect.top + rect.height / 2
+            };
+            if (organicAudio) organicAudio.playSynapseSpark(1.5);
+          });
+
+          target.addEventListener('pointerleave', () => {
+            this.isHovering = false;
+            this.magneticTarget = null;
+            this.cursorEl.classList.remove('hovering');
+          });
+        });
+      }
+
+      animate() {
+        requestAnimationFrame(() => this.animate());
+
+        if (this.magneticTarget) {
+          this.target.x = this.magneticTarget.x + (this.mouse.x - this.magneticTarget.x) * 0.25;
+          this.target.y = this.magneticTarget.y + (this.mouse.y - this.magneticTarget.y) * 0.25;
+        } else {
+          this.target.x = this.mouse.x;
+          this.target.y = this.mouse.y;
+        }
+
+        this.pos.x += (this.target.x - this.pos.x) * 0.22;
+        this.pos.y += (this.target.y - this.pos.y) * 0.22;
+
+        this.cursorEl.style.transform = `translate3d(${this.pos.x}px, ${this.pos.y}px, 0)`;
+
+        let svgPaths = '';
+        const centerOffset = 100;
+
+        this.tentacles.forEach((tentacle, tIdx) => {
+          const head = tentacle.joints[0];
+          head.x = centerOffset;
+          head.y = centerOffset;
+
+          for (let j = 1; j < this.numJoints; j++) {
+            const prev = tentacle.joints[j - 1];
+            const current = tentacle.joints[j];
+            const dx = current.x - prev.x;
+            const dy = current.y - prev.y;
+            let angle = Math.atan2(dy, dx);
+            const restAngle = tentacle.baseAngle + Math.sin(Date.now() * 0.005 + tIdx + j * 0.5) * 0.4;
+            angle += (restAngle - angle) * 0.08;
+            current.x = prev.x + Math.cos(angle) * this.jointDist;
+            current.y = prev.y + Math.sin(angle) * this.jointDist;
+          }
+
+          let d = `M ${tentacle.joints[0].x} ${tentacle.joints[0].y}`;
+          for (let j = 1; j < this.numJoints - 1; j++) {
+            const xc = (tentacle.joints[j].x + tentacle.joints[j + 1].x) / 2;
+            const yc = (tentacle.joints[j].y + tentacle.joints[j + 1].y) / 2;
+            d += ` Q ${tentacle.joints[j].x} ${tentacle.joints[j].y}, ${xc} ${yc}`;
+          }
+
+          svgPaths += `
+            <path d="${d}" 
+              fill="none" 
+              stroke="${tentacle.color}" 
+              stroke-width="${Math.max(1, 3 - tIdx * 0.4)}" 
+              stroke-linecap="round" 
+              opacity="${this.isHovering ? 0.85 : 0.45}"
+              style="filter: drop-shadow(0 0 4px ${tentacle.color});"
+            />
+          `;
+        });
+
+        this.svgEl.innerHTML = svgPaths;
+      }
+    }
+
+    /* --------------------------------------------------------------------------
+     * 4. Three.js / WebGL 3D 硅基生命体系统
+     * -------------------------------------------------------------------------- */
+    class DigitalOrganism {
+      constructor(containerId) {
+        this.container = document.getElementById(containerId);
+        this.width = window.innerWidth;
+        this.height = window.innerHeight;
+
+        this.time = 0;
+        this.currentEpoch = 0;
+        this.epochTransitionProgress = 0;
+        this.pulseBurst = 0;
+        
+        this.mouse2D = { x: 0, y: 0 };
+        this.targetMouse3D = new THREE.Vector3(0, 0, 0);
+        this.currentMouse3D = new THREE.Vector3(0, 0, 0);
+        this.mouseVelocity = 0;
+        this.lastMousePos = { x: 0, y: 0 };
+
+        this.params = {
+          viscosity: 0.65,
+          metabolism: 1.20,
+          turbulence: 1.80,
+          gravity: 1.50,
+          color1: new THREE.Color(0x00f2fe),
+          color2: new THREE.Color(0x4facfe),
+          color3: new THREE.Color(0x7f00ff)
+        };
+
+        this.colorThemes = {
+          'cyan-purple': { c1: 0x00f2fe, c2: 0x4facfe, c3: 0x7f00ff },
+          'solar-ember': { c1: 0xff4e50, c2: 0xf9d423, c3: 0xff0844 },
+          'bio-emerald': { c1: 0x00ff87, c2: 0x60efff, c3: 0x0061ff },
+          'void-pearl': { c1: 0xffffff, c2: 0xd299c2, c3: 0x7028e4 }
+        };
+
+        this.initThree();
+        this.createOrganismCore();
+        this.createSynapseSwarm();
+        this.createNeuralFilaments();
+        this.setupEvents();
+        this.animate();
+      }
+
+      initThree() {
+        this.scene = new THREE.Scene();
+        this.scene.fog = new THREE.FogExp2(0x03060d, 0.08);
+
+        this.camera = new THREE.PerspectiveCamera(50, this.width / this.height, 0.1, 100);
+        this.camera.position.set(0, 0, 6.2);
+
+        this.renderer = new THREE.WebGLRenderer({
+          antialias: true,
+          alpha: true,
+          powerPreference: 'high-performance'
+        });
+        this.renderer.setSize(this.width, this.height);
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        this.renderer.setClearColor(0x03060d, 1);
+        this.container.appendChild(this.renderer.domElement);
+
+        this.rayPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+        this.raycaster = new THREE.Raycaster();
+      }
+
+      createOrganismCore() {
+        const geometry = new THREE.IcosahedronGeometry(1.65, 64);
+
+        this.coreMaterial = new THREE.ShaderMaterial({
+          vertexShader: Shaders.organismVertex,
+          fragmentShader: Shaders.organismFragment,
+          uniforms: {
+            uTime: { value: 0 },
+            uMetabolism: { value: this.params.metabolism },
+            uViscosity: { value: this.params.viscosity },
+            uTurbulence: { value: this.params.turbulence },
+            uPulseBurst: { value: 0 },
+            uMousePos: { value: new THREE.Vector3(0, 0, 0) },
+            uMouseDistort: { value: 0 },
+            uColor1: { value: this.params.color1 },
+            uColor2: { value: this.params.color2 },
+            uColor3: { value: this.params.color3 }
+          },
+          transparent: true,
+          side: THREE.DoubleSide
+        });
+
+        this.coreMesh = new THREE.Mesh(geometry, this.coreMaterial);
+        this.scene.add(this.coreMesh);
+      }
+
+      createSynapseSwarm() {
+        const particleCount = 12000;
+        const geometry = new THREE.BufferGeometry();
+        const positions = new Float32Array(particleCount * 3);
+        const scales = new Float32Array(particleCount);
+        const randomVecs = new Float32Array(particleCount * 3);
+
+        for (let i = 0; i < particleCount; i++) {
+          const theta = Math.random() * Math.PI * 2;
+          const phi = Math.acos(Math.random() * 2 - 1);
+          const radius = 1.8 + Math.random() * 3.5;
+
+          positions[i * 3 + 0] = radius * Math.sin(phi) * Math.cos(theta);
+          positions[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
+          positions[i * 3 + 2] = radius * Math.cos(phi);
+
+          scales[i] = 0.5 + Math.random() * 1.5;
+
+          randomVecs[i * 3 + 0] = Math.random();
+          randomVecs[i * 3 + 1] = Math.random();
+          randomVecs[i * 3 + 2] = Math.random();
+        }
+
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        geometry.setAttribute('aScale', new THREE.BufferAttribute(scales, 1));
+        geometry.setAttribute('aRandomVec', new THREE.BufferAttribute(randomVecs, 3));
+
+        this.swarmMaterial = new THREE.ShaderMaterial({
+          vertexShader: Shaders.swarmVertex,
+          fragmentShader: Shaders.swarmFragment,
+          uniforms: {
+            uTime: { value: 0 },
+            uMetabolism: { value: this.params.metabolism },
+            uGravity: { value: this.params.gravity },
+            uMousePos: { value: new THREE.Vector3(0, 0, 0) },
+            uColor1: { value: this.params.color1 },
+            uColor2: { value: this.params.color3 }
+          },
+          transparent: true,
+          depthWrite: false,
+          blending: THREE.AdditiveBlending
+        });
+
+        this.swarmPoints = new THREE.Points(geometry, this.swarmMaterial);
+        this.scene.add(this.swarmPoints);
+      }
+
+      createNeuralFilaments() {
+        const filamentGeometry = new THREE.IcosahedronGeometry(2.1, 2);
+        const wireMaterial = new THREE.MeshBasicMaterial({
+          color: 0x00f2fe,
+          wireframe: true,
+          transparent: true,
+          opacity: 0.12,
+          blending: THREE.AdditiveBlending
+        });
+
+        this.neuralCage = new THREE.Mesh(filamentGeometry, wireMaterial);
+        this.scene.add(this.neuralCage);
+      }
+
+      onResize() {
+        this.width = window.innerWidth;
+        this.height = window.innerHeight;
+        this.camera.aspect = this.width / this.height;
+        this.camera.updateProjectionMatrix();
+        this.renderer.setSize(this.width, this.height);
+      }
+
+      setupEvents() {
+        window.addEventListener('resize', () => this.onResize());
+
+        window.addEventListener('pointermove', (e) => {
+          this.mouse2D.x = (e.clientX / this.width) * 2 - 1;
+          this.mouse2D.y = -(e.clientY / this.height) * 2 + 1;
+
+          const dx = e.clientX - this.lastMousePos.x;
+          const dy = e.clientY - this.lastMousePos.y;
+          this.mouseVelocity = Math.sqrt(dx * dx + dy * dy);
+          this.lastMousePos = { x: e.clientX, y: e.clientY };
+
+          this.raycaster.setFromCamera(this.mouse2D, this.camera);
+          const intersectPoint = new THREE.Vector3();
+          this.raycaster.ray.intersectPlane(this.rayPlane, intersectPoint);
+          if (intersectPoint) this.targetMouse3D.copy(intersectPoint);
+        });
+
+        window.addEventListener('pointerdown', () => {
+          this.triggerPulseBurst(1.0);
+          if (organicAudio) organicAudio.playSynapseSpark(1.2);
+        });
+
+        window.addEventListener('keydown', (e) => {
+          if (e.code === 'Space') {
+            e.preventDefault();
+            this.triggerPulseBurst(1.8);
+            if (organicAudio) organicAudio.playMutationChord();
+          }
+        });
+      }
+
+      triggerPulseBurst(intensity = 1.0) {
+        this.pulseBurst = intensity;
+      }
+
+      triggerVortex() {
+        this.params.turbulence += 1.5;
+        setTimeout(() => {
+          this.params.turbulence = Math.max(0.5, this.params.turbulence - 1.5);
+        }, 1500);
+        this.triggerPulseBurst(1.2);
+      }
+
+      setTheme(themeKey) {
+        const theme = this.colorThemes[themeKey];
+        if (!theme) return;
+
+        this.params.color1.setHex(theme.c1);
+        this.params.color2.setHex(theme.c2);
+        this.params.color3.setHex(theme.c3);
+
+        this.coreMaterial.uniforms.uColor1.value = this.params.color1;
+        this.coreMaterial.uniforms.uColor2.value = this.params.color2;
+        this.coreMaterial.uniforms.uColor3.value = this.params.color3;
+
+        this.swarmMaterial.uniforms.uColor1.value = this.params.color1;
+        this.swarmMaterial.uniforms.uColor2.value = this.params.color3;
+
+        this.neuralCage.material.color.setHex(theme.c1);
+      }
+
+      setEpochProgress(epochIndex, progress) {
+        this.currentEpoch = epochIndex;
+        this.epochTransitionProgress = progress;
+
+        const targetZ = 6.2 - epochIndex * 0.45;
+        this.camera.position.z += (targetZ - this.camera.position.z) * 0.05;
+
+        if (epochIndex === 1) {
+          this.neuralCage.material.opacity = 0.35;
+          this.neuralCage.scale.setScalar(1.0 + progress * 0.3);
+        } else {
+          this.neuralCage.material.opacity = 0.12;
+          this.neuralCage.scale.setScalar(1.0);
+        }
+
+        if (epochIndex === 2) {
+          this.swarmPoints.scale.setScalar(1.2 + Math.sin(this.time * 2) * 0.1);
+        } else {
+          this.swarmPoints.scale.setScalar(1.0);
+        }
+      }
+
+      animate() {
+        requestAnimationFrame(() => this.animate());
+
+        const delta = 0.016;
+        this.time += delta;
+
+        this.currentMouse3D.lerp(this.targetMouse3D, 0.08);
+        this.pulseBurst = Math.max(0, this.pulseBurst - delta * 1.8);
+
+        if (this.coreMaterial) {
+          this.coreMaterial.uniforms.uTime.value = this.time;
+          this.coreMaterial.uniforms.uMetabolism.value = this.params.metabolism;
+          this.coreMaterial.uniforms.uViscosity.value = this.params.viscosity;
+          this.coreMaterial.uniforms.uTurbulence.value = this.params.turbulence;
+          this.coreMaterial.uniforms.uPulseBurst.value = this.pulseBurst;
+          this.coreMaterial.uniforms.uMousePos.value.copy(this.currentMouse3D);
+          this.coreMaterial.uniforms.uMouseDistort.value = Math.min(1.0, this.mouseVelocity * 0.03 + 0.3);
+        }
+
+        if (this.swarmMaterial) {
+          this.swarmMaterial.uniforms.uTime.value = this.time;
+          this.swarmMaterial.uniforms.uMetabolism.value = this.params.metabolism;
+          this.swarmMaterial.uniforms.uGravity.value = this.params.gravity;
+          this.swarmMaterial.uniforms.uMousePos.value.copy(this.currentMouse3D);
+        }
+
+        if (this.coreMesh) {
+          this.coreMesh.rotation.y = this.time * 0.15 + this.mouse2D.x * 0.35;
+          this.coreMesh.rotation.x = this.time * 0.08 - this.mouse2D.y * 0.35;
+        }
+
+        if (this.neuralCage) {
+          this.neuralCage.rotation.y = -this.time * 0.1 - this.mouse2D.x * 0.2;
+          this.neuralCage.rotation.z = this.time * 0.05;
+        }
+
+        if (this.swarmPoints) {
+          this.swarmPoints.rotation.y = this.time * 0.06;
+          this.swarmPoints.rotation.x = Math.sin(this.time * 0.2) * 0.1;
+        }
+
+        this.camera.position.x = Math.sin(this.time * 0.5) * 0.1 + this.mouse2D.x * 0.2;
+        this.camera.position.y = Math.cos(this.time * 0.4) * 0.1 + this.mouse2D.y * 0.2;
+        this.camera.lookAt(0, 0, 0);
+
+        this.renderer.render(this.scene, this.camera);
+      }
+    }
+
+    /* --------------------------------------------------------------------------
+     * 5. 核心总控逻辑与事件协调
+     * -------------------------------------------------------------------------- */
+    document.addEventListener('DOMContentLoaded', () => {
+      const organism = new DigitalOrganism('webgl-container');
+      const cursor = new BioCursor();
+
+      const launchCurtain = document.getElementById('launch-curtain');
+      const startBtn = document.getElementById('start-experience-btn');
+      const audioToggleBtn = document.getElementById('audio-toggle-btn');
+      const audioStatusText = document.getElementById('audio-status-text');
+      const soundIconWaves = document.getElementById('sound-icon-waves');
+      
+      const dnaPanelBtn = document.getElementById('dna-panel-btn');
+      const dnaDrawer = document.getElementById('dna-drawer');
+      const drawerCloseBtn = document.getElementById('drawer-close');
+
+      const hudStatus = document.getElementById('hud-status');
+      const hudMetabolism = document.getElementById('hud-metabolism');
+      const hudEntropy = document.getElementById('hud-entropy');
+
+      const epochProgressFill = document.getElementById('epoch-progress');
+      const epochNodes = document.querySelectorAll('.epoch-node');
+      const storyEpochs = document.querySelectorAll('.story-epoch');
+
+      const sliderViscosity = document.getElementById('slider-viscosity');
+      const sliderMetabolism = document.getElementById('slider-metabolism');
+      const sliderTurbulence = document.getElementById('slider-turbulence');
+      const sliderParticles = document.getElementById('slider-particles');
+      const valViscosity = document.getElementById('val-viscosity');
+      const valMetabolism = document.getElementById('val-metabolism');
+      const valTurbulence = document.getElementById('val-turbulence');
+      const valParticles = document.getElementById('val-particles');
+      const colorPills = document.querySelectorAll('.color-pill');
+      const dnaResetBtn = document.getElementById('dna-reset-btn');
+      const dnaMutateBtn = document.getElementById('dna-mutate-btn');
+
+      const pulseInjectBtn = document.getElementById('pulse-inject-btn');
+      const vortexTrigger = document.getElementById('vortex-trigger');
+      const chromaShift = document.getElementById('chroma-shift');
+      const openSandboxBtn = document.getElementById('open-sandbox-btn');
+      const resonateBtn = document.getElementById('resonate-btn');
+
+      let isAudioActive = false;
+      let isSandboxMode = false;
+
+      // 首次接入体验
+      startBtn.addEventListener('click', async () => {
+        launchCurtain.classList.add('hidden');
+        document.body.classList.remove('loading-state');
+        
+        if (organicAudio) {
+          isAudioActive = await organicAudio.init();
+          updateAudioUI(isAudioActive);
+          organicAudio.playMutationChord();
+        }
+
+        organism.triggerPulseBurst(1.5);
+      });
+
+      // 音频开关
+      audioToggleBtn.addEventListener('click', async () => {
+        if (organicAudio) {
+          isAudioActive = await organicAudio.toggle();
+          updateAudioUI(isAudioActive);
+        }
+      });
+
+      function updateAudioUI(active) {
+        if (active) {
+          audioStatusText.textContent = 'ACTIVE';
+          audioStatusText.style.color = 'var(--accent-cyan)';
+          soundIconWaves.style.display = 'block';
+        } else {
+          audioStatusText.textContent = 'MUTED';
+          audioStatusText.style.color = 'var(--text-muted)';
+          soundIconWaves.style.display = 'none';
+        }
+      }
+
+      // 调谐台开闭
+      dnaPanelBtn.addEventListener('click', () => {
+        dnaDrawer.classList.toggle('open');
+        if (organicAudio) organicAudio.playSynapseSpark(1.8);
+      });
+
+      drawerCloseBtn.addEventListener('click', () => {
+        dnaDrawer.classList.remove('open');
+      });
+
+      // 滑块绑定
+      sliderViscosity.addEventListener('input', (e) => {
+        const v = parseFloat(e.target.value);
+        valViscosity.textContent = v.toFixed(2);
+        organism.params.viscosity = v;
+      });
+
+      sliderMetabolism.addEventListener('input', (e) => {
+        const v = parseFloat(e.target.value);
+        valMetabolism.textContent = `${v.toFixed(2)}x`;
+        organism.params.metabolism = v;
+        const bpm = Math.round(70 * v);
+        hudMetabolism.textContent = `${bpm} bpm`;
+        if (organicAudio) organicAudio.setMetabolism(bpm);
+      });
+
+      sliderTurbulence.addEventListener('input', (e) => {
+        const v = parseFloat(e.target.value);
+        valTurbulence.textContent = v.toFixed(2);
+        organism.params.turbulence = v;
+      });
+
+      sliderParticles.addEventListener('input', (e) => {
+        const v = parseFloat(e.target.value);
+        valParticles.textContent = v.toFixed(2);
+        organism.params.gravity = v;
+      });
+
+      // 色谱预设切换
+      colorPills.forEach(pill => {
+        pill.addEventListener('click', () => {
+          colorPills.forEach(p => p.classList.remove('active'));
+          pill.classList.add('active');
+          const themeKey = pill.getAttribute('data-theme');
+          organism.setTheme(themeKey);
+          if (organicAudio) organicAudio.playSynapseSpark(1.4);
+        });
+      });
+
+      // 恢复默认
+      dnaResetBtn.addEventListener('click', () => {
+        sliderViscosity.value = 0.65;
+        sliderMetabolism.value = 1.20;
+        sliderTurbulence.value = 1.80;
+        sliderParticles.value = 1.50;
+        
+        valViscosity.textContent = '0.65';
+        valMetabolism.textContent = '1.20x';
+        valTurbulence.textContent = '1.80';
+        valParticles.textContent = '1.50';
+
+        organism.params.viscosity = 0.65;
+        organism.params.metabolism = 1.20;
+        organism.params.turbulence = 1.80;
+        organism.params.gravity = 1.50;
+
+        colorPills[0].click();
+        if (organicAudio) organicAudio.playMutationChord();
+      });
+
+      // 随机突变
+      dnaMutateBtn.addEventListener('click', () => {
+        const randomVis = 0.2 + Math.random() * 1.5;
+        const randomMeta = 0.5 + Math.random() * 2.2;
+        const randomTurb = 0.5 + Math.random() * 3.0;
+        const randomGrav = 0.5 + Math.random() * 2.0;
+
+        sliderViscosity.value = randomVis;
+        sliderMetabolism.value = randomMeta;
+        sliderTurbulence.value = randomTurb;
+        sliderParticles.value = randomGrav;
+
+        valViscosity.textContent = randomVis.toFixed(2);
+        valMetabolism.textContent = `${randomMeta.toFixed(2)}x`;
+        valTurbulence.textContent = randomTurb.toFixed(2);
+        valParticles.textContent = randomGrav.toFixed(2);
+
+        organism.params.viscosity = randomVis;
+        organism.params.metabolism = randomMeta;
+        organism.params.turbulence = randomTurb;
+        organism.params.gravity = randomGrav;
+
+        const themes = ['cyan-purple', 'solar-ember', 'bio-emerald', 'void-pearl'];
+        const pickTheme = themes[Math.floor(Math.random() * themes.length)];
+        document.querySelector(`.color-pill[data-theme="${pickTheme}"]`).click();
+
+        organism.triggerPulseBurst(1.8);
+      });
+
+      // 纪元内交互按键
+      if (pulseInjectBtn) {
+        pulseInjectBtn.addEventListener('click', () => {
+          organism.triggerPulseBurst(2.0);
+          hudEntropy.textContent = (0.02 + Math.random() * 0.08).toFixed(3) + ' ΔS';
+          if (organicAudio) organicAudio.playSynapseSpark(2.0);
+        });
+      }
+
+      if (vortexTrigger) {
+        vortexTrigger.addEventListener('click', () => {
+          organism.triggerVortex();
+          if (organicAudio) organicAudio.playVortexSound();
+        });
+      }
+
+      if (chromaShift) {
+        chromaShift.addEventListener('click', () => {
+          dnaMutateBtn.click();
+        });
+      }
+
+      if (resonateBtn) {
+        resonateBtn.addEventListener('click', () => {
+          organism.triggerPulseBurst(2.5);
+          if (organicAudio) organicAudio.playMutationChord();
+        });
+      }
+
+      if (openSandboxBtn) {
+        openSandboxBtn.addEventListener('click', () => {
+          isSandboxMode = !isSandboxMode;
+          if (isSandboxMode) {
+            document.querySelector('.scroll-story-container').style.opacity = '0.08';
+            document.querySelector('.symbiosis-hud').style.opacity = '0.3';
+            openSandboxBtn.querySelector('.btn-content').textContent = '退出沙盒专注模式 (EXIT SANDBOX)';
+          } else {
+            document.querySelector('.scroll-story-container').style.opacity = '1';
+            document.querySelector('.symbiosis-hud').style.opacity = '1';
+            openSandboxBtn.querySelector('.btn-content').textContent = '进入全屏意识沙盒模式 (FULL SANDBOX)';
+          }
+          organism.triggerPulseBurst(1.5);
+        });
+      }
+
+      // 滚动与空间排版视差计算
+      let lastScrollY = window.scrollY;
+      window.addEventListener('scroll', () => {
+        const scrollY = window.scrollY;
+        const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+        const progress = Math.max(0, Math.min(1, scrollY / maxScroll));
+        const scrollVelocity = Math.abs(scrollY - lastScrollY);
+        lastScrollY = scrollY;
+
+        epochProgressFill.style.height = `${progress * 100}%`;
+
+        const exactEpoch = progress * 3;
+        const currentEpochIndex = Math.min(3, Math.floor(exactEpoch));
+        const epochFrac = exactEpoch - currentEpochIndex;
+
+        epochNodes.forEach((node, idx) => {
+          if (idx === currentEpochIndex) {
+            node.classList.add('active');
+          } else {
+            node.classList.remove('active');
+          }
+        });
+
+        organism.setEpochProgress(currentEpochIndex, epochFrac);
+
+        storyEpochs.forEach((epochEl) => {
+          const rect = epochEl.getBoundingClientRect();
+          const offsetCenter = (rect.top + rect.height / 2 - window.innerHeight / 2) / window.innerHeight;
+          
+          const content = epochEl.querySelector('.epoch-content');
+          if (content) {
+            const rotateX = offsetCenter * -18;
+            const translateZ = (1 - Math.abs(offsetCenter)) * 40;
+            const opacity = Math.max(0.15, 1 - Math.abs(offsetCenter) * 1.2);
+            content.style.transform = `perspective(1000px) rotateX(${rotateX}deg) translateZ(${translateZ}px)`;
+            content.style.opacity = opacity;
+
+            const words = content.querySelectorAll('.spatial-title .word');
+            words.forEach(word => {
+              const speed = parseFloat(word.getAttribute('data-speed') || 1);
+              word.style.transform = `translateY(${offsetCenter * speed * 35}px)`;
+            });
+          }
+        });
+
+        const entropyVal = (0.02 + progress * 0.18 + Math.random() * 0.01).toFixed(3);
+        hudEntropy.textContent = `${entropyVal} ΔS`;
+
+        const statusMap = ['NUCLEATING', 'NEURAL EXPANSION', 'BIOLUMINESCENCE', 'TRANSCENDED'];
+        hudStatus.textContent = statusMap[currentEpochIndex];
+
+        if (organicAudio) {
+          organicAudio.updateScrollModulation(progress, scrollVelocity * 0.01);
+        }
+      });
+
+      epochNodes.forEach((node, idx) => {
+        node.addEventListener('click', () => {
+          const targetSection = document.getElementById(`epoch-${idx + 1}`);
+          if (targetSection) {
+            targetSection.scrollIntoView({ behavior: 'smooth' });
+            if (organicAudio) organicAudio.playSynapseSpark(1.0 + idx * 0.2);
+          }
+        });
+      });
+
+      document.querySelectorAll('.data-cell').forEach(cell => {
+        cell.addEventListener('click', () => {
+          organism.triggerPulseBurst(1.2);
+          if (organicAudio) organicAudio.playSynapseSpark(2.2);
+        });
+      });
+
+      cursor.bindHoverTargets();
+    });
+  </script>
+</body>
+</html>

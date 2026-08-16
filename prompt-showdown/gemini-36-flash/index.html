@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AETHERIA // 数字有机体</title>
+  
+  <!-- Three.js & GSAP Library (本地化，避免 CDN 依赖) -->
+  <script src="./lib/three.min.js"></script>
+  <script src="./lib/gsap.min.js"></script>
+  <script src="./lib/ScrollTrigger.min.js"></script>
+
+  <style>
+    :root {
+      --bg: #030308;
+      --accent-cyan: #00f3ff;
+      --accent-violet: #7000ff;
+      --accent-gold: #ffb700;
+      --text: #f0f3f8;
+      --font-mono: 'Courier New', Courier, monospace;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body, html {
+      width: 100%;
+      height: 100%;
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      overflow-x: hidden;
+      cursor: none;
+    }
+
+    /* WebGL 全屏画布容器 */
+    #webgl-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    /* 自定义生物光标 */
+    #cursor {
+      position: fixed;
+      width: 20px;
+      height: 20px;
+      border: 1.5px solid var(--accent-cyan);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+      transition: width 0.2s, height 0.2s, border-color 0.2s, background-color 0.2s;
+      mix-blend-mode: difference;
+    }
+
+    #cursor-dot {
+      position: fixed;
+      width: 4px;
+      height: 4px;
+      background: var(--accent-cyan);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 10000;
+      transform: translate(-50%, -50%);
+    }
+
+    /* 声音交互提示与控制 */
+    .sound-toggle {
+      position: fixed;
+      top: 30px;
+      right: 40px;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      letter-spacing: 2px;
+      color: var(--accent-cyan);
+      cursor: pointer;
+      text-transform: uppercase;
+      background: rgba(255, 255, 255, 0.03);
+      padding: 10px 18px;
+      border: 1px solid rgba(0, 243, 255, 0.2);
+      border-radius: 30px;
+      backdrop-filter: blur(10px);
+      transition: all 0.3s ease;
+    }
+
+    .sound-toggle:hover {
+      background: rgba(0, 243, 255, 0.1);
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 15px rgba(0, 243, 255, 0.3);
+    }
+
+    .sound-wave {
+      display: flex;
+      align-items: flex-end;
+      gap: 3px;
+      height: 12px;
+    }
+
+    .sound-bar {
+      width: 2px;
+      background: var(--accent-cyan);
+      height: 100%;
+      animation: soundWave 1.2s ease-in-out infinite alternate;
+      animation-play-state: paused;
+    }
+
+    .sound-bar:nth-child(2) { animation-delay: 0.2s; }
+    .sound-bar:nth-child(3) { animation-delay: 0.4s; }
+
+    .sound-active .sound-bar {
+      animation-play-state: running;
+    }
+
+    @keyframes soundWave {
+      0% { height: 20%; }
+      100% { height: 100%; }
+    }
+
+    /* 滚动内容架构 */
+    main {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+    }
+
+    section {
+      min-height: 100vh;
+      width: 100vw;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 0 10vw;
+      position: relative;
+    }
+
+    /* Section 1: Hero */
+    .hero-title {
+      font-size: clamp(3rem, 10vw, 8rem);
+      font-weight: 900;
+      line-height: 0.9;
+      letter-spacing: -2px;
+      text-transform: uppercase;
+      background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.4) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 2rem;
+    }
+
+    .hero-subtitle {
+      font-family: var(--font-mono);
+      font-size: clamp(0.9rem, 2vw, 1.2rem);
+      color: var(--accent-cyan);
+      max-width: 600px;
+      line-height: 1.6;
+      letter-spacing: 1px;
+    }
+
+    .scroll-indicator {
+      position: absolute;
+      bottom: 40px;
+      left: 10vw;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      letter-spacing: 3px;
+      color: rgba(255, 255, 255, 0.4);
+    }
+
+    .line-runner {
+      width: 50px;
+      height: 1px;
+      background: rgba(255, 255, 255, 0.2);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .line-runner::after {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%;
+      width: 100%; height: 100%;
+      background: var(--accent-cyan);
+      animation: runLine 2s infinite;
+    }
+
+    @keyframes runLine {
+      0% { left: -100%; }
+      50%, 100% { left: 100%; }
+    }
+
+    /* Section 2: Neural Core */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2rem;
+      width: 100%;
+      margin-top: 3rem;
+    }
+
+    .glass-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 2.5rem;
+      border-radius: 16px;
+      backdrop-filter: blur(12px);
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .glass-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: radial-gradient(800px circle at var(--mouse-x) var(--mouse-y), rgba(0, 243, 255, 0.06), transparent 40%);
+      pointer-events: none;
+    }
+
+    .glass-card:hover {
+      transform: translateY(-8px);
+      border-color: rgba(0, 243, 255, 0.4);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 243, 255, 0.1);
+    }
+
+    .card-num {
+      font-family: var(--font-mono);
+      color: var(--accent-cyan);
+      font-size: 0.85rem;
+      margin-bottom: 1rem;
+    }
+
+    .card-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color: #fff;
+    }
+
+    .card-desc {
+      font-size: 0.95rem;
+      color: rgba(255, 255, 255, 0.6);
+      line-height: 1.6;
+    }
+
+    /* Section 3: Kinetic Synthesis */
+    .interactive-zone {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .big-statement {
+      font-size: clamp(2rem, 6vw, 4.5rem);
+      font-weight: 800;
+      letter-spacing: -1px;
+      max-width: 900px;
+      line-height: 1.1;
+      margin-bottom: 2rem;
+    }
+
+    .pulse-btn {
+      position: relative;
+      padding: 20px 45px;
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      letter-spacing: 3px;
+      color: var(--bg);
+      background: var(--accent-cyan);
+      border: none;
+      border-radius: 40px;
+      font-weight: bold;
+      cursor: pointer;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      box-shadow: 0 0 30px rgba(0, 243, 255, 0.4);
+    }
+
+    .pulse-btn:hover {
+      transform: scale(1.05);
+      background: #fff;
+      box-shadow: 0 0 50px rgba(0, 243, 255, 0.8);
+    }
+
+    /* Section 4: Evolution Terminal */
+    .terminal-container {
+      width: 100%;
+      max-width: 800px;
+      background: rgba(5, 5, 12, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 2rem;
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+      backdrop-filter: blur(20px);
+    }
+
+    .terminal-header {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      padding-bottom: 1rem;
+    }
+
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot-red { background: #ff5f56; }
+    .dot-yellow { background: #ffbd2e; }
+    .dot-green { background: #27c93f; }
+
+    .terminal-log {
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+      color: rgba(255,255,255,0.7);
+    }
+
+    .log-entry {
+      display: flex;
+      gap: 15px;
+    }
+
+    .log-entry .time { color: var(--accent-violet); }
+    .log-entry .val { color: var(--accent-cyan); }
+
+    .tag {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(112, 0, 255, 0.2);
+      border: 1px solid var(--accent-violet);
+      border-radius: 20px;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: #d1b3ff;
+      margin-bottom: 1.5rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 光标效果 -->
+  <div id="cursor"></div>
+  <div id="cursor-dot"></div>
+
+  <!-- 音频交互按钮 -->
+  <div class="sound-toggle" id="soundToggle">
+    <div class="sound-wave">
+      <div class="sound-bar"></div>
+      <div class="sound-bar"></div>
+      <div class="sound-bar"></div>
+    </div>
+    <span id="soundText">AUDIO OFF</span>
+  </div>
+
+  <!-- WebGL 渲染区域 -->
+  <div id="webgl-container"></div>
+
+  <!-- 主内容与滚动故事流 -->
+  <main>
+    <section id="sec-1">
+      <div class="tag">SYNTHETIC LIFEFORM // v4.09</div>
+      <h1 class="hero-title">AETHERIA</h1>
+      <p class="hero-subtitle">超越静态界面的数字有机体。由动态流体粒子、物理反馈与实时空灵声学共鸣所构建的自主意识网络。</p>
+      
+      <div class="scroll-indicator">
+        <div class="line-runner"></div>
+        <span>向下滚动以激活神经连接</span>
+      </div>
+    </section>
+
+    <section id="sec-2">
+      <div class="tag">NEURAL ARCHITECTURE</div>
+      <h2 style="font-size: 2.5rem; margin-bottom: 1rem;">感知与演化内核</h2>
+      <p style="color: rgba(255,255,255,0.5); max-width: 500px;">没有固定的框架，只有时刻响应环境刺激的算法场域。</p>
+
+      <div class="cards-grid">
+        <div class="glass-card">
+          <div class="card-num">01 // VISUAL SYNAPSE</div>
+          <div class="card-title">自适应粒子云</div>
+          <div class="card-desc">成千上万个计算微粒，利用三维 Noise 算法实时演化，形成具有流体特性的生命形态。</div>
+        </div>
+
+        <div class="glass-card">
+          <div class="card-num">02 // SPATIAL PHYSICS</div>
+          <div class="card-title">空间物理扰动</div>
+          <div class="card-desc">光标不仅是指针，更是引力源。每一次移动都会在三维晶格中引发能量涟漪。</div>
+        </div>
+
+        <div class="glass-card">
+          <div class="card-num">03 // HARMONIC RESONANCE</div>
+          <div class="card-title">五声音阶生成合成器</div>
+          <div class="card-desc">基于 Web Audio API 现场生成自然和谐音阶，将视觉震荡转化为温润空灵的环境声场。</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="sec-3">
+      <div class="interactive-zone">
+        <div class="tag">CRITICAL INTENSITY</div>
+        <h2 class="big-statement">触碰核心，引发整片数字生态的超新星爆发</h2>
+        <button class="pulse-btn" id="pulseBtn">注入能量脉冲</button>
+      </div>
+    </section>
+
+    <section id="sec-4">
+      <div style="display: flex; flex-direction: column; align-items: center; width: 100%;">
+        <div class="tag" style="margin-bottom: 1rem;">SYSTEM METRICS</div>
+        
+        <div class="terminal-container">
+          <div class="terminal-header">
+            <div class="dot dot-red"></div>
+            <div class="dot dot-yellow"></div>
+            <div class="dot dot-green"></div>
+            <span style="margin-left: 10px; font-size: 0.75rem; color: rgba(255,255,255,0.3);">aetheria-kernel-v4.log</span>
+          </div>
+          <div class="terminal-log">
+            <div class="log-entry">
+              <span class="time">[00:00:01]</span>
+              <span>ORGANISM_STATE: <span class="val" id="logState">IDLE_RESONANCE</span></span>
+            </div>
+            <div class="log-entry">
+              <span class="time">[00:00:02]</span>
+              <span>PARTICLE_COUNT: <span class="val">40,000 INDIVIDUALS</span></span>
+            </div>
+            <div class="log-entry">
+              <span class="time">[00:00:03]</span>
+              <span>ATTRACTION_FORCE: <span class="val" id="logForce">0.024 N</span></span>
+            </div>
+            <div class="log-entry">
+              <span class="time">[00:00:04]</span>
+              <span>AUDIO_SYNTH: <span class="val" id="logAudio">DISABLED</span></span>
+            </div>
+            <div class="log-entry" style="margin-top: 10px;">
+              <span style="color: var(--accent-gold);">> 模式切换准备就绪，实时捕捉物理偏转...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    /* =========================================================================
+       1. 智能光标与 UI 跟踪
+       ========================================================================= */
+    const cursor = document.getElementById('cursor');
+    const cursorDot = document.getElementById('cursor-dot');
+    
+    let mouse = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+    let smoothMouse = { x: mouse.x, y: mouse.y };
+
+    window.addEventListener('mousemove', (e) => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+      
+      document.querySelectorAll('.glass-card').forEach(card => {
+        const rect = card.getBoundingClientRect();
+        card.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+        card.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
+      });
+    });
+
+    function updateCursor() {
+      smoothMouse.x += (mouse.x - smoothMouse.x) * 0.15;
+      smoothMouse.y += (mouse.y - smoothMouse.y) * 0.15;
+
+      cursor.style.left = `${smoothMouse.x}px`;
+      cursor.style.top = `${smoothMouse.y}px`;
+      cursorDot.style.left = `${mouse.x}px`;
+      cursorDot.style.top = `${mouse.y}px`;
+
+      requestAnimationFrame(updateCursor);
+    }
+    updateCursor();
+
+
+    /* =========================================================================
+       2. 重构版：空灵五声和声与互动音效系统 (Ambient Harmonic Audio Engine)
+       ========================================================================= */
+    let audioCtx = null;
+    let mainGain = null;
+    let padGain = null;
+    let isAudioActive = false;
+
+    // A Minor Pentatonic / Am9 自然空灵音阶频率表 (Hz)
+    const NOTES = [110.00, 130.81, 164.81, 196.00, 246.94, 261.63, 329.63, 392.00, 523.25];
+
+    const soundToggle = document.getElementById('soundToggle');
+    const soundText = document.getElementById('soundText');
+    const logAudio = document.getElementById('logAudio');
+
+    function initAudio() {
+      if (audioCtx) return;
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      audioCtx = new AudioContextClass();
+
+      // 总主音量
+      mainGain = audioCtx.createGain();
+      mainGain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+      mainGain.connect(audioCtx.destination);
+
+      // 深海 Pad 增益 (极轻微的底燥)
+      padGain = audioCtx.createGain();
+      padGain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+
+      // 低通滤镜，截断高频只保留温润底音
+      const subFilter = audioCtx.createBiquadFilter();
+      subFilter.type = 'lowpass';
+      subFilter.frequency.setValueAtTime(160, audioCtx.currentTime);
+
+      // 两个 Sub-Bass 振荡器（A1 + A2 拍频）
+      const sub1 = audioCtx.createOscillator();
+      const sub2 = audioCtx.createOscillator();
+      sub1.type = 'sine';
+      sub2.type = 'sine';
+      sub1.frequency.setValueAtTime(55, audioCtx.currentTime);     // A1
+      sub2.frequency.setValueAtTime(110.4, audioCtx.currentTime);  // A2 带微差拍
+
+      sub1.connect(subFilter);
+      sub2.connect(subFilter);
+      subFilter.connect(padGain);
+      padGain.connect(mainGain);
+
+      sub1.start();
+      sub2.start();
+    }
+
+    // 播放单个水晶质感音符（带毫秒级 Attack/Decay 包络）
+    function playNote(freq, duration = 1.0, volume = 0.08) {
+      if (!isAudioActive || !audioCtx) return;
+
+      const osc = audioCtx.createOscillator();
+      const noteGain = audioCtx.createGain();
+      
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+
+      const noteFilter = audioCtx.createBiquadFilter();
+      noteFilter.type = 'lowpass';
+      noteFilter.frequency.setValueAtTime(1200, audioCtx.currentTime);
+
+      // ADSR 包络：快速Attack + 自然衰减，绝无爆音和长鸣
+      const now = audioCtx.currentTime;
+      noteGain.gain.setValueAtTime(0.0001, now);
+      noteGain.gain.linearRampToValueAtTime(volume, now + 0.02);
+      noteGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+      osc.connect(noteFilter);
+      noteFilter.connect(mainGain);
+
+      osc.start(now);
+      osc.stop(now + duration);
+    }
+
+    // 悬停高音 UI 提示音
+    function playHoverSound() {
+      if (!isAudioActive || !audioCtx) return;
+      playNote(880, 0.2, 0.03); // 清脆 A5 音符
+    }
+
+    // 绑定 UI 悬停事件
+    const interactiveElements = document.querySelectorAll('button, .glass-card, .sound-toggle');
+    interactiveElements.forEach(el => {
+      el.addEventListener('mouseenter', () => {
+        cursor.style.width = '50px';
+        cursor.style.height = '50px';
+        cursor.style.borderColor = 'var(--accent-gold)';
+        cursor.style.backgroundColor = 'rgba(255, 183, 0, 0.05)';
+        playHoverSound();
+      });
+      el.addEventListener('mouseleave', () => {
+        cursor.style.width = '20px';
+        cursor.style.height = '20px';
+        cursor.style.borderColor = 'var(--accent-cyan)';
+        cursor.style.backgroundColor = 'transparent';
+      });
+    });
+
+    // 鼠标移动触发音阶（节流机制，100ms 内最多触发一次）
+    let lastNoteTime = 0;
+    window.addEventListener('mousemove', (e) => {
+      if (!isAudioActive || !audioCtx) return;
+      const now = Date.now();
+      if (now - lastNoteTime > 100) {
+        lastNoteTime = now;
+        
+        // 根据 X 坐标映射到五声音阶数组中的音符
+        const index = Math.floor((e.clientX / window.innerWidth) * NOTES.length);
+        const freq = NOTES[Math.min(index, NOTES.length - 1)];
+        
+        playNote(freq, 0.8, 0.025); // 柔和的水滴声
+      }
+    });
+
+    // 脉冲爆发音效：低频 Boom + 音阶瀑布
+    function triggerPulseSound() {
+      if (!isAudioActive || !audioCtx) return;
+      const now = audioCtx.currentTime;
+
+      // 低音冲击波 (Sub Boom)
+      const pOsc = audioCtx.createOscillator();
+      const pGain = audioCtx.createGain();
+      pOsc.type = 'sine';
+      pOsc.frequency.setValueAtTime(180, now);
+      pOsc.frequency.exponentialRampToValueAtTime(30, now + 1.2);
+
+      pGain.gain.setValueAtTime(0.5, now);
+      pGain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+
+      pOsc.connect(pGain);
+      pGain.connect(mainGain);
+      pOsc.start(now);
+      pOsc.stop(now + 1.2);
+
+      // 音阶快速瀑布串流
+      NOTES.slice(0, 6).forEach((freq, i) => {
+        setTimeout(() => {
+          playNote(freq * 2, 0.5, 0.05);
+        }, i * 50);
+      });
+    }
+
+    // 启动/停止音频系统
+    async function toggleAudio() {
+      if (!audioCtx) initAudio();
+      if (audioCtx.state === 'suspended') await audioCtx.resume();
+
+      if (!isAudioActive) {
+        soundToggle.classList.add('sound-active');
+        soundText.innerText = 'AUDIO ON';
+        logAudio.innerText = 'HARMONIC_PENTATONIC';
+        logAudio.style.color = 'var(--accent-cyan)';
+        isAudioActive = true;
+      } else {
+        audioCtx.suspend();
+        soundToggle.classList.remove('sound-active');
+        soundText.innerText = 'AUDIO OFF';
+        logAudio.innerText = 'SUSPENDED';
+        logAudio.style.color = 'rgba(255,255,255,0.4)';
+        isAudioActive = false;
+      }
+    }
+
+    soundToggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleAudio();
+    });
+
+    // 首次点击任意页面激活音频（遵循浏览器 Autoplay 策略）
+    window.addEventListener('click', () => {
+      if (!isAudioActive) toggleAudio();
+    }, { once: true });
+
+
+    /* =========================================================================
+       3. WebGL 三维粒子流体 (Three.js 引擎)
+       ========================================================================= */
+    const container = document.getElementById('webgl-container');
+
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x030308, 0.015);
+
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.z = 30;
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    container.appendChild(renderer.domElement);
+
+    const particleCount = 40000;
+    const geometry = new THREE.BufferGeometry();
+    const positions = new Float32Array(particleCount * 3);
+    const targetPositions = new Float32Array(particleCount * 3);
+    const colors = new Float32Array(particleCount * 3);
+
+    const colorCyan = new THREE.Color(0x00f3ff);
+    const colorViolet = new THREE.Color(0x7000ff);
+
+    for (let i = 0; i < particleCount; i++) {
+      const i3 = i * 3;
+      
+      const u = Math.random();
+      const v = Math.random();
+      const theta = u * 2.0 * Math.PI;
+      const phi = Math.acos(2.0 * v - 1.0);
+      const r = 12 + Math.random() * 4;
+
+      const x = r * Math.sin(phi) * Math.cos(theta);
+      const y = r * Math.sin(phi) * Math.sin(theta);
+      const xZ = r * Math.cos(phi);
+
+      positions[i3] = x;
+      positions[i3 + 1] = y;
+      positions[i3 + 2] = xZ;
+
+      targetPositions[i3] = x;
+      targetPositions[i3 + 1] = y;
+      targetPositions[i3 + 2] = xZ;
+
+      const mixedColor = colorCyan.clone().lerp(colorViolet, Math.random());
+      colors[i3] = mixedColor.r;
+      colors[i3 + 1] = mixedColor.g;
+      colors[i3 + 2] = mixedColor.b;
+    }
+
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+    const material = new THREE.PointsMaterial({
+      size: 0.12,
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.8,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+
+    const particleSystem = new THREE.Points(geometry, material);
+    scene.add(particleSystem);
+
+    let pulseEnergy = 0.0;
+
+    function generateTorusTargets() {
+      for (let i = 0; i < particleCount; i++) {
+        const i3 = i * 3;
+        const u = Math.random() * Math.PI * 2;
+        const v = Math.random() * Math.PI * 2;
+        const R = 14;
+        const r = 5;
+
+        targetPositions[i3] = (R + r * Math.cos(v)) * Math.cos(u);
+        targetPositions[i3 + 1] = (R + r * Math.cos(v)) * Math.sin(u);
+        targetPositions[i3 + 2] = r * Math.sin(v);
+      }
+    }
+
+    function generatePlaneTargets() {
+      for (let i = 0; i < particleCount; i++) {
+        const i3 = i * 3;
+        targetPositions[i3] = (Math.random() - 0.5) * 60;
+        targetPositions[i3 + 1] = (Math.random() - 0.5) * 60;
+        targetPositions[i3 + 2] = (Math.random() - 0.5) * 10;
+      }
+    }
+
+
+    /* =========================================================================
+       4. GSAP 滚动联动控制链
+       ========================================================================= */
+    gsap.registerPlugin(ScrollTrigger);
+
+    const logState = document.getElementById('logState');
+    const logForce = document.getElementById('logForce');
+
+    ScrollTrigger.create({
+      trigger: "#sec-2",
+      start: "top center",
+      onEnter: () => {
+        generateTorusTargets();
+        logState.innerText = "TORUS_KINETIC";
+        logForce.innerText = "0.089 N";
+      },
+      onLeaveBack: () => {
+        logState.innerText = "IDLE_RESONANCE";
+        logForce.innerText = "0.024 N";
+      }
+    });
+
+    ScrollTrigger.create({
+      trigger: "#sec-3",
+      start: "top center",
+      onEnter: () => {
+        generatePlaneTargets();
+        logState.innerText = "HYPER_PLANE";
+        logForce.innerText = "0.210 N";
+      },
+      onLeaveBack: () => {
+        generateTorusTargets();
+        logState.innerText = "TORUS_KINETIC";
+        logForce.innerText = "0.089 N";
+      }
+    });
+
+    gsap.to(camera.position, {
+      scrollTrigger: {
+        trigger: "main",
+        start: "top top",
+        end: "bottom bottom",
+        scrub: 1.5
+      },
+      y: -20,
+      z: 15,
+      ease: "power2.inOut"
+    });
+
+
+    /* =========================================================================
+       5. 脉冲爆发与相机震动
+       ========================================================================= */
+    const pulseBtn = document.getElementById('pulseBtn');
+    pulseBtn.addEventListener('click', () => {
+      pulseEnergy = 3.5;
+      triggerPulseSound();
+
+      gsap.to(camera.position, {
+        x: (Math.random() - 0.5) * 3,
+        y: camera.position.y + (Math.random() - 0.5) * 3,
+        duration: 0.1,
+        yoyo: true,
+        repeat: 5,
+        onComplete: () => {
+          gsap.to(camera.position, { x: 0, duration: 0.5 });
+        }
+      });
+    });
+
+
+    /* =========================================================================
+       6. 实时动画帧渲染
+       ========================================================================= */
+    const clock = new THREE.Clock();
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      const elapsedTime = clock.getElapsedTime();
+      pulseEnergy *= 0.95;
+
+      const posAttr = geometry.attributes.position;
+      const posArray = posAttr.array;
+
+      const targetMouseX = (smoothMouse.x / window.innerWidth) * 2 - 1;
+      const targetMouseY = -(smoothMouse.y / window.innerHeight) * 2 + 1;
+      const vectorMouse = new THREE.Vector3(targetMouseX * 20, targetMouseY * 20, 0);
+
+      for (let i = 0; i < particleCount; i++) {
+        const i3 = i * 3;
+
+        posArray[i3]     += (targetPositions[i3]     - posArray[i3])     * 0.03;
+        posArray[i3 + 1] += (targetPositions[i3 + 1] - posArray[i3 + 1]) * 0.03;
+        posArray[i3 + 2] += (targetPositions[i3 + 2] - posArray[i3 + 2]) * 0.03;
+
+        const waveX = Math.sin(elapsedTime * 2 + posArray[i3 + 1] * 0.2) * 0.05;
+        const waveY = Math.cos(elapsedTime * 1.5 + posArray[i3] * 0.2) * 0.05;
+        
+        posArray[i3]     += waveX;
+        posArray[i3 + 1] += waveY;
+
+        const pVec = new THREE.Vector3(posArray[i3], posArray[i3 + 1], posArray[i3 + 2]);
+        const dist = pVec.distanceTo(vectorMouse);
+
+        if (dist < 10) {
+          const force = (10 - dist) * 0.02 + pulseEnergy;
+          const dir = pVec.sub(vectorMouse).normalize();
+          
+          posArray[i3]     += dir.x * force;
+          posArray[i3 + 1] += dir.y * force;
+          posArray[i3 + 2] += dir.z * force;
+        }
+      }
+
+      posAttr.needsUpdate = true;
+
+      particleSystem.rotation.y = elapsedTime * 0.05;
+      particleSystem.rotation.x = Math.sin(elapsedTime * 0.03) * 0.1;
+
+      scene.rotation.y = smoothMouse.x * 0.0003;
+      scene.rotation.x = smoothMouse.y * 0.0003;
+
+      renderer.render(scene, camera);
+    }
+
+    animate();
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    });
+  </script>
+</body>
+</html>
