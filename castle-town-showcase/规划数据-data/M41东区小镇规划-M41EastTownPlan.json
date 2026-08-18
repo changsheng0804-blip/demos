@@ -1,0 +1,54 @@
+{
+  "schemaId": "castle-town-m41-east-town-plan",
+  "version": "1.0.0",
+  "stageId": "M41",
+  "status": "implemented-plan",
+  "coordinateSystem": { "horizontalAxes": ["x", "z"], "verticalAxis": "y", "northDirection": "negative-z", "unit": "meter-approximation" },
+  "boundary": {
+    "polygon": [[5,21],[18,5],[58,-2],[88,-2],[98,8],[94,24],[82,29],[42,27],[18,25]],
+    "eastForestEdge": [[88,-8],[108,-8],[108,24],[98,24],[88,18]],
+    "riverBuffer": [[18,25],[42,27],[82,29],[94,24],[82,22],[60,25],[36,25]],
+    "note": "东区整体小镇边界；东部林缘与河岸缓冲带不布置住宅"
+  },
+  "roads": [
+    { "roadId": "m41-east-long-street", "name": "东区长街", "roadClass": "secondary-road", "width": 4.8, "shoulderWidth": 0.6, "setback": 1.6, "minimumTurnRadius": 8, "centerline": [[-5,21],[18,20],[40,17],[61,12],[82,10]], "role": "东区主街，承接北岸入口" },
+    { "roadId": "m41-east-north-living-street", "name": "东区北侧生活街", "roadClass": "secondary-road", "width": 4.4, "shoulderWidth": 0.5, "setback": 1.5, "minimumTurnRadius": 7, "centerline": [[18,20],[30,10],[48,6],[68,3],[84,8]], "role": "北侧住宅和作坊街" },
+    { "roadId": "m41-east-river-street", "name": "东区河岸街", "roadClass": "secondary-road", "width": 4.2, "shoulderWidth": 0.5, "setback": 1.5, "minimumTurnRadius": 7, "centerline": [[18,20],[36,25],[60,25],[82,22]], "role": "北侧住宅临街，南侧保留河岸绿带" },
+    { "roadId": "m41-east-central-cross", "name": "东区中央横街", "roadClass": "lane", "width": 2.8, "shoulderWidth": 0.3, "setback": 0.8, "minimumTurnRadius": 3, "centerline": [[61,12],[60,25]], "role": "连接长街与河岸街" },
+    { "roadId": "m41-east-forest-loop", "name": "东区林缘回游巷", "roadClass": "lane", "width": 2.6, "shoulderWidth": 0.3, "setback": 0.8, "minimumTurnRadius": 3, "centerline": [[82,10],[90,14],[82,22]], "role": "东端林缘小环路" }
+  ],
+  "nodes": [
+    { "nodeId": "m41-east-entry", "position": [ -5, 21 ], "role": "north-bank-handoff" },
+    { "nodeId": "m41-east-north-west", "position": [ 18, 20 ], "role": "junction" },
+    { "nodeId": "m41-east-center", "position": [ 61, 12 ], "role": "town-center" },
+    { "nodeId": "m41-east-east", "position": [ 82, 10 ], "role": "forest-loop-junction" },
+    { "nodeId": "m41-east-river-east", "position": [ 82, 22 ], "role": "river-street-end" },
+    { "nodeId": "m41-east-river-west", "position": [ 18, 25 ], "role": "river-street-entry" }
+  ],
+  "publicSpaces": [ { "spaceId": "m41-east-town-center", "name": "东区小镇中心空地", "center": [61,12], "size": [12,10], "treeLimit": 3 } ],
+  "housing": {
+    "targetCount": 13,
+    "streetFrontage": { "minimumGap": 1.2, "maximumGap": 2.0, "junctionClearance": 6.0, "roadDistance": 1.8 },
+    "note": "房子-道路规则（房子占地不得压任何路带）自动落地后，东区路网在交汇处过于密集，只有 13 栋能干净放下；中央横街与林缘环路的房子因压路被自动跳过。",
+    "groups": [
+      { "roadId": "m41-east-long-street", "side": 1, "count": 4, "startDistance": 1.5, "types": ["木骨架民居","石屋","木骨架民居","石屋","木骨架民居","作坊"], "scale": 0.64 },
+      { "roadId": "m41-east-long-street", "side": -1, "count": 3, "startDistance": 1.5, "types": ["石屋","木骨架民居","木骨架民居","石屋","木骨架民居","作坊"], "scale": 0.64 },
+      { "roadId": "m41-east-north-living-street", "side": 1, "count": 1, "startDistance": 22, "types": ["木骨架民居","石屋","木骨架民居"], "scale": 0.52 },
+      { "roadId": "m41-east-north-living-street", "side": -1, "count": 3, "startDistance": 22, "types": ["石屋","木骨架民居","木骨架民居"], "scale": 0.52 },
+      { "roadId": "m41-east-river-street", "side": -1, "count": 2, "startDistance": 18, "types": ["木骨架民居","石屋","木骨架民居","石屋","木骨架民居"], "scale": 0.52 }
+    ]
+  },
+  "vegetation": {
+    "retainForestPolygon": [[88,-8],[108,-8],[108,24],[98,24],[88,18]],
+    "retainRiverBuffer": [[18,25],[42,27],[82,29],[94,24],[82,22],[60,25],[36,25]],
+    "riverGreenBelt": [[18,32],[42,34],[82,31],[94,28],[82,27],[60,30],[36,30]],
+    "clearRoadBufferMeters": 5,
+    "clearBuildingBufferMeters": 6,
+    "rearGardenCount": [12,16],
+    "riverGreenBeltTreeCount": 10,
+    "townCenterTreeLimit": 3,
+    "seed": 20260730
+  },
+  "retired": ["M30街道-东区主路","M31D街道-东区","M34B东区-西屋迁入","M38支巷-东区北支巷","M38支巷-东区南支巷","M38后院杂物","parcel-east-*"],
+  "preservedContracts": ["M19R道路网络","M39街道空间审计","M31树布局固定种子与避让","M29外部房屋模板"]
+}

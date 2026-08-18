@@ -1,0 +1,117 @@
+{
+  "graphId": "mist-ridge-castle-town-road-graph",
+  "stageId": "M19R",
+  "version": "2.1.0",
+  "status": "ordinary-road-design-resolved",
+  "seed": 20260730,
+  "sourcePlan": {
+    "planId": "mist-ridge-castle-town-master-plan",
+    "stageId": "M17",
+    "version": "1.0.0"
+  },
+  "coordinateSystem": {
+    "horizontalAxes": ["x", "z"],
+    "verticalAxis": "y",
+    "northDirection": "negative-z",
+    "unit": "meter-approximation"
+  },
+  "worldBounds": { "minX": -115, "maxX": 115, "minZ": -95, "maxZ": 95 },
+  "roadClasses": {
+    "main-road": { "name": "主路", "minimumWidth": 6.0, "maximumWidth": 7.4, "minimumTurnRadius": 8.0, "minimumSetback": 2.0 },
+    "secondary-road": { "name": "次路", "minimumWidth": 4.0, "maximumWidth": 5.0, "minimumTurnRadius": 5.0, "minimumSetback": 1.5 },
+    "lane": { "name": "小巷", "minimumWidth": 2.2, "maximumWidth": 3.2, "minimumTurnRadius": 2.5, "minimumSetback": 0.8 }
+  },
+  "riverPolicy": {
+    "sourceZoneId": "zone-river-corridor",
+    "allowedCrossingEdgeTypes": ["bridge-handoff"]
+  },
+  "nodes": [
+    { "nodeId": "node-south-gate", "name": "南门入口", "type": "gate", "position": { "x": -12, "z": 82 }, "heightSource": "raw-terrain", "maxSlope": 0.08, "connectedEdgeIds": ["edge-south-gate-main"] },
+    { "nodeId": "node-south-junction", "name": "南门主路交叉口", "type": "junction", "position": { "x": -15, "z": 70 }, "heightSource": "raw-terrain", "maxSlope": 0.08, "connectedEdgeIds": ["edge-south-gate-main", "edge-south-market-main"] },
+    { "nodeId": "node-market-square", "name": "中央集市广场", "type": "square", "position": { "x": -20, "z": 56 }, "heightSource": "market-square-profile", "maxSlope": 0.04, "connectedEdgeIds": ["edge-south-market-main", "edge-market-east-square", "edge-market-west-square"] },
+    { "nodeId": "node-market-west", "name": "集市西入口", "type": "gate", "position": { "x": -34, "z": 57 }, "heightSource": "market-square-profile", "maxSlope": 0.04, "connectedEdgeIds": ["edge-market-west-square"] },
+    { "nodeId": "node-market-east", "name": "集市东入口", "type": "square", "position": { "x": -13, "z": 53 }, "heightSource": "market-square-profile", "maxSlope": 0.04, "connectedEdgeIds": ["edge-market-east-square", "edge-market-bridge-main"] },
+    { "nodeId": "node-south-bank-land", "name": "南岸普通道路端", "type": "junction", "position": { "x": -10, "z": 49 }, "heightSource": "raw-terrain", "maxSlope": 0.08, "connectedEdgeIds": ["edge-market-bridge-main", "edge-south-bank-to-bridge-socket"] },
+    {
+      "nodeId": "node-bridge-south-road-socket", "name": "南桥头道路连接口", "type": "bridge-road-socket",
+      "position": { "x": -7, "z": 44.375 }, "heightSource": "road-design-surface", "maxSlope": 0.08,
+      "connectedEdgeIds": ["edge-south-bank-to-bridge-socket", "edge-bridge-handoff"],
+      "socket": {
+        "socketId": "bridge-south-road-socket", "sourceRoadEdgeId": "edge-south-bank-to-bridge-socket",
+        "tangent": { "x": 0.544191, "z": -0.838961 }, "roadWidth": 6.6, "shoulderWidth": 0.8,
+        "surfaceHeight": -0.03942168208514764, "longitudinalSlope": 0.08, "crossSlope": 0,
+        "leftBoundary": { "x": -9.769, "z": 42.579 }, "rightBoundary": { "x": -4.231, "z": 46.171 },
+        "navigationConnectionId": "nav-bridge-south-road-socket", "graphSha256": "F6D62ED92FE29575C355AB0C8B4A81458D6065791EBBE2DEF0F3E1CF9804C72E",
+        "ownerModule": "M18R", "resolverModule": "M19R", "consumerModule": "M20", "resolutionState": "resolved"
+      }
+    },
+    {
+      "nodeId": "node-bridge-north-road-socket", "name": "北桥头道路连接口", "type": "bridge-road-socket",
+      "position": { "x": -6, "z": 25.55 }, "heightSource": "road-design-surface", "maxSlope": 0.08,
+      "connectedEdgeIds": ["edge-bridge-handoff", "edge-bridge-socket-to-north-bank"],
+      "socket": {
+        "socketId": "bridge-north-road-socket", "sourceRoadEdgeId": "edge-bridge-socket-to-north-bank",
+        "tangent": { "x": 0.214657, "z": -0.976689 }, "roadWidth": 6.6, "shoulderWidth": 0.8,
+        "surfaceHeight": 0.5795296075747818, "longitudinalSlope": 0.07999999999999999, "crossSlope": 0,
+        "leftBoundary": { "x": -9.223, "z": 24.842 }, "rightBoundary": { "x": -2.777, "z": 26.258 },
+        "navigationConnectionId": "nav-bridge-north-road-socket", "graphSha256": "F6D62ED92FE29575C355AB0C8B4A81458D6065791EBBE2DEF0F3E1CF9804C72E",
+        "ownerModule": "M18R", "resolverModule": "M19R", "consumerModule": "M20", "resolutionState": "resolved"
+      }
+    },
+    { "nodeId": "node-north-bank-land", "name": "北岸道路交叉口", "type": "junction", "position": { "x": -5, "z": 21 }, "heightSource": "raw-terrain", "maxSlope": 0.08, "connectedEdgeIds": ["edge-bridge-socket-to-north-bank", "edge-north-castle-main", "edge-west-residential-approach", "edge-east-residential-approach"] },
+    {
+      "nodeId": "node-castle-site-entry", "name": "城堡场地入口", "type": "castle-site-entry",
+      "position": { "x": 3, "z": -5 }, "heightSource": "road-design-surface", "maxSlope": 0.08,
+      "connectedEdgeIds": ["edge-north-castle-main"],
+      "socket": {
+        "socketId": "castle-world-road-handoff-socket", "sourceRoadEdgeId": "edge-north-castle-main",
+        "tangent": { "x": 0.316228, "z": -0.948683 }, "roadWidth": 6.6, "shoulderWidth": 0.8,
+        "surfaceHeight": 1.380848656633619, "longitudinalSlope": -0.07725861426949931, "crossSlope": 0,
+        "leftBoundary": { "x": -0.130, "z": -6.044 }, "rightBoundary": { "x": 6.130, "z": -3.956 },
+        "navigationConnectionId": "nav-castle-site-entry", "graphSha256": "F6D62ED92FE29575C355AB0C8B4A81458D6065791EBBE2DEF0F3E1CF9804C72E",
+        "ownerModule": "M18R", "resolverModule": "M19R", "consumerModule": "M23", "resolutionState": "resolved"
+      }
+    },
+    { "nodeId": "node-west-residential-entry", "name": "西住宅区东入口", "type": "junction", "position": { "x": -23, "z": 12 }, "heightSource": "raw-terrain", "maxSlope": 0.08, "connectedEdgeIds": ["edge-west-residential-approach", "edge-west-residential-main"] },
+    { "nodeId": "node-west-residential-center", "name": "西住宅区中心交叉口", "type": "junction", "position": { "x": -39, "z": 8 }, "heightSource": "raw-terrain", "maxSlope": 0.08, "connectedEdgeIds": ["edge-west-residential-main", "edge-west-residential-west", "edge-west-lane-north", "edge-west-lane-south"] },
+    { "nodeId": "node-west-residential-west", "name": "西住宅区西端", "type": "gate", "position": { "x": -53, "z": 4 }, "heightSource": "raw-terrain", "maxSlope": 0.08, "connectedEdgeIds": ["edge-west-residential-west"] },
+    { "nodeId": "node-west-lane-north", "name": "西住宅北巷端", "type": "gate", "position": { "x": -43, "z": 16 }, "heightSource": "raw-terrain", "maxSlope": 0.1, "connectedEdgeIds": ["edge-west-lane-north"] },
+    { "nodeId": "node-west-lane-south", "name": "西住宅南巷端", "type": "gate", "position": { "x": -41, "z": -5 }, "heightSource": "raw-terrain", "maxSlope": 0.1, "connectedEdgeIds": ["edge-west-lane-south"] },
+    { "nodeId": "node-east-residential-entry", "name": "东住宅区西入口", "type": "junction", "position": { "x": 61, "z": 12 }, "heightSource": "raw-terrain", "maxSlope": 0.08, "connectedEdgeIds": ["edge-east-residential-approach", "edge-east-residential-main"] },
+    { "nodeId": "node-east-residential-center", "name": "东住宅区中心交叉口", "type": "junction", "position": { "x": 68, "z": 10 }, "heightSource": "raw-terrain", "maxSlope": 0.08, "connectedEdgeIds": ["edge-east-residential-main", "edge-east-lane-north", "edge-east-lane-south"] },
+    { "nodeId": "node-east-lane-north", "name": "东住宅北巷端", "type": "gate", "position": { "x": 69, "z": 18 }, "heightSource": "raw-terrain", "maxSlope": 0.1, "connectedEdgeIds": ["edge-east-lane-north"] },
+    { "nodeId": "node-east-lane-south", "name": "东住宅南巷端", "type": "gate", "position": { "x": 69, "z": 2 }, "heightSource": "raw-terrain", "maxSlope": 0.1, "connectedEdgeIds": ["edge-east-lane-south"] }
+  ],
+  "edges": [
+    { "edgeId": "edge-south-gate-main", "name": "南门入口主路", "type": "main-road", "roadClass": "main-road", "startNodeId": "node-south-gate", "endNodeId": "node-south-junction", "centerCurve": [[-12,82],[-15,70]], "width": 6.8, "shoulderWidth": 0.8, "setback": 2.2, "minimumTurnRadius": 10, "heightProfile": { "source": "raw-terrain", "strategy": "sample-and-smooth", "maximumSlope": 0.08 }, "leftBoundary": [[-15.3,82.8],[-18.3,70.8]], "rightBoundary": [[-8.7,81.2],[-11.7,69.2]], "walkable": true },
+    { "edgeId": "edge-south-market-main", "name": "南门至集市主路", "type": "main-road", "roadClass": "main-road", "startNodeId": "node-south-junction", "endNodeId": "node-market-square", "centerCurve": [[-15,70],[-17,63],[-20,56]], "width": 7.0, "shoulderWidth": 0.8, "setback": 2.2, "minimumTurnRadius": 12, "heightProfile": { "source": "raw-terrain", "strategy": "sample-and-smooth", "maximumSlope": 0.08 }, "leftBoundary": [[-18.4,70.9],[-20.4,64.1],[-23.4,57.2]], "rightBoundary": [[-11.6,69.1],[-13.6,61.9],[-16.6,54.8]], "walkable": true },
+    { "edgeId": "edge-market-west-square", "name": "集市西侧广场连接", "type": "square-connection", "roadClass": "main-road", "startNodeId": "node-market-square", "endNodeId": "node-market-west", "centerCurve": [[-20,56],[-27,57],[-34,57]], "width": 6.2, "shoulderWidth": 0.6, "setback": 2.0, "minimumTurnRadius": 9, "heightProfile": { "source": "market-square-profile", "strategy": "flat-square-connection", "maximumSlope": 0.04 }, "leftBoundary": [[-20.4,52.9],[-27.2,53.9],[-34,53.9]], "rightBoundary": [[-19.6,59.1],[-26.8,60.1],[-34,60.1]], "walkable": true },
+    { "edgeId": "edge-market-east-square", "name": "集市东侧广场连接", "type": "square-connection", "roadClass": "main-road", "startNodeId": "node-market-square", "endNodeId": "node-market-east", "centerCurve": [[-20,56],[-16.5,54.5],[-13,53]], "width": 6.4, "shoulderWidth": 0.6, "setback": 2.0, "minimumTurnRadius": 9, "heightProfile": { "source": "market-square-profile", "strategy": "flat-square-connection", "maximumSlope": 0.04 }, "leftBoundary": [[-21.3,53.1],[-17.8,51.6],[-14.3,50.1]], "rightBoundary": [[-18.7,58.9],[-15.2,57.4],[-11.7,55.9]], "walkable": true },
+    { "edgeId": "edge-market-bridge-main", "name": "集市至南岸主路", "type": "main-road", "roadClass": "main-road", "startNodeId": "node-market-east", "endNodeId": "node-south-bank-land", "centerCurve": [[-13,53],[-10,49]], "width": 6.6, "shoulderWidth": 0.8, "setback": 2.2, "minimumTurnRadius": 10, "heightProfile": { "source": "raw-terrain", "strategy": "sample-and-smooth", "maximumSlope": 0.08 }, "leftBoundary": [[-15.6,51],[-12.6,47]], "rightBoundary": [[-10.4,55],[-7.4,51]], "walkable": true },
+    { "edgeId": "edge-south-bank-to-bridge-socket", "name": "南岸至桥头连接口主路", "type": "main-road", "roadClass": "main-road", "startNodeId": "node-south-bank-land", "endNodeId": "node-bridge-south-road-socket", "centerCurve": [[-10,49],[-7,44.375]], "width": 6.6, "shoulderWidth": 0.8, "setback": 2.2, "minimumTurnRadius": 10, "heightProfile": { "source": "raw-terrain", "strategy": "sample-and-smooth", "maximumSlope": 0.08 }, "leftBoundary": [[-12.8,47.3],[-9.769,42.579]], "rightBoundary": [[-7.2,50.7],[-4.231,46.171]], "walkable": true },
+    { "edgeId": "edge-bridge-handoff", "name": "桥梁模块拓扑交接占位", "type": "bridge-handoff", "roadClass": "main-road", "startNodeId": "node-bridge-south-road-socket", "endNodeId": "node-bridge-north-road-socket", "centerCurve": [[-7,44.375],[-6.5,35],[-6,25.55]], "width": 6.6, "shoulderWidth": 0.8, "setback": 2.2, "minimumTurnRadius": 10, "heightProfile": { "source": "bridge-deck-surface", "strategy": "delegated-to-m20", "maximumSlope": 0.06, "resolutionState": "pending-road-design" }, "leftBoundary": [[-9.769,42.579],[-9.8,34.8],[-9.223,24.842]], "rightBoundary": [[-4.231,46.171],[-3.2,35.2],[-2.777,26.258]], "walkable": false, "meshGeneration": "forbidden", "ownerModule": "M20" },
+    { "edgeId": "edge-bridge-socket-to-north-bank", "name": "桥头连接口至北岸主路", "type": "main-road", "roadClass": "main-road", "startNodeId": "node-bridge-north-road-socket", "endNodeId": "node-north-bank-land", "centerCurve": [[-6,25.55],[-5,21]], "width": 6.6, "shoulderWidth": 0.8, "setback": 2.2, "minimumTurnRadius": 10, "heightProfile": { "source": "raw-terrain", "strategy": "sample-and-smooth", "maximumSlope": 0.08 }, "leftBoundary": [[-9.223,24.842],[-8.2,20.4]], "rightBoundary": [[-2.777,26.258],[-1.8,21.6]], "walkable": true },
+    { "edgeId": "edge-north-castle-main", "name": "北岸至城堡场地入口主路", "type": "main-road", "roadClass": "main-road", "startNodeId": "node-north-bank-land", "endNodeId": "node-castle-site-entry", "centerCurve": [[-5,21],[-2,10],[3,-5]], "width": 6.6, "shoulderWidth": 0.8, "setback": 2.2, "minimumTurnRadius": 12, "heightProfile": { "source": "raw-terrain", "strategy": "sample-and-smooth", "maximumSlope": 0.08 }, "leftBoundary": [[-8.2,20.1],[-5.2,9],[-0.2,-6]], "rightBoundary": [[-1.8,21.9],[1.2,11],[6.2,-4]], "walkable": true },
+    { "edgeId": "edge-west-residential-approach", "name": "西住宅区连接次路", "type": "secondary-road", "roadClass": "secondary-road", "startNodeId": "node-north-bank-land", "endNodeId": "node-west-residential-entry", "centerCurve": [[-5,21],[-14,18],[-23,12]], "width": 4.6, "shoulderWidth": 0.6, "setback": 1.6, "minimumTurnRadius": 7, "heightProfile": { "source": "raw-terrain", "strategy": "sample-and-smooth", "maximumSlope": 0.08 }, "leftBoundary": [[-5.7,23.2],[-15,20.1],[-24.3,13.9]], "rightBoundary": [[-4.3,18.8],[-13,15.9],[-21.7,10.1]], "walkable": true },
+    { "edgeId": "edge-west-residential-main", "name": "西住宅区中央次路", "type": "secondary-road", "roadClass": "secondary-road", "startNodeId": "node-west-residential-entry", "endNodeId": "node-west-residential-center", "centerCurve": [[-23,12],[-31,10],[-39,8]], "width": 4.6, "shoulderWidth": 0.6, "setback": 1.6, "minimumTurnRadius": 7, "heightProfile": { "source": "raw-terrain", "strategy": "sample-and-smooth", "maximumSlope": 0.08 }, "leftBoundary": [[-23.6,14.2],[-31.6,12.2],[-39.6,10.2]], "rightBoundary": [[-22.4,9.8],[-30.4,7.8],[-38.4,5.8]], "walkable": true },
+    { "edgeId": "edge-west-residential-west", "name": "西住宅区西段次路", "type": "secondary-road", "roadClass": "secondary-road", "startNodeId": "node-west-residential-center", "endNodeId": "node-west-residential-west", "centerCurve": [[-39,8],[-46,6],[-53,4]], "width": 4.4, "shoulderWidth": 0.6, "setback": 1.6, "minimumTurnRadius": 6, "heightProfile": { "source": "raw-terrain", "strategy": "sample-and-smooth", "maximumSlope": 0.08 }, "leftBoundary": [[-39.6,10.1],[-46.6,8.1],[-53.6,6.1]], "rightBoundary": [[-38.4,5.9],[-45.4,3.9],[-52.4,1.9]], "walkable": true },
+    { "edgeId": "edge-west-lane-north", "name": "西住宅北巷", "type": "lane", "roadClass": "lane", "startNodeId": "node-west-residential-center", "endNodeId": "node-west-lane-north", "centerCurve": [[-39,8],[-43,16]], "width": 2.8, "shoulderWidth": 0.3, "setback": 1.0, "minimumTurnRadius": 3, "heightProfile": { "source": "raw-terrain", "strategy": "sample-and-smooth", "maximumSlope": 0.1 }, "leftBoundary": [[-40.3,7.4],[-44.3,15.4]], "rightBoundary": [[-37.7,8.6],[-41.7,16.6]], "walkable": true },
+    { "edgeId": "edge-west-lane-south", "name": "西住宅南巷", "type": "lane", "roadClass": "lane", "startNodeId": "node-west-residential-center", "endNodeId": "node-west-lane-south", "centerCurve": [[-39,8],[-41,-5]], "width": 2.8, "shoulderWidth": 0.3, "setback": 1.0, "minimumTurnRadius": 3, "heightProfile": { "source": "raw-terrain", "strategy": "sample-and-smooth", "maximumSlope": 0.1 }, "leftBoundary": [[-40.4,8.2],[-42.4,-4.8]], "rightBoundary": [[-37.6,7.8],[-39.6,-5.2]], "walkable": true },
+    { "edgeId": "edge-east-residential-approach", "name": "东住宅区连接次路", "type": "secondary-road", "roadClass": "secondary-road", "startNodeId": "node-north-bank-land", "endNodeId": "node-east-residential-entry", "centerCurve": [[-5,21],[18,20],[40,17],[61,12]], "width": 4.6, "shoulderWidth": 0.6, "setback": 1.6, "minimumTurnRadius": 8, "heightProfile": { "source": "raw-terrain", "strategy": "sample-and-smooth", "maximumSlope": 0.08 }, "leftBoundary": [[-4.9,23.3],[18.2,22.3],[40.4,19.3],[61.5,14.3]], "rightBoundary": [[-5.1,18.7],[17.8,17.7],[39.6,14.7],[60.5,9.7]], "walkable": true },
+    { "edgeId": "edge-east-residential-main", "name": "东住宅区中央次路", "type": "secondary-road", "roadClass": "secondary-road", "startNodeId": "node-east-residential-entry", "endNodeId": "node-east-residential-center", "centerCurve": [[61,12],[68,10]], "width": 4.4, "shoulderWidth": 0.6, "setback": 1.6, "minimumTurnRadius": 6, "heightProfile": { "source": "raw-terrain", "strategy": "sample-and-smooth", "maximumSlope": 0.08 }, "leftBoundary": [[60.4,9.9],[67.4,7.9]], "rightBoundary": [[61.6,14.1],[68.6,12.1]], "walkable": true },
+    { "edgeId": "edge-east-lane-north", "name": "东住宅北巷", "type": "lane", "roadClass": "lane", "startNodeId": "node-east-residential-center", "endNodeId": "node-east-lane-north", "centerCurve": [[68,10],[69,18]], "width": 2.8, "shoulderWidth": 0.3, "setback": 1.0, "minimumTurnRadius": 3, "heightProfile": { "source": "raw-terrain", "strategy": "sample-and-smooth", "maximumSlope": 0.1 }, "leftBoundary": [[66.6,10.2],[67.6,18.2]], "rightBoundary": [[69.4,9.8],[70.4,17.8]], "walkable": true },
+    { "edgeId": "edge-east-lane-south", "name": "东住宅南巷", "type": "lane", "roadClass": "lane", "startNodeId": "node-east-residential-center", "endNodeId": "node-east-lane-south", "centerCurve": [[68,10],[69,2]], "width": 2.8, "shoulderWidth": 0.3, "setback": 1.0, "minimumTurnRadius": 3, "heightProfile": { "source": "raw-terrain", "strategy": "sample-and-smooth", "maximumSlope": 0.1 }, "leftBoundary": [[69.4,10.2],[70.4,2.2]], "rightBoundary": [[66.6,9.8],[67.6,1.8]], "walkable": true }
+  ],
+  "mainRoute": {
+    "routeId": "route-south-gate-to-castle-site-entry",
+    "name": "南门至城堡场地入口连续主路径",
+    "startNodeId": "node-south-gate",
+    "endNodeId": "node-castle-site-entry",
+    "nodeIds": ["node-south-gate", "node-south-junction", "node-market-square", "node-market-east", "node-south-bank-land", "node-bridge-south-road-socket", "node-bridge-north-road-socket", "node-north-bank-land", "node-castle-site-entry"],
+    "edgeIds": ["edge-south-gate-main", "edge-south-market-main", "edge-market-east-square", "edge-market-bridge-main", "edge-south-bank-to-bridge-socket", "edge-bridge-handoff", "edge-bridge-socket-to-north-bank", "edge-north-castle-main"]
+  },
+  "serviceAreas": {
+    "westResidential": { "zoneId": "zone-residential-districts", "polygonIndex": 0, "servedByEdgeIds": ["edge-west-residential-approach", "edge-west-residential-main", "edge-west-residential-west", "edge-west-lane-north", "edge-west-lane-south"] },
+    "eastResidential": { "zoneId": "zone-residential-districts", "polygonIndex": 1, "servedByEdgeIds": ["edge-east-residential-approach", "edge-east-residential-main", "edge-east-lane-north", "edge-east-lane-south"] }
+  }
+}

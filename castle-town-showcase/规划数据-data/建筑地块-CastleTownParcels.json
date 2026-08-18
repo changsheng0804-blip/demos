@@ -1,0 +1,17 @@
+{
+  "planId": "mist-ridge-castle-town-parcels",
+  "stageId": "M21",
+  "version": "1.0.0",
+  "status": "frozen-for-m21-validation",
+  "sourceIds": ["mist-ridge-castle-town-road-graph", "mist-ridge-castle-town-master-plan"],
+  "setbackPolicy": { "main-road": 2.0, "secondary-road": 1.5, "lane": 0.8 },
+  "parcels": [
+    { "parcelId": "parcel-west-south-01", "name": "西住宅南侧一号地块", "zoneId": "zone-residential-districts", "footprint": [[-29,3],[-35,1],[-37,-5],[-30,-6]], "frontage": { "roadEdgeId": "edge-west-residential-main", "maximumFrontageDistance": 12.0, "maximumDoorConnectionLength": 6.5 }, "allowedBuildingTypes": ["木骨架民居", "石屋"], "maximumFootprint": 28, "maximumHeight": 8.0, "foundationStrategy": "原始地形四角采样" },
+    { "parcelId": "parcel-west-south-02", "name": "西住宅南侧二号地块", "zoneId": "zone-residential-districts", "footprint": [[-52,-1],[-58,-3],[-59,-7],[-53,-9]], "frontage": { "roadEdgeId": "edge-west-residential-west", "maximumFrontageDistance": 10.0, "maximumDoorConnectionLength": 7.0 }, "allowedBuildingTypes": ["石屋", "作坊"], "maximumFootprint": 30, "maximumHeight": 8.0, "foundationStrategy": "原始地形四角采样" },
+    { "parcelId": "parcel-west-north-02", "name": "西住宅北侧二号地块", "zoneId": "zone-residential-districts", "footprint": [[-49,11],[-55,10],[-57,15],[-51,16]], "frontage": { "roadEdgeId": "edge-west-residential-west", "maximumFrontageDistance": 10.0, "maximumDoorConnectionLength": 7.0 }, "allowedBuildingTypes": ["木骨架民居", "石屋"], "maximumFootprint": 28, "maximumHeight": 8.0, "foundationStrategy": "原始地形四角采样" },
+    { "parcelId": "parcel-east-south-01", "name": "东住宅南侧一号地块", "zoneId": "zone-residential-districts", "footprint": [[61,5],[66,4],[66,6],[61,7]], "frontage": { "roadEdgeId": "edge-east-residential-main", "maximumFrontageDistance": 9.0, "maximumDoorConnectionLength": 6.5 }, "allowedBuildingTypes": ["石屋", "作坊"], "maximumFootprint": 20, "maximumHeight": 7.5, "foundationStrategy": "原始地形四角采样" },
+    { "parcelId": "parcel-east-south-02", "name": "东住宅南侧二号地块", "zoneId": "zone-residential-districts", "footprint": [[72,4],[74,4],[74,9],[72,9]], "frontage": { "roadEdgeId": "edge-east-lane-south", "maximumFrontageDistance": 7.0, "maximumDoorConnectionLength": 5.0 }, "allowedBuildingTypes": ["木骨架民居"], "maximumFootprint": 18, "maximumHeight": 7.0, "foundationStrategy": "原始地形四角采样" },
+    { "parcelId": "parcel-east-north-01", "name": "东住宅北侧一号地块", "zoneId": "zone-residential-districts", "footprint": [[61,17],[65,16],[65,19],[62,20]], "frontage": { "roadEdgeId": "edge-east-residential-main", "maximumFrontageDistance": 9.0, "maximumDoorConnectionLength": 6.5 }, "allowedBuildingTypes": ["木骨架民居", "石屋"], "maximumFootprint": 22, "maximumHeight": 7.5, "foundationStrategy": "原始地形四角采样" },
+    { "parcelId": "parcel-east-north-02", "name": "东住宅北侧二号地块", "zoneId": "zone-residential-districts", "footprint": [[72,15],[74,15],[74,20],[72,20]], "frontage": { "roadEdgeId": "edge-east-lane-north", "maximumFrontageDistance": 7.0, "maximumDoorConnectionLength": 5.0 }, "allowedBuildingTypes": ["木骨架民居"], "maximumFootprint": 18, "maximumHeight": 7.0, "foundationStrategy": "原始地形四角采样" }
+  ]
+}

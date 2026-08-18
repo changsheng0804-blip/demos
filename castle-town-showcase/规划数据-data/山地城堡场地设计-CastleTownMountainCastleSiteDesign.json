@@ -1,0 +1,704 @@
+{
+  "schemaId": "castle-town-mountain-castle-site-design",
+  "version": "3.7.0",
+  "status": "m37-castle-interface-road-vegetation-resolved",
+  "stageId": "M37",
+  "designPrinciple": "西侧城堡 v3.5：城堡加宽成近方形（约 90×75m，减少狭长、扩大内院空间）；整体南移 15m 远离河道（北缘 z≈5，河在 z≥21）；外城墙为单一闭合多面形环（连接全部外圈塔楼/城门，非到处乱连）；内院建筑与主堡在墙内；原城堡山丘（南侧山脊）改平地供居民区。",
+  "supersedes": {
+    "siteVersion": "v3.4.0",
+    "reason": "用户反馈：城堡狭长、内空间小；城墙连接错乱需单一外环；紧靠河道需南移；原城堡山丘改平地。",
+    "keptInvariants": [
+      "node-castle-site-entry 位置与镇区道路主网",
+      "原始地形高度函数",
+      "M12 碰撞核心"
+    ]
+  },
+  "site": {
+    "referenceCenter": {
+      "x": -60,
+      "z": -32
+    },
+    "boundarySource": "castle-core-and-hill-buffer-zones",
+    "terrainSource": "raw-terrain",
+    "contourSampleInterval": 1.0,
+    "maximumArtificialPlatformAreaRatio": 0.38,
+    "maximumUnsupportedFoundationCornerCount": 0
+  },
+  "hillDesign": {
+    "note": "人工城堡高台：西侧低地原始 1~4m，工程地形把城堡核心区抬升 ≤20m；主堡台面 ~20m",
+    "extent": {
+      "minX": -115,
+      "maxX": -10,
+      "minZ": -82,
+      "maxZ": 10
+    },
+    "center": {
+      "x": -60,
+      "z": -32
+    },
+    "radius": 50,
+    "peak": {
+      "x": -75,
+      "z": -32,
+      "y": 22
+    }
+  },
+  "r2TerrainAdaptation": {
+    "version": "terrain-led-sculpt-v4",
+    "terraceOverlaySampleStep": 1.0,
+    "terraceEdgeBlendMeters": 3.0,
+    "roadCoreHalfWidth": 3.3,
+    "roadBlendMeters": 2.4,
+    "foundationBlendMeters": 3.6,
+    "foundationTerrainClearance": 0.05,
+    "maximumEngineeringTerrainDisplacement": 20,
+    "gateApproachMaximumCutMeters": 8,
+    "castleExteriorCut": {
+      "sourceTerraceId": "terrace-lower-gate",
+      "outerBandMeters": 12,
+      "targetHeightOffset": -3.5,
+      "blendMeters": 3,
+      "purpose": "城墙外侧降坡，保证城墙高出外部地形并保留护城防线"
+    },
+    "lowRetainingWall": {
+      "height": 0.72,
+      "terrainBurial": 0.08,
+      "maximumSegmentLength": 2.0
+    },
+    "forbidden": [
+      "固定厚度整体挤出台地",
+      "宽大连续竖直台地侧壁",
+      "城墙按两端平均高度整体悬置"
+    ]
+  },
+  "terrainLedComposition": {
+    "highestNaturalOutcropUse": "主堡（人工高台最高点）",
+    "middleTerracesUse": [
+      "内庭院",
+      "兵营",
+      "礼拜堂",
+      "仓房"
+    ],
+    "lowerTerracesUse": [
+      "外堡",
+      "城门设施",
+      "防御前院"
+    ],
+    "wallAlignment": "follow-contours-and-rock-edges",
+    "towerPlacement": "anchor-individually-to-rock-or-engineered-terrace",
+    "buildingPlacement": "individual-foundation-adaptation",
+    "forbidden": [
+      "整座城堡使用单一世界坐标整体放置",
+      "用单个规则圆柱或盒体作为整座城堡基座",
+      "城墙跨越山谷而没有拱基、墙脚或挡土结构",
+      "为了连接城门把整条山脚道路整体抬高"
+    ]
+  },
+  "worldRoadHandoffSocket": {
+    "nodeId": "node-castle-site-entry",
+    "socketId": "castle-world-road-handoff-socket",
+    "sourceRoadEdgeId": "edge-north-castle-main",
+    "tangent": {
+      "x": 0.316228,
+      "z": -0.948683
+    },
+    "roadWidth": 6.6,
+    "shoulderWidth": 0.8,
+    "surfaceHeight": 1.380848656633619,
+    "longitudinalSlope": -0.07725861426949931,
+    "crossSlope": 0,
+    "leftBoundary": {
+      "x": -0.13,
+      "z": -6.044
+    },
+    "rightBoundary": {
+      "x": 6.13,
+      "z": -3.956
+    },
+    "navigationConnectionId": "nav-castle-site-entry",
+    "graphSha256": "F6D62ED92FE29575C355AB0C8B4A81458D6065791EBBE2DEF0F3E1CF9804C72E",
+    "ownerModule": "M18R",
+    "resolverModule": "M19R",
+    "consumerModule": "M23",
+    "resolutionState": "resolved",
+    "sourceModule": "M19R",
+    "note": "镇区道路主网不变，此交接口保持原位原高；城堡城门路从此处向西接入。"
+  },
+  "gateRoadSocket": {
+    "socketId": "castle-gate-road-socket",
+    "position": {
+      "x": -25,
+      "y": 8,
+      "z": -15
+    },
+    "tangent": {
+      "x": 0.92,
+      "z": 0.39
+    },
+    "roadWidth": 5.0,
+    "heightTolerance": 0.03
+  },
+  "gatePlaza": {
+    "id": "castle-gate-plaza",
+    "note": "承接旧城堡门前平台：城堡东侧大广场，面向小镇；国王/马放广场",
+    "center": {
+      "x": -13,
+      "z": -9
+    },
+    "size": {
+      "width": 28,
+      "depth": 20
+    },
+    "targetHeight": 4.0,
+    "paved": true,
+    "moat": {
+      "width": 7,
+      "drawbridgeLength": 5
+    }
+  },
+  "flattenZones": [
+    {
+      "id": "旧城堡山丘-改平地",
+      "note": "原 v3.2 城堡所在南侧山脊（自然 ~18m）工程地形整平为 ~3m 平地，供后续与旧街道扩建为居民区；整平区覆盖整条山脊，边缘接低地无陡坎",
+      "center": {
+        "x": 31,
+        "z": -41
+      },
+      "size": {
+        "width": 58,
+        "depth": 56
+      },
+      "targetHeight": 3.0,
+      "blendMeters": 10
+    }
+  ],
+  "terraces": [
+    {
+      "terraceId": "terrace-lower-gate",
+      "name": "外堡台地（整圈城墙内）",
+      "polygon": [
+        [
+          -15,
+          -2
+        ],
+        [
+          -15,
+          -62
+        ],
+        [
+          -60,
+          -70
+        ],
+        [
+          -102,
+          -55
+        ],
+        [
+          -106,
+          -15
+        ],
+        [
+          -85,
+          2
+        ],
+        [
+          -40,
+          4
+        ]
+      ],
+      "targetHeight": 8,
+      "use": [
+        "城门楼",
+        "外堡前院",
+        "卫兵营",
+        "城墙"
+      ],
+      "earthwork": "cut-and-fill-with-retaining-wall"
+    },
+    {
+      "terraceId": "terrace-middle-court",
+      "name": "内院台地（兵营/礼拜堂/粮仓）",
+      "polygon": [
+        [
+          -20,
+          -16
+        ],
+        [
+          -20,
+          -56
+        ],
+        [
+          -58,
+          -64
+        ],
+        [
+          -96,
+          -50
+        ],
+        [
+          -94,
+          -22
+        ],
+        [
+          -62,
+          -12
+        ]
+      ],
+      "targetHeight": 11,
+      "use": [
+        "内庭院",
+        "兵营",
+        "礼拜堂",
+        "粮仓",
+        "水井"
+      ],
+      "earthwork": "contour-led-cut-platform"
+    },
+    {
+      "terraceId": "terrace-upper-keep",
+      "name": "主堡岩台（人工高台最高点）",
+      "polygon": [
+        [
+          -48,
+          -28
+        ],
+        [
+          -48,
+          -46
+        ],
+        [
+          -76,
+          -52
+        ],
+        [
+          -102,
+          -42
+        ],
+        [
+          -96,
+          -24
+        ],
+        [
+          -66,
+          -20
+        ]
+      ],
+      "targetHeight": 16,
+      "use": [
+        "主堡",
+        "主力塔"
+      ],
+      "earthwork": "rock-outcrop-trim"
+    }
+  ],
+  "structureAnchors": [
+    {
+      "anchorId": "gatehouse",
+      "kind": "gatehouse",
+      "position": {
+        "x": -25,
+        "y": 8,
+        "z": -15
+      },
+      "rotationY": 1.5707963267948966,
+      "terraceId": "terrace-lower-gate",
+      "foundation": "lower-retaining-wall"
+    },
+    {
+      "anchorId": "ne-tower",
+      "kind": "tower",
+      "position": {
+        "x": -35,
+        "y": 8,
+        "z": -5
+      },
+      "rotationY": 0,
+      "terraceId": "terrace-lower-gate",
+      "foundation": "rock-patch"
+    },
+    {
+      "anchorId": "n-tower",
+      "kind": "tower",
+      "position": {
+        "x": -60,
+        "y": 8,
+        "z": 0
+      },
+      "rotationY": 0,
+      "terraceId": "terrace-lower-gate",
+      "foundation": "rock-patch"
+    },
+    {
+      "anchorId": "nw-tower",
+      "kind": "tower",
+      "position": {
+        "x": -85,
+        "y": 8,
+        "z": -10
+      },
+      "rotationY": 0,
+      "terraceId": "terrace-lower-gate",
+      "foundation": "rock-patch"
+    },
+    {
+      "anchorId": "w-tower",
+      "kind": "tower",
+      "position": {
+        "x": -100,
+        "y": 8,
+        "z": -28
+      },
+      "rotationY": 0,
+      "terraceId": "terrace-lower-gate",
+      "foundation": "rock-patch"
+    },
+    {
+      "anchorId": "sw-tower",
+      "kind": "tower",
+      "position": {
+        "x": -85,
+        "y": 8,
+        "z": -52
+      },
+      "rotationY": 0,
+      "terraceId": "terrace-lower-gate",
+      "foundation": "rock-patch"
+    },
+    {
+      "anchorId": "s-tower",
+      "kind": "tower",
+      "position": {
+        "x": -55,
+        "y": 8,
+        "z": -64
+      },
+      "rotationY": 0,
+      "terraceId": "terrace-lower-gate",
+      "foundation": "rock-patch"
+    },
+    {
+      "anchorId": "se-tower",
+      "kind": "tower",
+      "position": {
+        "x": -30,
+        "y": 8,
+        "z": -55
+      },
+      "rotationY": 0,
+      "terraceId": "terrace-lower-gate",
+      "foundation": "rock-patch"
+    },
+    {
+      "anchorId": "e-tower",
+      "kind": "tower",
+      "position": {
+        "x": -20,
+        "y": 8,
+        "z": -40
+      },
+      "rotationY": 0,
+      "terraceId": "terrace-lower-gate",
+      "foundation": "rock-patch"
+    },
+    {
+      "anchorId": "middle-barracks",
+      "kind": "barracks",
+      "position": {
+        "x": -42,
+        "y": 11,
+        "z": -36
+      },
+      "rotationY": -1.82,
+      "terraceId": "terrace-middle-court",
+      "foundation": "terrain-fit-patch"
+    },
+    {
+      "anchorId": "chapel",
+      "kind": "chapel",
+      "position": {
+        "x": -64,
+        "y": 11,
+        "z": -52
+      },
+      "rotationY": 0.32,
+      "terraceId": "terrace-middle-court",
+      "foundation": "terrain-fit-patch"
+    },
+    {
+      "anchorId": "granary",
+      "kind": "granary",
+      "position": {
+        "x": -43,
+        "y": 11,
+        "z": -50
+      },
+      "rotationY": -1.04,
+      "terraceId": "terrace-middle-court",
+      "foundation": "terrain-fit-patch"
+    },
+    {
+      "anchorId": "upper-keep",
+      "kind": "keep",
+      "position": {
+        "x": -70,
+        "y": 16,
+        "z": -32
+      },
+      "rotationY": 1.5707963267948966,
+      "terraceId": "terrace-upper-keep",
+      "foundation": "terrain-fit-patch"
+    }
+  ],
+  "wallFoundationPaths": [
+    {
+      "pathId": "outer-wall",
+      "anchorIds": [
+        "gatehouse",
+        "ne-tower",
+        "n-tower",
+        "nw-tower",
+        "w-tower",
+        "sw-tower",
+        "s-tower",
+        "se-tower",
+        "e-tower",
+        "gatehouse"
+      ],
+      "baseTerraceIds": [
+        "terrace-lower-gate"
+      ]
+    }
+  ],
+  "approachRoad": {
+    "ownerModule": "M34-C",
+    "worldRoadHandoffNodeId": "node-castle-site-entry",
+    "gateSocketId": "castle-gate-road-socket",
+    "routeStrategy": "ramp-with-gentle-curves",
+    "maximumCartSlope": 0.2,
+    "maximumShortGateSlope": 0.15,
+    "minimumTurningRadius": 8.0,
+    "note": "西侧低地平坦且空间充足：城门路从镇路网（3,-5）向西绕行至城门",
+    "centerline": [
+      [
+        3,
+        -5
+      ],
+      [
+        1,
+        -9
+      ],
+      [
+        4,
+        -13
+      ],
+      [
+        6,
+        -18
+      ],
+      [
+        4,
+        -22
+      ],
+      [
+        0,
+        -24
+      ],
+      [
+        -5,
+        -23
+      ],
+      [
+        -10,
+        -20
+      ],
+      [
+        -14,
+        -17
+      ],
+      [
+        -16,
+        -16
+      ],
+      [
+        -25,
+        -15
+      ]
+    ],
+    "heightProfile": [
+      1.38,
+      2.2,
+      3.0,
+      3.8,
+      4.6,
+      5.4,
+      6.0,
+      6.4,
+      7.0,
+      7.4,
+      8.0
+    ],
+    "switchbackNodeIndices": [
+      4,
+      6,
+      8
+    ],
+    "roadWidth": 5.5,
+    "roadWidthProfile": [
+      5.5,
+      5.5,
+      5.2,
+      5.0,
+      5.0,
+      5.0,
+      4.8,
+      4.8,
+      4.8,
+      5.0,
+      5.0
+    ]
+  },
+  "perimeterRoad": {
+    "ownerModule": "M36-B",
+    "note": "沿墙道路：城堡北侧（外墙外）沿墙向西延伸至地图西北缘，沿河道方向；M36-B 沿墙道+河侧坡地",
+    "centerline": [
+      [-25, 9],
+      [-45, 9],
+      [-65, 10],
+      [-85, 12],
+      [-103, 16],
+      [-115, 21]
+    ],
+    "heightProfile": [
+      8,
+      7.6,
+      6.9,
+      5.8,
+      4.2,
+      2.8
+    ],
+    "roadWidth": 5.2,
+    "roadWidthProfile": [
+      5.2,
+      5.2,
+      5.0,
+      5.0,
+      4.8,
+      4.8
+    ]
+  },
+  "innerAccessRoad": {
+    "ownerModule": "M36",
+    "note": "门洞后的内院缓坡：从城门楼穿过外墙，连续到内院石板地面；工程地形必须在该通道内让位。",
+    "centerline": [
+      [-25, -15],
+      [-31, -15],
+      [-37, -17],
+      [-43, -20],
+      [-49, -23],
+      [-54, -26]
+    ],
+    "heightProfile": [8, 8, 8.8, 9.6, 10.3, 11],
+    "roadWidth": 4.8,
+    "roadWidthProfile": [5, 5, 4.8, 4.6, 4.5, 4.5],
+    "maximumSlope": 0.15
+  },
+  "castleComponents": {
+    "note": "本轮先渲染程序化骨架（建筑按组件尺寸放大）；M35 再用 Thrixel 写实模型替换",
+    "keep": {
+      "partType": "keep",
+      "footprint": {
+        "width": 24,
+        "depth": 18
+      },
+      "height": 26
+    },
+    "gatehouse": {
+      "partType": "gatehouse",
+      "footprint": {
+        "width": 26,
+        "depth": 14
+      },
+      "height": 20
+    },
+    "tower": {
+      "partType": "tower",
+      "footprint": {
+        "width": 10,
+        "depth": 10
+      },
+      "height": 22
+    },
+    "barracks": {
+      "partType": "barracks",
+      "footprint": {
+        "width": 18,
+        "depth": 10
+      },
+      "height": 10
+    },
+    "granary": {
+      "partType": "granary",
+      "footprint": {
+        "width": 10,
+        "depth": 8
+      },
+      "height": 8
+    },
+    "chapel": {
+      "partType": "chapel",
+      "footprint": {
+        "width": 14,
+        "depth": 9
+      },
+      "height": 12
+    }
+  },
+  "requiredOutputs": [
+    "rawTerrainContours",
+    "castleSiteBoundary",
+    "hillExtent",
+    "terracePolygons",
+    "terraceTargetHeights",
+    "individualStructureAnchors",
+    "wallFoundationPaths",
+    "towerFoundationPatches",
+    "cutRegions",
+    "fillRegions",
+    "retainingWallPaths",
+    "rockExposureRegions",
+    "approachRoadCenterline",
+    "approachRoadHeightProfile",
+    "switchbackNodes",
+    "gatePlazaPavement",
+    "moatAndDrawbridge",
+    "worldRoadHandoffSocket",
+    "gateRoadSocket"
+  ],
+  "ownership": {
+    "M18R": [
+      "镇级道路只到node-castle-site-entry，不定义城堡内部坡道"
+    ],
+    "M34-C": [
+      "西侧城堡加宽+外城墙环+南移（JSON v3.5）、原山丘改平地、移除旧对象"
+    ],
+    "M35": [
+      "Thrixel 城堡写实组件生成与装配接口（castleTemplates + 城堡组件装配）"
+    ],
+    "M36": [
+      "城墙段、内院铺装、城门广场吊桥护城沟整合、国王/马、树/人物避让"
+    ]
+  },
+  "blockingAcceptance": {
+    "maximumStandaloneCastleRootCount": 0,
+    "maximumMonolithicBaseCount": 0,
+    "maximumApproachRoadSlope": 0.2,
+    "maximumShortGateSlope": 0.15,
+    "maximumWorldRoadSocketHeightError": 0.03,
+    "maximumGateSocketHeightError": 0.03,
+    "maximumFloatingWallFootCount": 0,
+    "maximumUnsupportedTowerFoundationCount": 0,
+    "maximumTerrainThroughGateCount": 0,
+    "maximumVisibleRoadVoidCount": 0,
+    "minimumTerrainFollowingVisualScore": 0.85
+  }
+}

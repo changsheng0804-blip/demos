@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0c1716" />
+    <meta name="description" content="雾岭王城：可自由游览的三维城堡小镇视觉预览。" />
+    <title>雾岭王城 · 城堡小镇展示版</title>
+    <script type="module" crossorigin src="./assets/index-DHSaIvEq.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/地表接口-SurfaceProviders-Civ_TRV8.js">
+  </head>
+  <body>
+    <main class="世界容器">
+      <canvas id="世界画布" aria-label="可自由游览的三维城堡小镇"></canvas>
+
+      <section id="载入画面" class="载入画面" aria-live="polite">
+        <div class="载入徽记"><span></span><span></span><span></span></div>
+        <p class="小标题">正在载入展示世界</p>
+        <h1>雾岭王城</h1>
+        <div class="载入进度"><i id="载入进度条"></i></div>
+        <p id="载入说明">正在生成山谷与城墙……</p>
+      </section>
+
+      <header class="顶部栏">
+        <div class="品牌卡片">
+          <div class="王冠图标" aria-hidden="true">♜</div>
+          <div>
+            <p>CASTLE TOWN SHOWCASE</p>
+            <h1>雾岭王城</h1>
+          </div>
+        </div>
+        <div class="状态组">
+          <div class="状态标签"><i class="在线点"></i><span>世界已载入</span></div>
+          <div class="状态标签"><span>视觉预览</span><b id="时钟文字">18:24</b></div>
+        </div>
+      </header>
+
+      <section class="地点卡片" aria-label="项目简介">
+        <p class="小标题">可游览的三维世界</p>
+        <h2>雨后黄昏的山谷王城</h2>
+        <p>从山谷鸟瞰城墙与街区，再走进石板路、集市和城堡入口，浏览当前版本的主要世界构成。</p>
+        <div class="世界统计"><span><b>3</b><br />展示视角</span><span><b>WASD</b><br />自由步行</span><span><b>WebGL</b><br />实时场景</span></div>
+      </section>
+
+      <aside id="步行提示" class="步行提示" aria-hidden="true">
+        <span>移动鼠标环顾</span>
+        <span><kbd>W A S D</kbd> 行走</span>
+        <span><kbd>Shift</kbd> 快走</span>
+        <span><kbd>Esc</kbd> 返回鸟瞰</span>
+      </aside>
+
+      <div id="准星" class="准星" aria-hidden="true"><i></i><i></i></div>
+
+      <nav class="控制台" aria-label="世界游览控制">
+        <div class="视角按钮组">
+          <button id="鸟瞰按钮" type="button" class="当前按钮" aria-label="切换到山谷鸟瞰视角">
+            <span class="按钮图标">⌁</span><span>山谷鸟瞰</span>
+          </button>
+          <button id="街道按钮" type="button" aria-label="切换到城镇近景">
+            <span class="按钮图标">◇</span><span>城镇近景</span>
+          </button>
+          <button id="城堡按钮" type="button" aria-label="切换到城堡视角">
+            <span class="按钮图标">♜</span><span>仰望城堡</span>
+          </button>
+        </div>
+        <div class="分隔线"></div>
+        <button id="步行按钮" type="button" class="主按钮"><span class="按钮图标">↟</span><span>进入步行</span></button>
+        <button id="全屏按钮" type="button"><span class="按钮图标">⛶</span><span>全屏观赏</span></button>
+      </nav>
+
+      <div class="基础提示">拖动旋转 · 滚轮缩放 · 点击“进入步行”探索街巷</div>
+    </main>
+  </body>
+</html>

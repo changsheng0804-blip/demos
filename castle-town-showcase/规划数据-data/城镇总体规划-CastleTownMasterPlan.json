@@ -1,0 +1,192 @@
+{
+  "planId": "mist-ridge-castle-town-master-plan",
+  "stageId": "M17",
+  "version": "1.0.0",
+  "status": "frozen-for-m17-validation",
+  "seed": 20260730,
+  "coordinateSystem": {
+    "horizontalAxes": ["x", "z"],
+    "verticalAxis": "y",
+    "northDirection": "negative-z",
+    "unit": "meter-approximation"
+  },
+  "worldBounds": {
+    "minX": -115,
+    "maxX": 115,
+    "minZ": -95,
+    "maxZ": 95
+  },
+  "designIntent": {
+    "primarySequence": ["南门入口", "中央集市", "南侧桥头", "北侧桥头", "城堡门"],
+    "referenceComposition": "城堡位于北东高地，集市位于南西低地，河流与石桥构成中景分界。",
+    "roadGeometryDeferredUntil": "M19",
+    "roadGraphDeferredUntil": "M18"
+  },
+  "allowedZoneRelations": [
+    {
+      "containerZoneId": "zone-castle-hill-buffer",
+      "containedZoneId": "zone-castle-core",
+      "relation": "contains"
+    }
+  ],
+  "zones": [
+    {
+      "zoneId": "zone-castle-core",
+      "type": "castle-core",
+      "name": "城堡核心区",
+      "color": "#b8a06a",
+      "polygons": [
+        [[6, -23], [12, -54], [28, -66], [50, -57], [56, -34], [46, -18], [22, -17]]
+      ],
+      "allowedUses": ["主堡", "庭院", "城墙", "塔楼", "城堡道路"]
+    },
+    {
+      "zoneId": "zone-castle-hill-buffer",
+      "type": "castle-hill-buffer",
+      "name": "城堡山缓冲区",
+      "color": "#6f7657",
+      "polygons": [
+        [[-5, -15], [2, -61], [24, -78], [61, -68], [72, -34], [59, -6], [25, 2]]
+      ],
+      "allowedUses": ["岩基", "坡道", "阶梯", "挡土墙", "禁建陡坡"]
+    },
+    {
+      "zoneId": "zone-central-market",
+      "type": "central-market",
+      "name": "中央集市区",
+      "color": "#c7894b",
+      "polygons": [
+        [[-44, 47], [-35, 67], [-12, 69], [9, 64], [10, 52], [-3, 50], [-24, 47]]
+      ],
+      "allowedUses": ["主广场", "摊位", "服务建筑", "人群"]
+    },
+    {
+      "zoneId": "zone-south-gate",
+      "type": "south-gate-entry",
+      "name": "南门入口区",
+      "color": "#d2bd78",
+      "polygons": [
+        [[-30, 73], [-22, 94], [16, 94], [18, 75], [-1, 70]]
+      ],
+      "allowedUses": ["出生点", "南门", "主路入口", "视觉引导"]
+    },
+    {
+      "zoneId": "zone-residential-districts",
+      "type": "residential-districts",
+      "name": "东西住宅区",
+      "color": "#8d7560",
+      "polygons": [
+        [[-63, -9], [-58, 18], [-38, 20], [-20, 16], [-20, -5], [-39, -17]],
+        [[60, 3], [61, 20], [74, 22], [75, 2], [68, -1]]
+      ],
+      "allowedUses": ["住宅", "作坊", "小型庭院", "次路"]
+    },
+    {
+      "zoneId": "zone-river-corridor",
+      "type": "river-and-banks",
+      "name": "河流与河岸区",
+      "color": "#3f8490",
+      "polygons": [
+        [[-115, 28.1], [-96, 25.9], [-76, 23.1], [-56, 21.3], [-36, 21.5], [-16, 23.8], [4, 27.3], [24, 30.3], [44, 31.5], [64, 30.3], [84, 27.3], [104, 23.8], [115, 22.2], [115, 41.2], [104, 42.8], [84, 46.3], [64, 49.3], [44, 50.5], [24, 49.3], [4, 46.3], [-16, 42.8], [-36, 40.5], [-56, 40.3], [-76, 42.1], [-96, 44.9], [-115, 47.1]]
+      ],
+      "allowedUses": ["河流", "河岸植被", "桥梁", "水边步道"]
+    },
+    {
+      "zoneId": "zone-far-scenery",
+      "type": "far-scenery",
+      "name": "远景区",
+      "color": "#536a5b",
+      "polygons": [
+        [[-115, -95], [-70, -95], [-70, 17], [-86, 19], [-115, 17]],
+        [[76, -95], [115, -95], [115, 18], [92, 19], [76, 17]]
+      ],
+      "allowedUses": ["远山", "树林", "不可交互装饰"]
+    }
+  ],
+  "forbiddenAreas": [
+    {
+      "areaId": "forbidden-river-construction-band",
+      "type": "river-no-build",
+      "name": "河流禁建带",
+      "sourceZoneId": "zone-river-corridor",
+      "exceptions": ["bridge", "riverbank-landscape"]
+    },
+    {
+      "areaId": "forbidden-castle-hill-normal-buildings",
+      "type": "castle-buffer-no-build",
+      "name": "城堡山普通建筑禁建区",
+      "sourceZoneId": "zone-castle-hill-buffer",
+      "exceptions": ["castle", "castle-foundation", "castle-road"]
+    },
+    {
+      "areaId": "forbidden-steep-west-slope",
+      "type": "steep-slope-no-build",
+      "name": "西侧陡坡禁建区",
+      "polygons": [
+        [[-69, -51], [-48, -66], [-28, -52], [-35, -28], [-58, -23], [-73, -37]]
+      ],
+      "exceptions": ["retaining-wall", "vegetation"]
+    },
+    {
+      "areaId": "forbidden-far-scenery-construction",
+      "type": "far-scenery-no-build",
+      "name": "远景普通建筑禁建区",
+      "sourceZoneId": "zone-far-scenery",
+      "exceptions": ["far-scenery-decoration"]
+    }
+  ],
+  "criticalLocations": [
+    {
+      "locationId": "location-south-gate",
+      "type": "gate",
+      "name": "南门入口",
+      "position": { "x": -12, "z": 82 },
+      "requiredZoneIds": ["zone-south-gate"]
+    },
+    {
+      "locationId": "location-market-center",
+      "type": "square",
+      "name": "中央集市",
+      "position": { "x": -20, "z": 56 },
+      "requiredZoneIds": ["zone-central-market"]
+    },
+    {
+      "locationId": "location-bridge-south",
+      "type": "bridge-entry",
+      "name": "南侧桥头",
+      "position": { "x": -7, "z": 44 },
+      "requiredZoneIds": ["zone-river-corridor"]
+    },
+    {
+      "locationId": "location-bridge-north",
+      "type": "bridge-exit",
+      "name": "北侧桥头",
+      "position": { "x": -6, "z": 26 },
+      "requiredZoneIds": ["zone-river-corridor"]
+    },
+    {
+      "locationId": "location-castle-gate",
+      "type": "castle-entry",
+      "name": "城堡门",
+      "position": { "x": 11, "z": -24 },
+      "requiredZoneIds": ["zone-castle-core", "zone-castle-hill-buffer"]
+    }
+  ],
+  "mainRouteIntent": {
+    "routeId": "route-south-gate-to-castle",
+    "name": "南门至城堡主路径意图",
+    "locationSequence": [
+      "location-south-gate",
+      "location-market-center",
+      "location-bridge-south",
+      "location-bridge-north",
+      "location-castle-gate"
+    ],
+    "segments": [
+      { "from": "location-south-gate", "to": "location-market-center", "crossingMode": "land" },
+      { "from": "location-market-center", "to": "location-bridge-south", "crossingMode": "land" },
+      { "from": "location-bridge-south", "to": "location-bridge-north", "crossingMode": "bridge-required" },
+      { "from": "location-bridge-north", "to": "location-castle-gate", "crossingMode": "land" }
+    ]
+  }
+}

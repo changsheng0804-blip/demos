@@ -1,0 +1,194 @@
+{
+  "schemaId": "castle-town-bridge-river-joint-design",
+  "version": "2.2.0",
+  "status": "m20-c1r-frozen",
+  "stageId": "M20-C1R",
+  "title": "桥梁—河道纵横断面返工冻结",
+  "coordinateSystem": {
+    "upAxis": "Y",
+    "horizontalAxes": ["X", "Z"],
+    "unit": "meter"
+  },
+  "supersedes": {
+    "fixedBridgeDeckHeight": 5.08,
+    "legacyWaterSurfaceTarget": -1.2,
+    "reason": "桥面固定高度会造成桥路断层；M19R 已解析的桥头高度证明原水位范围无法同时满足桥面结构厚度和桥拱净空。"
+  },
+  "surfaceProviders": {
+    "rawTerrain": "raw-terrain",
+    "riverBed": "river-bed",
+    "waterSurface": "river-water-surface",
+    "roadDesignSurface": "road-design-surface",
+    "bridgeDeck": "bridge-deck-surface",
+    "walkableSurface": "walkable-surface"
+  },
+  "crossing": {
+    "bridgeId": "bridge-stone-a-main-v2",
+    "crossingCenterReference": { "x": -6.0, "z": 34.99 },
+    "southRoadSocketNodeId": "node-bridge-south-road-socket",
+    "northRoadSocketNodeId": "node-bridge-north-road-socket",
+    "roadWidth": 6.6,
+    "shoulderWidth": 0.8,
+    "totalDeckWidth": 8.2,
+    "socketHeightStrategy": "inherit-exact-road-design-height",
+    "maximumSocketHeightDifference": 0.03,
+    "maximumSocketPositionError": 0.03,
+    "maximumSocketDirectionErrorDegrees": 2.0
+  },
+  "resolvedRoadSockets": [
+    {
+      "nodeId": "node-bridge-south-road-socket",
+      "socketId": "bridge-south-road-socket",
+      "position": { "x": -7.0, "z": 44.375 },
+      "tangent": { "x": 0.544191, "z": -0.838961 },
+      "surfaceHeight": -0.03942168208514764,
+      "longitudinalSlope": 0.08,
+      "outwardLongitudinalSlope": 0.08,
+      "crossSlope": 0,
+      "roadWidth": 6.6,
+      "shoulderWidth": 0.8,
+      "leftBoundary": { "x": -9.769, "z": 42.579 },
+      "rightBoundary": { "x": -4.231, "z": 46.171 },
+      "navigationConnectionId": "nav-bridge-south-road-socket",
+      "graphSha256": "F6D62ED92FE29575C355AB0C8B4A81458D6065791EBBE2DEF0F3E1CF9804C72E",
+      "resolutionState": "resolved",
+      "sourceModule": "M19R"
+    },
+    {
+      "nodeId": "node-bridge-north-road-socket",
+      "socketId": "bridge-north-road-socket",
+      "position": { "x": -6.0, "z": 25.55 },
+      "tangent": { "x": 0.214657, "z": -0.976689 },
+      "surfaceHeight": 0.5795296075747818,
+      "longitudinalSlope": 0.07999999999999999,
+      "outwardLongitudinalSlope": 0.07999999999999999,
+      "crossSlope": 0,
+      "roadWidth": 6.6,
+      "shoulderWidth": 0.8,
+      "leftBoundary": { "x": -9.223, "z": 24.842 },
+      "rightBoundary": { "x": -2.777, "z": 26.258 },
+      "navigationConnectionId": "nav-bridge-north-road-socket",
+      "graphSha256": "F6D62ED92FE29575C355AB0C8B4A81458D6065791EBBE2DEF0F3E1CF9804C72E",
+      "resolutionState": "resolved",
+      "sourceModule": "M19R"
+    }
+  ],
+  "bridgeAlignment": {
+    "sourceEdgeId": "edge-bridge-handoff",
+    "curveType": "cubic-bezier",
+    "centerCurve": [[-7.0, 44.375], [-5.367427, 41.858117], [-6.643971, 28.480067], [-6.0, 25.55]],
+    "controlPoints": [[-7.0, 44.375], [-5.367427, 41.858117], [-6.643971, 28.480067], [-6.0, 25.55]],
+    "totalLength": 18.94560271831285,
+    "travelDirection": "south-socket-to-north-socket",
+    "riverCenterIntersection": { "station": 9.49182686112788, "x": -6.130382987963099, "z": 34.99283797603635 },
+    "endpointTangentRule": "三次贝塞尔曲线的首末导数分别精确继承 M19R 南、北桥头道路连接口切线；端部方向误差不得超过 2 度。",
+    "designRule": "桥面、路肩和导航走廊严格沿此中心线生成；不得改写 M19R 道路连接口。"
+  },
+  "riverSection": {
+    "centerlineSource": "river-centerline-v2",
+    "sectionCoordinate": "d = z - naturalRiverCenterZ(x)，d 为正表示南岸",
+    "waterWidth": 8.0,
+    "waterHalfWidth": 4.0,
+    "bankTransitionWidthPerSide": 4.5,
+    "bankOuterOffset": 8.5,
+    "waterSurfaceTarget": -1.9,
+    "waterSurfaceAllowedRange": [-2.0, -1.8],
+    "bedCenterTarget": -5.15,
+    "bedCenterAllowedRange": [-5.3, -5.0],
+    "bedHeightAtWaterEdge": -3.95,
+    "bankTopTarget": -1.0,
+    "minimumWaterDepthAtCenter": 3.25,
+    "minimumWaterDepthAtEdge": 2.05,
+    "minimumVisibleBankHeight": 0.8,
+    "maximumBankSlope": 0.7,
+    "crossSectionStations": [
+      { "absoluteOffset": 0.0, "height": -5.15, "zone": "river-bed-center" },
+      { "absoluteOffset": 4.0, "height": -3.95, "zone": "river-bed-water-edge" },
+      { "absoluteOffset": 8.5, "height": -1.0, "zone": "engineered-bank-top" }
+    ],
+    "constructionRules": [
+      "河床从中心到水边使用连续凹形曲线，水面不得代替河床。",
+      "水边至岸顶使用分段线性或受限样条；任一点土质岸坡坡度不得超过 0.70。",
+      "岸顶至 raw-terrain 以不高于 0.30 的短过渡带收口；不得以透明水面遮盖穿插。",
+      "桥台挡墙属于石质结构，不计入土质岸坡坡度；其责任是把桥面和低于桥面的岸顶稳定连接。"
+    ]
+  },
+  "bridgeDeckProfile": {
+    "absoluteHeight": null,
+    "fixedAbsoluteHeightForbidden": true,
+    "endpointStrategy": "match-road-sockets-exactly",
+    "maximumLongitudinalSlope": 0.06,
+    "maximumCrossSlope": 0.025,
+    "maximumAdjacentSectionHeightDelta": 0.05,
+    "requiredMaximumMeshSectionSpacing": 0.6,
+    "deckStructureDepth": 0.55,
+    "deckStructureDepthAllowedRange": [0.55, 0.9],
+    "minimumMainArchClearanceAboveWater": 1.2,
+    "centerCamberAboveEndpointChord": 0.1549460372551829,
+    "centerCamberAllowedRange": [0.15, 0.4],
+    "endpointSlopeConvention": "连接口的 outwardLongitudinalSlope 指向普通道路外侧；桥面按南到北行进方向的设计端部坡度分别为 -0.06 和 +0.06。",
+    "profileStations": [
+      { "station": 0.0, "height": -0.03942168208514764, "role": "south-road-socket" },
+      { "station": 0.5, "height": -0.06942168208514764, "role": "south-drainage-sag" },
+      { "station": 1.5, "height": -0.04, "role": "south-recovery" },
+      { "station": 2.5, "height": 0.015, "role": "south-rise" },
+      { "station": 4.0, "height": 0.105, "role": "south-bank-approach" },
+      { "station": 5.38, "height": 0.1878, "role": "south-water-edge" },
+      { "station": 6.0, "height": 0.225, "role": "main-arch-south" },
+      { "station": 8.0, "height": 0.345, "role": "main-arch-rise" },
+      { "station": 9.425, "height": 0.425, "role": "design-camber" },
+      { "station": 11.0, "height": 0.455, "role": "main-arch-north" },
+      { "station": 13.0, "height": 0.48, "role": "north-water-edge-approach" },
+      { "station": 13.39, "height": 0.4829, "role": "north-water-edge" },
+      { "station": 15.0, "height": 0.495, "role": "north-bank-approach" },
+      { "station": 16.8, "height": 0.51, "role": "north-rise" },
+      { "station": 17.65, "height": 0.525, "role": "north-abutment" },
+      { "station": 18.344060585372247, "height": 0.5434374444760106, "role": "north-transition" },
+      { "station": 18.94560271831285, "height": 0.5795296075747818, "role": "north-road-socket" }
+    ],
+    "requirements": [
+      "桥面南北端必须与 M19R 连接口同高、同宽、同方向。",
+      "0.50 米处的极浅排水凹点只用于消化南岸既有外向坡，不得形成台阶或可见断缝。",
+      "桥面横坡保持 0；路面 6.6 米加双侧路肩后总宽 8.2 米。",
+      "主拱开口覆盖 d=-4.0 至 d=+4.0 的水面宽度，桥面下缘以桥面高度减 0.55 米计算净空。",
+      "不得通过抬高两岸普通道路、固定桥面绝对高程或增设台阶解决高程关系。"
+    ]
+  },
+  "abutments": {
+    "south": { "bankOffset": 8.5, "bridgeStation": 0.88, "capHeightSource": "bridge-deck-profile", "foundationSource": "engineered-bank-top" },
+    "north": { "bankOffset": -8.5, "bridgeStation": 17.91, "capHeightSource": "bridge-deck-profile", "foundationSource": "engineered-bank-top" },
+    "requirements": [
+      "桥台脚落在工程化岸顶或其下方的稳定土体中，不得悬在水面或河床上。",
+      "桥台背墙与普通道路端面重叠不得超过 0.01 米；桥台不得侵入水面区域。",
+      "桥台外露部分使用石质挡墙，连续遮挡道路填方端面和土坡切口。"
+    ]
+  },
+  "ownership": {
+    "M18R": ["桥头道路连接口位置、方向、宽度和拓扑"],
+    "M19R": ["普通道路目标高度、外向纵坡和桥头端面"],
+    "M20-C1": ["桥面纵断面、水位、河床、岸坡、桥台和桥拱净空的冻结数据"],
+    "M20-C2": ["按冻结数据生成网格、表面接口和可视结构"],
+    "M20-C3": ["运行时与视觉验收"]
+  },
+  "blockingAcceptance": {
+    "maximumRoadBridgeEndpointHeightError": 0.03,
+    "maximumRoadBridgeEndpointPositionError": 0.03,
+    "maximumRoadBridgeEndpointDirectionErrorDegrees": 2.0,
+    "maximumRoadBridgeWidthError": 0.03,
+    "maximumVisibleRoadBridgeGap": 0.01,
+    "maximumCrossEdgeSlopeDelta": 0.02,
+    "minimumMainArchClearanceAboveWater": 1.2,
+    "minimumVisibleBankHeight": 0.8,
+    "maximumBankSlope": 0.7,
+    "maximumTerrainThroughBridgeCount": 0,
+    "maximumWaterAboveBankCount": 0,
+    "maximumFixedLegacyBridgeHeightReferenceCount": 0,
+    "requiredNavigationContinuity": 1.0
+  },
+  "freezeEvidence": {
+    "roadGraphSha256": "F6D62ED92FE29575C355AB0C8B4A81458D6065791EBBE2DEF0F3E1CF9804C72E",
+    "validatedBy": "M20-C1R-main-dialogue",
+    "frozenAt": "2026-08-05",
+    "implementationAuthorization": "M20-C2R may implement only this revised frozen alignment and section data; changes to water level, deck stations, sockets, or acceptance thresholds require a new C1 revision."
+  }
+}
