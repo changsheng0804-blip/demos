@@ -86,5 +86,7 @@
     - ../机械蝴蝶-MechanicalButterfly/机械蝶-MechanicalButterfly.html
     - ../机械蝶-MechanicalButterfly/验收记录-Validation.json
     - ./机械蝶候选-ButterflyDirections.png
-  Git提交: 待本次发布提交产生后补充
+  Git提交:
+    编号: f20bfd2818cb052cf2b24fab573bf101c2c00f66
+    说明: 发布体验驱动意图收敛方法、机械蝶案例与最新可玩页面。
 重开记录: []
