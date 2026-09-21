@@ -3,137 +3,433 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>体验驱动意图收敛</title>
+  <meta name="description" content="先让人看见和试玩候选，再把体验中的发现变成约束，指导下一轮 AI 生成。">
+  <title>体验驱动意图收敛｜先看见，再决定</title>
   <style>
-    :root { color-scheme: light; --ink:#1f2b25; --muted:#617068; --paper:#f7f4ed; --panel:#fffdfa; --line:#d9ded2; --leaf:#477152; --mint:#dcebd8; --gold:#be8a38; --blue:#dbeaf4; }
-    * { box-sizing:border-box; }
-    body { margin:0; color:var(--ink); background:radial-gradient(circle at 8% 0%, #e4f0df 0, transparent 29rem), radial-gradient(circle at 96% 8%, #f5e9c9 0, transparent 28rem), var(--paper); font-family:"Microsoft YaHei","PingFang SC",sans-serif; line-height:1.7; }
-    main { width:min(1080px, calc(100% - 32px)); margin:0 auto; padding:56px 0 72px; }
-    .eyebrow { color:var(--leaf); font-size:14px; font-weight:700; letter-spacing:.12em; }
-    h1 { max-width:820px; margin:8px 0 12px; font-size:clamp(32px, 5vw, 56px); line-height:1.14; letter-spacing:-.045em; }
-    .lead { max-width:760px; margin:0; color:var(--muted); font-size:18px; }
-    .actions { display:flex; flex-wrap:wrap; gap:12px; margin:28px 0 46px; }
-    a.button { display:inline-flex; align-items:center; min-height:44px; padding:8px 16px; border:1px solid var(--leaf); border-radius:999px; color:#fff; background:var(--leaf); text-decoration:none; font-weight:700; }
-    a.button.secondary { color:var(--leaf); background:transparent; }
-    section { margin-top:26px; padding:28px; border:1px solid var(--line); border-radius:22px; background:rgba(255,253,250,.86); box-shadow:0 14px 32px rgba(47,64,51,.045); }
-    h2 { margin:0 0 12px; font-size:24px; letter-spacing:-.025em; }
-    h3 { margin:0; font-size:17px; }
-    p { margin:10px 0 0; }
-    .label { display:inline-block; margin-bottom:8px; padding:2px 9px; border-radius:999px; background:var(--mint); color:#2f653e; font-size:13px; font-weight:700; }
-    .label.infer { background:#f9e5b8; color:#895d18; }
-    .label.open { background:var(--blue); color:#346887; }
-    .flow { display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; margin-top:22px; }
-    .step { position:relative; min-height:134px; padding:18px; border:1px solid var(--line); border-radius:16px; background:#fff; }
-    .step:not(:last-child)::after { content:"→"; position:absolute; right:-20px; top:50%; z-index:2; color:var(--gold); font-size:22px; transform:translateY(-50%); }
-    .step b { display:block; font-size:18px; }
-    .step span { display:block; margin-top:8px; color:var(--muted); font-size:14px; line-height:1.55; }
-    .compare { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:18px; }
-    .compare > div { padding:19px; border-radius:16px; background:#f4f1e9; }
-    .compare > div:last-child { background:#e9f3e5; }
-    .compare p { color:var(--muted); }
-    .diagram { display:grid; grid-template-columns:150px 1fr; align-items:center; gap:20px; margin-top:20px; padding:22px; border-radius:16px; background:#f2f7ef; }
-    .core { display:grid; place-items:center; aspect-ratio:1; border-radius:50%; border:1px solid #7da17e; background:#fff; color:var(--leaf); font-weight:700; text-align:center; }
-    .branches { display:grid; grid-template-columns:repeat(5, 1fr); gap:8px; }
-    .branches div { min-height:72px; display:grid; place-items:center; padding:8px; border:1px solid #b7cfb5; border-radius:12px; background:#fff; text-align:center; font-size:14px; }
-    .case-grid, .state-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:14px; margin-top:18px; }
-    .case, .state { padding:18px; border-left:4px solid var(--leaf); border-radius:0 14px 14px 0; background:#fbfaf5; }
-    .state:nth-child(2) { border-left-color:var(--gold); }
-    .state:nth-child(3) { border-left-color:#5f92b0; }
-    .case-image { width:100%; display:block; margin-top:20px; border:1px solid var(--line); border-radius:16px; background:#14201f; }
-    ul { margin:10px 0 0; padding-left:1.25em; }
-    li + li { margin-top:5px; }
-    code { padding:.12em .35em; border-radius:5px; background:#eef1eb; font-family:ui-monospace,monospace; font-size:.9em; }
-    .documents { display:flex; flex-wrap:wrap; gap:10px; margin-top:18px; }
-    .documents a { padding:9px 12px; border:1px solid var(--line); border-radius:10px; color:var(--leaf); background:#fff; text-decoration:none; font-size:14px; }
-    .note { color:var(--muted); font-size:14px; }
-    footer { padding:25px 4px 0; color:var(--muted); font-size:14px; }
-    @media (max-width:760px) { main { width:min(100% - 24px, 1080px); padding-top:36px; } section { padding:21px; border-radius:18px; } .flow,.case-grid,.state-grid { grid-template-columns:1fr; } .step:not(:last-child)::after { content:"↓"; top:auto; right:50%; bottom:-24px; transform:translateX(50%); } .compare,.diagram { grid-template-columns:1fr; } .branches { grid-template-columns:repeat(2,1fr); } .core { width:120px; } }
+    :root {
+      --ink: #15221d;
+      --soft-ink: #4d5c54;
+      --paper: #f8f6ef;
+      --card: rgba(255, 254, 250, .86);
+      --line: #d8ded4;
+      --green: #326a50;
+      --green-deep: #174b37;
+      --mint: #dceddf;
+      --sky: #dcecf4;
+      --gold: #c48c37;
+      --peach: #f5e3c2;
+      --shadow: 0 18px 50px rgba(31, 57, 43, .09);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 10% 0%, rgba(211, 232, 211, .92) 0, rgba(211,232,211,0) 29rem),
+        radial-gradient(circle at 95% 8%, rgba(248, 225, 184, .72) 0, rgba(248,225,184,0) 30rem),
+        var(--paper);
+      font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", sans-serif;
+      line-height: 1.72;
+    }
+    a { color: inherit; }
+    .shell { width: min(1140px, calc(100% - 36px)); margin: 0 auto; }
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      min-height: 76px;
+      border-bottom: 1px solid rgba(50, 106, 80, .16);
+    }
+    .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 800; }
+    .brand-mark {
+      width: 30px; height: 30px; display: grid; place-items: center;
+      border-radius: 10px; color: #fff; background: var(--green);
+      box-shadow: 0 7px 18px rgba(32, 96, 70, .25);
+    }
+    .topbar nav { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 18px; font-size: 14px; color: var(--soft-ink); }
+    .topbar nav a { text-decoration: none; }
+    .topbar nav a:hover { color: var(--green-deep); }
+    .hero { position: relative; padding: 92px 0 74px; overflow: hidden; }
+    .hero::after {
+      content: ""; position: absolute; z-index: -1; width: 340px; height: 340px;
+      right: -90px; top: 34px; border: 1px solid rgba(50,106,80,.17); border-radius: 48% 52% 41% 59%;
+      transform: rotate(26deg);
+    }
+    .kicker {
+      display: inline-flex; align-items: center; gap: 8px; margin: 0 0 14px;
+      color: var(--green); font-size: 14px; font-weight: 800; letter-spacing: .09em;
+    }
+    .kicker::before { content: ""; width: 30px; height: 1px; background: currentColor; }
+    h1 {
+      max-width: 880px; margin: 0; font-family: "STSong", "Songti SC", serif;
+      font-size: clamp(42px, 7vw, 78px); line-height: 1.08; letter-spacing: -.055em;
+      font-weight: 600;
+    }
+    .hero-copy { max-width: 720px; margin: 26px 0 0; color: var(--soft-ink); font-size: clamp(17px, 2vw, 21px); }
+    .hero-copy strong { color: var(--green-deep); }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
+    .button {
+      display: inline-flex; align-items: center; justify-content: center; min-height: 48px;
+      padding: 10px 18px; border: 1px solid var(--green); border-radius: 999px;
+      background: var(--green); color: #fff; text-decoration: none; font-weight: 800; cursor: pointer;
+      font: inherit;
+    }
+    .button:hover { background: var(--green-deep); border-color: var(--green-deep); }
+    .button.ghost { color: var(--green); background: transparent; }
+    .button.ghost:hover { color: #fff; background: var(--green); }
+    .promise {
+      display: grid; grid-template-columns: 30px 1fr; gap: 13px; max-width: 810px;
+      margin-top: 48px; padding: 17px 20px; border-left: 3px solid var(--gold);
+      border-radius: 0 16px 16px 0; background: rgba(255, 253, 245, .72);
+    }
+    .promise b { color: var(--green-deep); }
+    .promise-icon { color: var(--gold); font-size: 24px; line-height: 1.1; }
+    section { margin: 32px 0; padding: 34px; border: 1px solid var(--line); border-radius: 28px; background: var(--card); box-shadow: var(--shadow); }
+    .section-tag {
+      display: inline-block; padding: 3px 10px; border-radius: 999px;
+      background: var(--mint); color: var(--green-deep); font-size: 13px; font-weight: 800;
+    }
+    .section-tag.warm { color: #7a511b; background: var(--peach); }
+    h2 { max-width: 820px; margin: 12px 0 0; font-family: "STSong", "Songti SC", serif; font-size: clamp(29px, 4.2vw, 45px); line-height: 1.2; letter-spacing: -.035em; font-weight: 600; }
+    h3 { margin: 0; font-size: 18px; line-height: 1.4; }
+    .intro { max-width: 770px; margin: 16px 0 0; color: var(--soft-ink); font-size: 17px; }
+    .origin-grid { display: grid; grid-template-columns: .9fr 1.1fr; gap: 22px; margin-top: 28px; }
+    .story { padding: 24px; border-radius: 20px; background: #f0f4ed; }
+    .story + .story { background: #f8eee0; }
+    .story-number { display: block; color: var(--green); font-size: 38px; font-family: Georgia, serif; line-height: 1; }
+    .story h3 { margin-top: 12px; }
+    .story p { margin: 9px 0 0; color: var(--soft-ink); }
+    .wrong-path {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 22px;
+      padding: 18px; border-radius: 18px; background: #f2f0ea;
+    }
+    .wrong-path div { position: relative; min-height: 92px; padding: 13px; border: 1px solid #d6d8d2; border-radius: 13px; background: #fbfaf7; font-size: 14px; }
+    .wrong-path div:not(:last-child)::after { content: "→"; position: absolute; right: -15px; top: 50%; z-index: 2; color: #999f97; font-size: 19px; transform: translateY(-50%); }
+    .wrong-path b { display: block; margin-bottom: 5px; color: #3c4a41; }
+    .visual-caption { display: flex; align-items: flex-start; gap: 10px; margin: 15px 0 0; color: var(--soft-ink); font-size: 14px; }
+    .visual-caption::before { content: "↳"; color: var(--gold); font-size: 20px; line-height: 1; }
+    .gallery { display: grid; grid-template-columns: 1.2fr .9fr .9fr; gap: 12px; margin-top: 22px; }
+    figure { min-width: 0; margin: 0; overflow: hidden; border: 1px solid var(--line); border-radius: 17px; background: #fff; }
+    figure img { display: block; width: 100%; height: 180px; object-fit: contain; object-position: top; background: #fff; }
+    figure:first-child img { height: 180px; }
+    figcaption { padding: 12px 13px 13px; color: var(--soft-ink); font-size: 13px; line-height: 1.55; }
+    figcaption b { display: block; color: var(--ink); font-size: 14px; }
+    .flip-intro { display: grid; grid-template-columns: 1fr 72px 1fr; align-items: center; gap: 12px; margin-top: 26px; }
+    .flow-side { padding: 22px; border: 1px solid var(--line); border-radius: 18px; }
+    .flow-side.old { background: #f6f2eb; }
+    .flow-side.new { border-color: #9fc1a7; background: #edf6e8; }
+    .flow-side p { margin: 8px 0 0; color: var(--soft-ink); }
+    .turn { display: grid; place-items: center; width: 60px; height: 60px; margin: auto; border-radius: 50%; color: #fff; background: var(--green); font-size: 25px; transform: rotate(180deg); }
+    .loop { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 32px; }
+    .loop-step { position: relative; min-height: 190px; padding: 20px; border: 1px solid var(--line); border-radius: 18px; background: #fff; }
+    .loop-step:not(:last-child)::after { content: "→"; position: absolute; right: -20px; top: 50%; z-index: 2; color: var(--gold); font-size: 24px; transform: translateY(-50%); }
+    .loop-icon { display: grid; place-items: center; width: 38px; height: 38px; margin-bottom: 28px; border-radius: 12px; color: var(--green-deep); background: var(--mint); font-weight: 900; }
+    .loop-step p { margin: 9px 0 0; color: var(--soft-ink); font-size: 14px; line-height: 1.62; }
+    .two-arrows { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 18px; }
+    .arrow-note { padding: 16px 18px; border-radius: 16px; background: var(--sky); color: #244f68; }
+    .arrow-note:nth-child(2) { background: var(--peach); color: #704d1d; }
+    .arrow-note b { display: block; margin-bottom: 4px; }
+    .decision-layout { display: grid; grid-template-columns: .83fr 1.17fr; gap: 26px; align-items: center; margin-top: 26px; }
+    .decision-copy { color: var(--soft-ink); }
+    .decision-copy p { margin: 0; }
+    .decision-copy ul { padding-left: 1.15em; margin: 15px 0 0; }
+    .decision-copy li + li { margin-top: 8px; }
+    .decision-map { position: relative; min-height: 320px; padding: 24px; overflow: hidden; border-radius: 23px; background: #eaf3e7; }
+    .decision-map::before, .decision-map::after { content: ""; position: absolute; border: 1px dashed rgba(50,106,80,.37); border-radius: 50%; }
+    .decision-map::before { width: 360px; height: 210px; top: 54px; left: 58px; transform: rotate(-19deg); }
+    .decision-map::after { width: 250px; height: 170px; top: 74px; left: 155px; transform: rotate(24deg); }
+    .decision-center { position: absolute; z-index: 2; left: 50%; top: 50%; display: grid; place-items: center; width: 124px; height: 124px; border: 1px solid #6c9b74; border-radius: 50%; background: #fffefb; color: var(--green-deep); text-align: center; font-weight: 900; transform: translate(-50%, -50%); box-shadow: 0 8px 20px rgba(45,91,61,.13); }
+    .node { position: absolute; z-index: 2; display: grid; place-items: center; min-width: 83px; min-height: 42px; padding: 7px 10px; border: 1px solid #b4cfb9; border-radius: 12px; background: rgba(255,255,255,.9); font-size: 14px; text-align: center; }
+    .node.n1 { top: 30px; left: 7%; } .node.n2 { top: 34px; right: 8%; } .node.n3 { bottom: 31px; left: 6%; } .node.n4 { bottom: 29px; right: 8%; } .node.n5 { bottom: 14px; left: 43%; }
+    .state-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 24px; }
+    .state { padding: 18px; border-radius: 17px; background: #f8f7f0; }
+    .state:nth-child(2) { background: #f9efd8; } .state:nth-child(3) { background: #e7f1f6; }
+    .state small { display: block; margin-bottom: 8px; color: var(--soft-ink); font-weight: 700; }
+    .state p { margin: 7px 0 0; color: var(--soft-ink); font-size: 14px; }
+    .case-layout { display: grid; grid-template-columns: .92fr 1.08fr; gap: 24px; margin-top: 26px; align-items: start; }
+    .case-image { width: 100%; display: block; border: 1px solid var(--line); border-radius: 18px; background: #14201f; }
+    .case-steps { display: grid; gap: 10px; }
+    .case-step { display: grid; grid-template-columns: 34px 1fr; gap: 13px; padding: 15px; border-radius: 15px; background: #f6f5ee; }
+    .case-step:nth-child(2) { background: #edf4ea; } .case-step:nth-child(3) { background: #f8ecd8; } .case-step:nth-child(4) { background: #e7f1f6; }
+    .case-dot { display: grid; place-items: center; width: 29px; height: 29px; border-radius: 50%; color: #fff; background: var(--green); font-size: 13px; font-weight: 900; }
+    .case-step h3 { font-size: 16px; } .case-step p { margin: 4px 0 0; color: var(--soft-ink); font-size: 14px; }
+    .callout { margin-top: 21px; padding: 19px 20px; border-radius: 17px; background: var(--green-deep); color: #fff; }
+    .callout b { color: #d8edcf; } .callout p { margin: 7px 0 0; color: rgba(255,255,255,.84); }
+    .install { position: relative; overflow: hidden; color: #fff; border: 0; background: linear-gradient(135deg, #1a4d39, #2d7253); }
+    .install::before { content: ""; position: absolute; width: 440px; height: 440px; top: -250px; right: -130px; border: 1px solid rgba(255,255,255,.17); border-radius: 47% 53% 54% 46%; transform: rotate(24deg); }
+    .install h2 { max-width: 690px; }
+    .install .intro { color: rgba(255,255,255,.8); }
+    .install-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-top: 26px; }
+    .install-card { position: relative; padding: 22px; border: 1px solid rgba(255,255,255,.2); border-radius: 18px; background: rgba(255,255,255,.1); backdrop-filter: blur(6px); }
+    .install-card.full { grid-column: 1 / -1; }
+    .install-card .step-label { display: inline-block; margin-bottom: 10px; color: #d4efc8; font-size: 13px; font-weight: 800; }
+    .install-card h3 { color: #fff; }
+    .install-card p { margin: 8px 0 0; color: rgba(255,255,255,.83); font-size: 14px; }
+    .command { margin: 15px 0 0; padding: 14px; overflow-wrap: anywhere; border-radius: 12px; background: rgba(5,28,18,.45); color: #eff7e9; font: 13px/1.65 ui-monospace, "Cascadia Code", monospace; }
+    .copy-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 13px; }
+    .copy { min-height: 38px; padding: 7px 13px; border: 1px solid rgba(255,255,255,.52); border-radius: 999px; color: #fff; background: transparent; cursor: pointer; font: inherit; font-size: 14px; font-weight: 800; }
+    .copy:hover { background: rgba(255,255,255,.16); }
+    .copy-feedback { min-height: 1.6em; color: #dff3d3; font-size: 13px; }
+    .source-link { color: #fff; font-weight: 800; }
+    .fine-print { margin: 18px 0 0; color: rgba(255,255,255,.72); font-size: 13px; }
+    .materials { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 24px; }
+    .material { display: block; min-height: 146px; padding: 20px; border: 1px solid var(--line); border-radius: 17px; background: #fff; text-decoration: none; transition: transform .18s ease, box-shadow .18s ease; }
+    .material:hover { transform: translateY(-3px); box-shadow: 0 12px 24px rgba(31,57,43,.1); }
+    .material span { color: var(--green); font-size: 14px; font-weight: 800; } .material h3 { margin-top: 9px; } .material p { margin: 7px 0 0; color: var(--soft-ink); font-size: 14px; }
+    .limits { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 22px; }
+    .limit { padding: 17px; border-radius: 15px; background: #f5f2eb; color: var(--soft-ink); font-size: 14px; }
+    .limit b { display: block; margin-bottom: 5px; color: var(--ink); }
+    footer { padding: 15px 0 52px; color: var(--soft-ink); font-size: 14px; text-align: center; }
+    @media (max-width: 850px) {
+      .origin-grid, .decision-layout, .case-layout { grid-template-columns: 1fr; }
+      .loop { grid-template-columns: repeat(2, 1fr); }
+      .loop-step:nth-child(2)::after { content: "↓"; right: 50%; top: auto; bottom: -26px; transform: translateX(50%); }
+      .loop-step:nth-child(3)::after { content: "→"; right: -20px; top: 50%; bottom: auto; transform: translateY(-50%); }
+      .gallery { grid-template-columns: 1fr 1fr; } .gallery figure:first-child { grid-column: 1 / -1; }
+    }
+    @media (max-width: 620px) {
+      .shell { width: min(100% - 24px, 1140px); } .topbar { min-height: 65px; } .topbar nav { gap: 12px; font-size: 12px; }
+      .hero { padding: 60px 0 46px; } section { margin: 20px 0; padding: 22px; border-radius: 21px; }
+      .wrong-path, .loop, .state-strip, .materials, .limits, .install-grid { grid-template-columns: 1fr; }
+      .wrong-path div:not(:last-child)::after, .loop-step:not(:last-child)::after { content: "↓"; right: 50%; top: auto; bottom: -24px; transform: translateX(50%); }
+      .wrong-path { gap: 18px; } .loop { gap: 22px; }
+      .flip-intro { grid-template-columns: 1fr; } .turn { transform: rotate(270deg); }
+      .gallery { grid-template-columns: 1fr; } .gallery figure:first-child { grid-column: auto; }
+      .gallery figure img, .gallery figure:first-child img { height: auto; }
+      .state-strip { gap: 10px; } .decision-map { min-height: 300px; } .node { min-width: 70px; font-size: 12px; }
+      .node.n1 { left: 2%; } .node.n2 { right: 2%; } .node.n3 { left: 1%; } .node.n4 { right: 1%; } .node.n5 { left: 38%; }
+    }
   </style>
 </head>
 <body>
-  <main>
-    <div class="eyebrow">一种可复用的 AI 编程工作方式</div>
-    <h1>从“许愿式生成”回到用户真正参与的创造过程</h1>
-    <p class="lead">先让人看见、试玩和比较候选，再把体验中发现的条件冻结成可追溯、可重开的决策状态；下一轮生成只在这些状态允许的范围里继续。</p>
-    <div class="actions">
-      <a class="button" href="../机械蝴蝶-MechanicalButterfly/机械蝶-MechanicalButterfly.html">打开机械蝶案例</a>
-      <a class="button secondary" href="../index.html">返回演示合集</a>
-    </div>
+  <div class="shell">
+    <header class="topbar">
+      <a class="brand" href="../index.html" aria-label="返回演示合集">
+        <span class="brand-mark">↗</span><span>体验驱动意图收敛</span>
+      </a>
+      <nav aria-label="页面导航">
+        <a href="#来处">它从哪里来</a>
+        <a href="#方法">怎样运转</a>
+        <a href="#案例">看机械蝶案例</a>
+        <a href="#安装">安装技能</a>
+      </nav>
+    </header>
 
-    <section>
-      <span class="label">已确认</span>
-      <h2>这套方法要接起的闭环</h2>
-      <div class="flow">
-        <div class="step"><b>可玩候选</b><span>把未来用户会看到的效果先做成可体验的对象。</span></div>
-        <div class="step"><b>体验与判断</b><span>用户通过操作、比较和感受，发现原先没有说出的条件。</span></div>
-        <div class="step"><b>结构化意图</b><span>把选择、否定和待定项记录成可读、可追溯的状态。</span></div>
-        <div class="step"><b>受约束生成</b><span>AI 根据已确认状态继续，而不是重新凭空猜测。</span></div>
-      </div>
-      <div class="compare">
-        <div><h3>常见流程</h3><p>提示词 → 预览 → 再提示词 → 版本历史。反馈常停留在一句话里，下一轮容易重新误解。</p></div>
-        <div><h3>这里的流程</h3><p>体验 → 判断 → 结构化意图 → 受约束的下一次生成。每次体验都把知识向前补回需求与取舍。</p></div>
-      </div>
-    </section>
-
-    <section>
-      <span class="label">已确认</span>
-      <h2>它不是普通的代码分支，而是可组合的决策图</h2>
-      <p>传统分支通常复制一整条实现路径。这里把会影响感受的维度拆开，让用户可以分别选择，再组合成当前可玩的成品。</p>
-      <div class="diagram">
-        <div class="core">当前<br>可玩的<br>成品</div>
-        <div class="branches">
-          <div>动作</div><div>机械细节</div><div>翅面材质</div><div>微光</div><div>环境</div>
+    <main>
+      <section class="hero" aria-labelledby="主标题">
+        <p class="kicker">一套从真实试玩里长出来的 AI 编程方法</p>
+        <h1 id="主标题">不是先许愿，<br>而是先看见。</h1>
+        <p class="hero-copy">很多人不是不会提需求，而是<strong>在还没看见东西之前，根本无从知道自己要什么。</strong>这套方法先把可能的成果做成能看、能玩、能比较的小样，再让人的判断慢慢把 AI 的生成范围收拢。</p>
+        <div class="hero-actions">
+          <a class="button" href="#方法">先看它怎样运转</a>
+          <a class="button ghost" href="#安装">把它装进 Codex</a>
         </div>
-      </div>
-      <p class="note">这不会消除所有组合，但把探索从“整套版本互相排斥”变成“少数有意义的维度可随时重开”。</p>
-    </section>
+        <div class="promise">
+          <span class="promise-icon">✦</span>
+          <div><b>你不需要先会写需求。</b><br>“太亮了”“它挡住我了”“背景让我觉得不对”都是有效的判断；AI 的工作是把这些判断变成下一轮真正会遵守的条件。</div>
+        </div>
+      </section>
 
-    <section>
-      <span class="label infer">推断</span>
-      <h2>为什么它对 AI 实现更稳定、更可控</h2>
-      <p>AI 更擅长在已有上下文上补齐和修改，而不是从空白处反复构建。可追溯状态把“我喜欢这个，但不要那个”的体验结果变成下一轮可执行的边界，减少同一误解反复出现。</p>
-      <div class="state-grid">
-        <div class="state"><h3>用户已确认</h3><p>作为优先约束保存，例如外形起点、明确选择和排除项。</p></div>
-        <div class="state"><h3>AI 的实现假设</h3><p>单独记录，用户可随时推翻；不能伪装成用户的决定。</p></div>
-        <div class="state"><h3>尚待体验</h3><p>保留为下一轮候选，避免被过早“定稿”。</p></div>
-      </div>
-    </section>
+      <section id="来处">
+        <span class="section-tag warm">它从哪里来</span>
+        <h2>问题不在提示词写得还不够漂亮，<br>而在人被过早地请出了创造过程。</h2>
+        <p class="intro">传统编程里，程序员通常知道代码会长成什么样；但普通人在使用 AI 编程时，经常只能先给一句模糊愿望，然后等到成品出现才第一次发现：原来自己在意的是另一个问题。</p>
+        <div class="wrong-path" aria-label="一次性交付的常见过程">
+          <div><b>一句模糊愿望</b>“做个预约系统”</div>
+          <div><b>AI 填满空白</b>替人猜规则、界面与取舍</div>
+          <div><b>直接给出成品</b>人终于看见具体结果</div>
+          <div><b>才发现不对</b>但反馈又回到一句模糊提示</div>
+        </div>
+        <div class="visual-caption">难点不是“用户没说清”，而是有些条件只能在看见后果以后才会出现。</div>
+        <div class="origin-grid">
+          <article class="story">
+            <span class="story-number">01</span>
+            <h3>预约系统的规则，不该只躺在需求文档里</h3>
+            <p>当两个人争同一个时段时，人可以亲手比较“先到先得”和“占位五分钟”的后果：谁等待、谁确认、超时后发生什么。还没写完整业务代码，真正的取舍已经能被看见。</p>
+          </article>
+          <article class="story">
+            <span class="story-number">02</span>
+            <h3>机械蝶让“喜欢什么”变得具体</h3>
+            <p>从三种候选里选出晶翼、流线机身和少量机械结构以后，试玩又暴露出更深的条件：光点要在外面、不能挡视线；环境不是背景布，而会改变主体的感受。</p>
+          </article>
+        </div>
+        <div class="gallery" aria-label="用户提供的预约系统体验样图">
+          <figure>
+            <img src="./案例图示-CaseVisuals/预约关系-AppointmentFlow.png" alt="预约系统的关系图，展示排班、服务、客户资料、预约占位、取消改约和请假处理之间的关系">
+            <figcaption><b>先看关系</b>在代码之前，用户已经能判断哪些模块彼此影响。</figcaption>
+          </figure>
+          <figure>
+            <img src="./案例图示-CaseVisuals/规则后果-RuleConsequence.png" alt="预约冲突时先占位五分钟的互动规则样图">
+            <figcaption><b>再触发后果</b>规则不是抽象词，而是人能亲手经历的等待与确认。</figcaption>
+          </figure>
+          <figure>
+            <img src="./案例图示-CaseVisuals/入口比较-EntryComparison.png" alt="日历式、先选人和对话式三种预约入口的比较样图">
+            <figcaption><b>也可比较入口</b>保留、剪掉或补充方向，都来自体验而不是猜测。</figcaption>
+          </figure>
+        </div>
+      </section>
 
-    <section>
-      <span class="label">已确认</span>
-      <h2>机械蝶案例：体验如何反推约束</h2>
-      <div class="case-grid">
-        <div class="case"><h3>外形起点</h3><p>通透晶翼、细长流线机身、少量机械结构。</p></div>
-        <div class="case"><h3>体验中发现</h3><p>翅膀反光过亮；光点应在蝴蝶外部且不遮挡；背景会改变对蝴蝶的感受。</p></div>
-        <div class="case"><h3>进入下一轮的约束</h3><p>追随外部光点、少量翅根齿轮、含蓄微光，以及可切换的晨雾花园环境。</p></div>
-      </div>
-      <img class="case-image" src="./机械蝶候选-ButterflyDirections.png" alt="机械蝶的三个外形候选：精密钟表、通透晶翼、流线仿生">
-      <p>这个案例的重点不在“做出一只蝴蝶”，而在于用户能先玩到候选，才发现原本没有能力或没有机会描述的真实条件。</p>
-    </section>
+      <section id="方法">
+        <span class="section-tag">核心逻辑</span>
+        <h2>把开发顺序倒过来：<br>先让结果帮助人发现需求。</h2>
+        <div class="flip-intro">
+          <div class="flow-side old">
+            <h3>常见的“一次性交付”</h3>
+            <p>提示词 → 生成 → 成品 → 再写提示词</p>
+          </div>
+          <span class="turn" aria-hidden="true">↩</span>
+          <div class="flow-side new">
+            <h3>这里的“体验驱动”</h3>
+            <p>候选 → 体验 → 发现条件 → 受约束地继续生成</p>
+          </div>
+        </div>
+        <div class="loop" aria-label="体验驱动意图收敛的四步循环">
+          <article class="loop-step">
+            <span class="loop-icon">1</span>
+            <h3>给一个能判断的候选</h3>
+            <p>不是先做完整产品。只把当前最不确定、最影响方向的事情做得足够可见：效果、动作，或能触发后果的小情境。</p>
+          </article>
+          <article class="loop-step">
+            <span class="loop-icon">2</span>
+            <h3>让人用感受说话</h3>
+            <p>人可以说“太晃”“不对劲”“这个规则让我等太久”。这些不是不专业的噪音，而是以前没有机会出现的真实条件。</p>
+          </article>
+          <article class="loop-step">
+            <span class="loop-icon">3</span>
+            <h3>把发现存成状态</h3>
+            <p>AI 区分三件事：人已经决定什么、AI 暂时怎么实现、什么仍然等着下一次体验。保存的是当时的判断，不是永久封死。</p>
+          </article>
+          <article class="loop-step">
+            <span class="loop-icon">4</span>
+            <h3>带着约束再生成</h3>
+            <p>下一轮不再从空白猜测。它保留已选基线，只在允许探索的地方继续，并说明哪些决定可能受到影响。</p>
+          </article>
+        </div>
+        <div class="two-arrows">
+          <div class="arrow-note"><b>时间仍然向前</b>第一轮、第二轮、第三轮，成果持续往前走。</div>
+          <div class="arrow-note"><b>认识却能向回补</b>从看见结果开始，补回原本需求里缺失的约束。</div>
+        </div>
+      </section>
 
-    <section>
-      <span class="label open">不确定</span>
-      <h2>尚未自动化的部分</h2>
-      <ul>
-        <li>本案例已把决策状态和验证证据保存到仓库，但还没有实现“提交代码时自动阻止违背已确认决策”的程序规则。</li>
-        <li>它也不适合每一次小修复；明确、低风险的改动不需要强行制作可玩候选。</li>
-        <li>可组合维度仍需要设计边界，候选过多时，体验本身会变得难以判断。</li>
-      </ul>
-    </section>
+      <section>
+        <span class="section-tag">为什么不会变成分支地狱</span>
+        <h2>不要复制整套方案，<br>把可判断的部分拆成能重新组合的维度。</h2>
+        <div class="decision-layout">
+          <div class="decision-copy">
+            <p>传统代码分支常常是在复制一条完整实现路径。这里的选择更像一张<strong>可组合的决策图</strong>：动作、细节、材质、微光、环境分别可以变化，但它们围绕同一个当前成果。</p>
+            <ul>
+              <li>用户不会同时面对所有组合，只面对当前要判断的少数变化。</li>
+              <li>已经喜欢的部分保留为基线，新的发现可以加进来。</li>
+              <li>有影响关系的维度会被标出来，例如环境会影响微光和材质的感受。</li>
+            </ul>
+          </div>
+          <div class="decision-map" aria-label="动作、机械细节、翅面、微光和环境组成当前可玩成果的决策图">
+            <div class="decision-center">当前<br>可玩的<br>成果</div>
+            <div class="node n1">动作</div>
+            <div class="node n2">机械细节</div>
+            <div class="node n3">翅面材质</div>
+            <div class="node n4">环境</div>
+            <div class="node n5">微光</div>
+          </div>
+        </div>
+        <div class="state-strip">
+          <article class="state"><small>人已经决定</small><h3>继续遵守</h3><p>例如“晶翼、流线机身、少量机械结构”。这不是 AI 的默认值。</p></article>
+          <article class="state"><small>AI 暂时的做法</small><h3>允许推翻</h3><p>例如光晕多大、停多远。它们用来帮人判断，却不冒充人的选择。</p></article>
+          <article class="state"><small>还没看够的地方</small><h3>留给下一轮</h3><p>例如花园密度和飞行范围。先开放，不假装已经定稿。</p></article>
+        </div>
+      </section>
 
-    <section>
-      <span class="label infer">建议</span>
-      <h2>可复用资料</h2>
-      <p>下面的资料把方法、状态结构和机械蝶案例保存在同一仓库中，供后续任何探索型项目重用。</p>
-      <div class="documents">
-        <a href="./SKILL.md">工作方式说明</a>
-        <a href="./参考资料-references/方法精髓-MethodEssence.md">方法精髓</a>
-        <a href="./参考资料-references/决策状态-DecisionState.md">决策状态结构</a>
-        <a href="./机械蝶当前决策状态-ButterflyDecisionState.yaml">机械蝶当前决策状态</a>
-        <a href="./参考资料-references/案例证据-CaseEvidence.md">机械蝶案例证据</a>
-      </div>
-    </section>
-    <footer>静态展示页：页面不依赖外部程序资源，可与项目代码一同由 Git 版本记录保存。</footer>
-  </main>
+      <section id="案例">
+        <span class="section-tag warm">真实案例</span>
+        <h2>机械蝶不是一次“生成成功”，<br>而是一连串被体验改写的理解。</h2>
+        <p class="intro">它开始于三个外形候选，随后被用户拆开重组。每一次新反馈都不是“再改一下”，而是让 AI 发现自己对目标的某个理解其实错了。</p>
+        <div class="case-layout">
+          <img class="case-image" src="./机械蝶候选-ButterflyDirections.png" alt="机械蝶的三个外形候选：精密钟表、通透晶翼、流线仿生">
+          <div class="case-steps">
+            <article class="case-step"><span class="case-dot">1</span><div><h3>先看候选</h3><p>用户选了中间的通透翅膀、右边的流线机身，并要求机械结构只留一点。</p></div></article>
+            <article class="case-step"><span class="case-dot">2</span><div><h3>再试玩动作</h3><p>“追随光点”有感觉，但玻璃反光过亮，也看不清要追的对象。</p></div></article>
+            <article class="case-step"><span class="case-dot">3</span><div><h3>发现 AI 理解错了什么</h3><p>用户说的不是主体附近的小范围标记，而是场景外部的一个光点；标记反而遮挡视线。</p></div></article>
+            <article class="case-step"><span class="case-dot">4</span><div><h3>把环境也加入判断</h3><p>黑背景让场景单调。用户选择晨雾花园，背景、光团和蝴蝶开始作为整体一起判断。</p></div></article>
+          </div>
+        </div>
+        <div class="callout"><b>关键变化：</b>用户不是在替 AI 填一张需求表；用户在体验中发现了自己原本还不知道、也无法提前准确描述的条件。<p>这些条件随后被保存成“可以引用、可以重开”的决策状态，成为后续修改的边界。</p></div>
+        <div class="hero-actions">
+          <a class="button" href="../机械蝴蝶-MechanicalButterfly/机械蝶-MechanicalButterfly.html">试玩机械蝶当前版本</a>
+          <a class="button ghost" href="./机械蝶当前决策状态-ButterflyDecisionState.yaml">查看它的决策状态</a>
+        </div>
+      </section>
+
+      <section id="安装" class="install">
+        <span class="section-tag warm">现在就能使用</span>
+        <h2>看完以后，不需要自己复述这套方法。<br>把技能装进 Codex 就行。</h2>
+        <p class="intro">这个仓库现在把 <strong>.agents/skills/experience-to-intent</strong> 作为技能的标准来源。你不需要懂命令行：复制第一段话，发给 Codex；安装后复制第二段话，就能在任何新项目中调用它。</p>
+        <div class="install-grid">
+          <article class="install-card">
+            <span class="step-label">第一步：安装</span>
+            <h3>把这段话发给 Codex</h3>
+            <div class="command" id="安装指令">$skill-installer 请从 GitHub 仓库 changsheng0804-blip/demos 的路径 .agents/skills/experience-to-intent 安装“体验驱动意图收敛”技能。</div>
+            <div class="copy-row"><button class="copy" type="button" data-copy="安装指令">复制安装请求</button><span class="copy-feedback" aria-live="polite"></span></div>
+          </article>
+          <article class="install-card">
+            <span class="step-label">第二步：调用</span>
+            <h3>在新任务里这样开始</h3>
+            <div class="command" id="调用指令">$experience-to-intent 我有一个还说不清的产品想法。请先给我可看、可玩、可比较的小样；不要直接做最终成品。把我的体验反馈整理为后续生成要遵守的状态。</div>
+            <div class="copy-row"><button class="copy" type="button" data-copy="调用指令">复制调用请求</button><span class="copy-feedback" aria-live="polite"></span></div>
+          </article>
+          <article class="install-card full">
+            <span class="step-label">技能源</span>
+            <h3>这个仓库就是它的可追溯来源</h3>
+            <p>安装器会从标准技能目录下载完整的说明、决策状态模板和案例边界。若你把仓库克隆到本机，Codex 也会识别仓库中的 <code>.agents/skills</code> 目录。</p>
+            <div class="copy-row"><a class="source-link" href="https://github.com/changsheng0804-blip/demos/tree/main/.agents/skills/experience-to-intent">打开技能源文件 →</a></div>
+          </article>
+        </div>
+        <p class="fine-print">这套技能适合方向、取舍和体验尚不清楚的探索型工作；明确的小修复不需要被强行套进完整流程。</p>
+      </section>
+
+      <section>
+        <span class="section-tag">可继续阅读</span>
+        <h2>把方法、证据和状态分开保存，<br>下一个项目才能真正复用。</h2>
+        <div class="materials">
+          <a class="material" href="https://github.com/changsheng0804-blip/demos/blob/main/.agents/skills/experience-to-intent/SKILL.md">
+            <span>技能说明</span><h3>AI 如何推进这套工作方式</h3><p>什么时候先做候选，怎样记录反馈，怎样带着状态继续生成。</p>
+          </a>
+          <a class="material" href="./参考资料-references/方法精髓-MethodEssence.md">
+            <span>方法来历</span><h3>这套思路真正改变了什么</h3><p>从“体验发现条件”到“知识向前回补”的完整逻辑。</p>
+          </a>
+          <a class="material" href="./参考资料-references/案例证据-CaseEvidence.md">
+            <span>案例边界</span><h3>哪些已经发生，哪些仍待验证</h3><p>不把机械蝶的一次体验夸大成放之四海皆准的结论。</p>
+          </a>
+        </div>
+        <div class="limits">
+          <div class="limit"><b>它已经证明的</b>用户的真实体验能暴露原本没有表达的条件。</div>
+          <div class="limit"><b>它还没有承诺的</b>不是所有项目都需要候选，也不保证自动获得正确答案。</div>
+          <div class="limit"><b>下一步该观察的</b>后续项目是否少了反复误解，重开选择时能否定位影响。</div>
+        </div>
+      </section>
+    </main>
+    <footer>体验驱动意图收敛 · 从看见、判断到受约束生成 · 保存在 Git 版本记录中的可复用工作方式</footer>
+  </div>
+  <script>
+    document.querySelectorAll("[data-copy]").forEach((button) => {
+      button.addEventListener("click", async () => {
+        const source = document.getElementById(button.dataset.copy);
+        const feedback = button.parentElement.querySelector(".copy-feedback");
+        const original = button.textContent;
+        try {
+          await navigator.clipboard.writeText(source.textContent.trim());
+          feedback.textContent = "已复制，粘贴到 Codex 对话即可。";
+          button.textContent = "已复制";
+        } catch {
+          feedback.textContent = "请手动选中上方文字复制。";
+        }
+        window.setTimeout(() => {
+          button.textContent = original;
+          feedback.textContent = "";
+        }, 2600);
+      });
+    });
+  </script>
 </body>
 </html>
