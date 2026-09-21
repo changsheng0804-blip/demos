@@ -13,6 +13,8 @@
 | Pascal 场景查看器 | 单户两层住宅 3D 场景查看器 | [打开](pascal-scene-viewer/viewer/v1/) |
 | 雾岭王城 · 城堡小镇 | 可自由游览的三维城堡小镇展示版 | [打开](castle-town-showcase/) |
 | 一夜鱼龙舞 | 参数方程粒子光流动画 | [打开](yeyulongwu/index.html) |
+| 机械蝶 · 一起试飞 | 以可玩候选收敛动作、细节、材质、微光与环境的三维互动案例 | [打开](机械蝴蝶-MechanicalButterfly/机械蝶-MechanicalButterfly.html) |
+| 体验驱动意图收敛 | 从体验、判断到受约束生成的工作方式与机械蝶案例 | [打开](体验驱动意图收敛-ExperienceToIntent/index.html) |
 
 ## 在线地址
 

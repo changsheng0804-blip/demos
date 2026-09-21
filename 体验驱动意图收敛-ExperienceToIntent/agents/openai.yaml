@@ -1,0 +1,4 @@
+interface:
+  display_name: "体验驱动意图收敛"
+  short_description: "通过可玩候选发现真实条件，把体验中的判断保存为后续生成的约束。"
+  default_prompt: "使用 $experience-to-intent，通过可看、可玩、可比较的小样帮助我发现真实条件，并将我的判断保存为可追溯、可重开的状态，约束后续生成。"
