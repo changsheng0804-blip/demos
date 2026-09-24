@@ -12,6 +12,7 @@
 
 | 目录 | 内容 | 主入口 |
 |------|------|--------|
+| `2k-oil-painting-studio/` | 2K 交互式油画工作室（纯画笔原位无缝演进） | `index.html` |
 | `prompt-showdown/` | 同提示词 · 三家模型对决（对比页 + 3 份模型产物） | `index.html` |
 | `3d-physics-playground/` | 3D 物理游戏平台 | `立体物理游戏平台.html` |
 | `agent-readable-documents/` | 意图与承诺可视化文档（demo v2） | `demo-v2.html` |

@@ -24,6 +24,7 @@ $experience-to-intent 我有一个还说不清的产品想法。请先给我可�
 
 | 演示 | 说明 | 打开 |
 |------|------|------|
+| 2K 交互式油画工作室 | 纯画笔原位无缝演进系统，2K 分辨率逐层笔触合成与实时探针比对 | [打开](2k-oil-painting-studio/index.html) |
 | 同提示词·三家模型对决 | DeepSeek V4 Pro / Gemini 3.6 / 3.7 同提示词产物对比 | [打开](prompt-showdown/index.html) |
 | 3D 物理游戏平台 | 中文 3D 物理游戏单页应用 | [打开](3d-physics-playground/立体物理游戏平台.html) |
 | 意图与承诺可视化文档 | 让意图和承诺的关系可见的交互文档（demo v2） | [打开](agent-readable-documents/demo-v2.html) |
