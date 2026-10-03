@@ -730,8 +730,33 @@ function impulse(ctx, dur, decay){
   for (let c = 0; c < 2; c++) { const d = b.getChannelData(c); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, decay); }
   return b;
 }
+/* iOS 与微信的音频通道要“真的响过一次”才会打开：光 resume() 在微信里仍然没声。
+   办法是同一个手势里让一个 <audio> 元素播一下（0.5s 静音 WAV，-90dB 听不见），
+   再往 Web Audio 里塞一个空缓冲。Safari / 微信 / 普通浏览器都安全。 */
+const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const isWeixin = /MicroMessenger/i.test(navigator.userAgent);
+let primer = null, primed = false;
+function silentWavURL(){
+  const n = 4000, buf = new ArrayBuffer(44 + n * 2), v = new DataView(buf);
+  const w = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+  w(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); w(8, 'WAVEfmt ');
+  v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, 8000, true); v.setUint32(28, 16000, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true);
+  w(36, 'data'); v.setUint32(40, n * 2, true);
+  for (let i = 0; i < n; i++) v.setInt16(44 + i * 2, i % 2 ? -1 : 1, true);   // ±1/32768，听不见
+  return URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }));
+}
+function primeAudio(){
+  if (!(isIOS || isWeixin) || primer === false) return;
+  try {
+    if (!primer) { primer = new Audio(silentWavURL()); primer.loop = true; primer.setAttribute('playsinline', ''); }
+    const p = primer.play(); if (p && p.catch) p.catch(() => {});
+  } catch (e) { primer = primer || false; }
+  const ctx = audio.ctx;
+  if (ctx && !primed) { primed = true; try { const s = ctx.createBufferSource(); s.buffer = ctx.createBuffer(1, 1, ctx.sampleRate); s.connect(ctx.destination); s.start(0); } catch (e) {} }
+}
 function ensureAudio(){
-  if (audio.ctx) { if (audio.ctx.state === 'suspended') audio.ctx.resume(); return; }
+  if (audio.ctx) { if (audio.ctx.state !== 'running') { try { audio.ctx.resume(); } catch (e) {} } primeAudio(); return; }
   const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
   try {
     const ctx = new AC(); audio.ctx = ctx;
@@ -748,6 +773,7 @@ function ensureAudio(){
     audio.harm = FREQ.map(f => harmBuffer(ctx, f * 2, 2.4));
     audio.low = softLow(ctx, 73.42, 4.5);
     setSound(audio.want);
+    primeAudio();
   } catch (e) { console.warn(e); }
 }
 function setSound(on){
@@ -1126,7 +1152,18 @@ function buildLandscape(seed){
   y.T = T; mood = y;
   const R = rng(seed), rr = (a, b) => a + (b - a) * R();
   const A = aspect(), portrait = A < .85;
-  const yb = portrait ? .1 : .085, ys = portrait ? .88 : .9, M = v => yb + v * ys;
+  /* 手机适配：浮动工具栏和手机状态栏会压住画面。先量出它们真正占掉的高度，
+     再把整幅构图放进剩下的区域里——这样底部工具栏不再盖住近岸与题诗。 */
+  const cR = canvas.getBoundingClientRect();
+  const barEl = document.querySelector('.bar'), mastEl = document.querySelector('.mast');
+  const barTop = (barEl && barEl.getBoundingClientRect().height) ? barEl.getBoundingClientRect().top : cR.bottom;
+  const safeTop = mastEl ? Math.max(0, mastEl.getBoundingClientRect().top - 22 - cR.top) : 0;   // .mast 的 top 含 env(safe-area-inset-top)
+  const footIn = Math.min(.34, Math.max(0, (cR.bottom - barTop + 12) / cR.height));
+  const headIn = Math.min(.12, Math.max(0, safeTop - 24) / cR.height);
+  const yb = Math.max(portrait ? .1 : .085, footIn);
+  const ys = Math.max(.5, Math.min(portrait ? .88 : .9, (1 - headIn) - yb));
+  const M = v => yb + v * ys;
+  y.yb = yb; y.ys = ys;
   const wx = A < 1 ? Math.min(1.6, .75 / A) : 1;
   const W = d => d / A;
   const INK = y.ink;
@@ -1674,7 +1711,8 @@ function hidePoem(){ poemTimers.forEach(clearTimeout); poemTimers = []; poemEl.c
 function showPoem(lines){
   hidePoem(); poemEl.hidden = false;
   const bx = mood && mood.poemBox, rc = canvas.getBoundingClientRect();   // 题诗落在留白里，靠留白的右缘往下写
-  if (bx){ poemEl.style.left = 'auto'; poemEl.style.right = Math.max(12, innerWidth - (rc.left + bx.x1*rc.width) + 10) + 'px'; poemEl.style.top = Math.max(24, rc.top + (1 - bx.s1)*rc.height + 14) + 'px'; }
+  const mb = mood || {}, pyb = mb.yb ?? 0, pys = mb.ys ?? 1;   // 与构图同一套纵向映射，题诗才贴在留白里
+  if (bx){ poemEl.style.left = 'auto'; poemEl.style.right = Math.max(12, innerWidth - (rc.left + bx.x1*rc.width) + 10) + 'px'; poemEl.style.top = Math.max(24, rc.top + (1 - (pyb + bx.s1*pys))*rc.height + 14) + 'px'; }
   else { poemEl.style.left = poemEl.style.right = poemEl.style.top = ''; }
   let delay = 0;
   lines.forEach((ln, li) => {
@@ -1898,6 +1936,11 @@ setPaintBtn(false);
 ensureAudio();
 const unlock = () => { ensureAudio(); setTimeout(() => { const t = yiEl.querySelector('.tap'); if (t && audio.ctx && audio.ctx.state === 'running') t.remove(); }, 120); };
 document.addEventListener('pointerdown', unlock, true); document.addEventListener('keydown', unlock, true);
+document.addEventListener('WeixinJSBridgeReady', unlock, false);
+document.addEventListener('visibilitychange', () => {          // 切回前台：iOS 会挂起/中断音频，回来要重新开
+  if (document.hidden) { if (primer && primer.pause) try { primer.pause(); } catch (e) {} }
+  else unlock();
+});
 setTimeout(startPainting, 700);
 setTimeout(() => { hinted = true; hintEl.classList.add('gone'); }, 8000);
 })();
