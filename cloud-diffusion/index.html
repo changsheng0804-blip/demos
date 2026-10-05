@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>看云 · AI 是怎么从噪声里“看”出画的</title>
+<style>
+html,body{margin:0;height:100%;overflow:hidden;font-family:-apple-system,"PingFang SC","Noto Sans SC","Microsoft YaHei",sans-serif;background:#7fb2e0}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
+#cap{position:fixed;left:0;right:0;top:0;padding:22px 26px;color:#123;pointer-events:none;text-shadow:0 1px 8px #fff9}
+#ch{font-size:13px;letter-spacing:.2em;color:#2b4a6b;opacity:.85}
+#h{font-size:28px;font-weight:700;margin-top:6px;color:#0f2740}
+#p{font-size:16px;line-height:1.7;margin-top:8px;max-width:620px;color:#1d3956;min-height:3.4em}
+#word{position:fixed;left:50%;bottom:118px;transform:translateX(-50%);font-size:22px;font-weight:700;color:#0f2740;background:#ffffffb0;padding:6px 18px;border-radius:20px;opacity:0;transition:opacity .4s;pointer-events:none;white-space:nowrap}
+#step{position:fixed;right:24px;top:22px;text-align:right;color:#1d3956;pointer-events:none}
+#step b{display:block;font-size:26px;font-variant-numeric:tabular-nums}
+#step span{font-size:12px;letter-spacing:.1em}
+.lab{position:fixed;transform:translateX(-50%);font-size:14px;font-weight:600;color:#0f2740;background:#ffffffb8;padding:3px 10px;border-radius:12px;pointer-events:none;white-space:nowrap;display:none}
+#bar{position:fixed;left:0;right:0;bottom:0;padding:12px 16px 16px;display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-items:center;background:linear-gradient(#0000,#ffffff66)}
+button,select{font-family:inherit;font-size:14px;border-radius:18px;border:1px solid #0f274033;background:#ffffffd0;color:#0f2740;padding:7px 14px;cursor:pointer}
+button.on{background:#0f2740;color:#fff}
+#free{display:none;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center}
+#free label{font-size:14px;color:#0f2740}
+#load{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;font-size:18px;color:#0f2740}
+body.capture #bar{display:none}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="cap"><div id="ch"></div><div id="h"></div><div id="p"></div></div>
+<div id="step"><b id="sn">—</b><span>去噪第几步</span></div>
+<div id="word"></div>
+<div id="labs"></div>
+<div id="bar">
+  <span id="dots"></span>
+  <button id="prev">上一段</button><button id="next">下一段</button>
+  <span id="free">
+    <label>先说 <select id="fa"></select></label>
+    <label>在第 <select id="fs"><option value="0">不改口</option><option value="20">20</option><option value="40">40</option><option value="60">60</option><option value="80">80</option></select> 步</label>
+    <label>改成 <select id="fb"></select></label>
+    <button id="fseed">换一片云</button><button id="fgo" class="on">开始</button>
+  </span>
+</div>
+<div id="load">正在把云搬过来…</div>
+<script>
+(async function(){
+const Q=new URLSearchParams(location.search);if(Q.has('capture'))document.body.classList.add('capture');
+const $=id=>document.getElementById(id);
+const WORDS=['龙','鲸鱼','兔子','城堡'];
+let meta,buf;
+try{meta=await (await fetch('clouds.json')).json();buf=new Uint8Array(await (await fetch('clouds.bin')).arrayBuffer());}
+catch(e){$('load').textContent='云没搬过来（网络问题），刷新一下试试。';return;}
+$('load').style.display='none';
+const N=meta.N,T=100,AB=meta.abar; // AB[t], t=0..99
+// ---------- trajectories ----------
+function frames(name){const e=meta.entries[name];return {k0:e.k0,nf:e.nf,off:e.off};}
+function decode(name,j,out){const e=meta.entries[name];const o=e.off+j*N*2;for(let i=0;i<2*N;i++)out[i]=buf[o+i]/255*7-3.5;}
+// a "path" = list of segments; returns positions at continuous k in [0,100]
+function makePath(a,sw,b,seed){ // a: class idx (4=none), sw: switch t (0=none), b: second class
+  const base=seed?('seed'+seed+'_'+a):('base_'+a);
+  const br=(sw&&!seed)?('br_'+a+'_'+b+'_'+sw):null;
+  return function(k,out){ // k continuous 0..100
+    const kk=Math.max(0,Math.min(100,k));
+    let name=base,k0=0;
+    if(br&&kk>(100-sw)){name=br;k0=meta.entries[br].k0;}
+    const e=meta.entries[name];
+    let f=(kk-e.k0)/4;
+    if(name===br&&f<0)f=0;
+    const j0=Math.max(0,Math.min(e.nf-1,Math.floor(f)));const j1=Math.min(e.nf-1,j0+1);const u=Math.max(0,Math.min(1,f-j0));
+    // switching segment starts from last base frame before the switch
+    const A=getF(name,j0),B=getF(name,j1);
+    let P=A;
+    if(name===br&&f<1){P=getF(base,(100-sw)/4);const s=f;for(let i=0;i<2*N;i++)out[i]=P[i]+(A[i]-P[i])*s;return;}
+    const s=u*u*(3-2*u);for(let i=0;i<2*N;i++)out[i]=A[i]+(B[i]-A[i])*s;};
+}
+const cache={};function getF(name,j){const key=name+':'+j;if(!cache[key]){const a=new Float32Array(2*N);decode(name,j,a);cache[key]=a;}return cache[key];}
+// forward "blow away": x_t = sqrt(ab) x0 + sqrt(1-ab) eps, eps = the starting cloud
+function blow(x0,eps,t,out){const ab=AB[Math.max(0,Math.min(99,t))],a=Math.sqrt(ab),b=Math.sqrt(1-ab);for(let i=0;i<2*N;i++)out[i]=a*x0[i]+b*eps[i];}
+
+// ---------- WebGL1 renderer ----------
+const cv=$('c');const gl=cv.getContext('webgl',{premultipliedAlpha:true,antialias:true});
+if(!gl){$('load').style.display='flex';$('load').textContent='这个浏览器不支持 WebGL，换个浏览器试试。';return;}
+function sh(t,s){const x=gl.createShader(t);gl.shaderSource(x,s);gl.compileShader(x);if(!gl.getShaderParameter(x,gl.COMPILE_STATUS))throw gl.getShaderInfoLog(x);return x;}
+function prog(v,f){const p=gl.createProgram();gl.attachShader(p,sh(gl.VERTEX_SHADER,v));gl.attachShader(p,sh(gl.FRAGMENT_SHADER,f));gl.bindAttribLocation(p,0,'pos');gl.bindAttribLocation(p,1,'rnd');gl.linkProgram(p);return p;}
+const PV=`attribute vec2 pos;attribute vec2 rnd;uniform vec2 uS;uniform vec2 uC;uniform float uPx,uTime,uOff;varying float vR;varying float vY;
+void main(){vec2 w=pos+0.025*vec2(sin(uTime*.4+rnd.x*40.),cos(uTime*.33+rnd.y*40.));
+ vec2 p=uC+w*uS;p.y-=uOff;gl_Position=vec4(p,0,1);gl_PointSize=uPx*(0.65+0.7*rnd.x);vR=rnd.y;vY=w.y;}`;
+const PF=`precision mediump float;uniform sampler2D uT;uniform vec3 uCol;uniform float uA;varying float vR;varying float vY;
+void main(){vec2 q=gl_PointCoord;float c=cos(vR*6.28),s=sin(vR*6.28);q=mat2(c,-s,s,c)*(q-.5)+.5;
+ float a=texture2D(uT,q).a*uA;vec3 col=uCol*(0.93+0.07*clamp(vY*.4+.5,0.,1.));gl_FragColor=vec4(col*a,a);}`;
+const BGV=`attribute vec2 pos;varying vec2 v;void main(){v=pos*.5+.5;gl_Position=vec4(pos,0,1);}`;
+const BGF=`precision mediump float;varying vec2 v;uniform vec3 uTop,uBot;uniform vec2 uSun;
+void main(){vec3 c=mix(uBot,uTop,pow(v.y,0.8));float d=distance(v,uSun);c+=vec3(1.,.95,.8)*(.35*exp(-d*d*30.)+.1*exp(-d*4.));gl_FragColor=vec4(c,1);}`;
+const P=prog(PV,PF),PB=prog(BGV,BGF);
+// puff texture
+const tc=document.createElement('canvas');tc.width=tc.height=128;const g2=tc.getContext('2d');
+for(let i=0;i<14;i++){const r=18+Math.random()*26,x=64+(Math.random()-.5)*44,y=64+(Math.random()-.5)*34;const gr=g2.createRadialGradient(x,y,0,x,y,r);gr.addColorStop(0,'rgba(255,255,255,0.55)');gr.addColorStop(1,'rgba(255,255,255,0)');g2.fillStyle=gr;g2.beginPath();g2.arc(x,y,r,0,7);g2.fill();}
+const tex=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,tex);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,tc);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+const posB=gl.createBuffer(),rndB=gl.createBuffer(),quad=gl.createBuffer();
+const rnd=new Float32Array(2*N);for(let i=0;i<2*N;i++)rnd[i]=Math.random();gl.bindBuffer(gl.ARRAY_BUFFER,rndB);gl.bufferData(gl.ARRAY_BUFFER,rnd,gl.STATIC_DRAW);
+gl.bindBuffer(gl.ARRAY_BUFFER,quad);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
+const U=n=>gl.getUniformLocation(P,n),UB=n=>gl.getUniformLocation(PB,n);
+let W=0,H=0,dpr=1;function resize(){dpr=Math.min(devicePixelRatio||1,2);const w=Math.round(innerWidth*dpr),h=Math.round(innerHeight*dpr);if(w!==W||h!==H){W=w;H=h;cv.width=w;cv.height=h;}}
+let sky={top:[.30,.55,.85],bot:[.78,.88,.96],sun:[.82,.86]};
+function drawBG(){gl.viewport(0,0,W,H);gl.disable(gl.BLEND);gl.useProgram(PB);gl.bindBuffer(gl.ARRAY_BUFFER,quad);gl.enableVertexAttribArray(0);gl.vertexAttribPointer(0,2,gl.FLOAT,false,0,0);gl.disableVertexAttribArray(1);
+ gl.uniform3fv(UB('uTop'),sky.top);gl.uniform3fv(UB('uBot'),sky.bot);gl.uniform2fv(UB('uSun'),sky.sun);gl.drawArrays(gl.TRIANGLE_STRIP,0,4);}
+// draw clouds into a panel rect (x,y,w,h in css px, y from top)
+function drawClouds(pos,rect,time,fade){
+ const [x,y,w,h]=rect.map(v=>v*dpr);const m=Math.min(w,h);
+ gl.viewport(0,0,W,H);gl.enable(gl.BLEND);gl.blendFunc(gl.ONE,gl.ONE_MINUS_SRC_ALPHA);gl.useProgram(P);
+ gl.bindBuffer(gl.ARRAY_BUFFER,posB);gl.bufferData(gl.ARRAY_BUFFER,pos,gl.DYNAMIC_DRAW);gl.enableVertexAttribArray(0);gl.vertexAttribPointer(0,2,gl.FLOAT,false,0,0);
+ gl.bindBuffer(gl.ARRAY_BUFFER,rndB);gl.enableVertexAttribArray(1);gl.vertexAttribPointer(1,2,gl.FLOAT,false,0,0);
+ const sc=m*0.5/2.1; // world 2.1 -> half panel
+ gl.uniform2f(U('uS'),sc*2/W,sc*2/H);gl.uniform2f(U('uC'),(x+w/2)/W*2-1,1-(y+h/2)/H*2);
+ gl.uniform1f(U('uPx'),sc*0.30);gl.uniform1f(U('uTime'),time);gl.uniform1i(U('uT'),0);
+ gl.enable(gl.SCISSOR_TEST);gl.scissor(x,H-y-h,w,h);
+ gl.uniform1f(U('uOff'),sc*0.05*2/H);gl.uniform3f(U('uCol'),.55,.63,.75);gl.uniform1f(U('uA'),0.35*fade);gl.drawArrays(gl.POINTS,0,N);
+ gl.uniform1f(U('uOff'),0);gl.uniform3f(U('uCol'),1,1,1);gl.uniform1f(U('uA'),0.55*fade);gl.drawArrays(gl.POINTS,0,N);
+ gl.disable(gl.SCISSOR_TEST);}
+
+// ---------- story ----------
+const pos=new Float32Array(2*N),tmp=new Float32Array(2*N);
+const start0=getF('base_0',0);
+function full(){return [0,0,innerWidth,innerHeight];}
+function panels(n){const w=innerWidth,h=innerHeight-150,top=110;const cols=w/h>1.4?n:2,rows=Math.ceil(n/cols);const pw=w/cols,ph=(h-top+60)/rows;const r=[];for(let i=0;i<n;i++)r.push([pw*(i%cols),top+ph*Math.floor(i/cols),pw,ph]);return r;}
+const DUR=9; // seconds for 100 steps
+function stepText(k){$('sn').textContent=Math.round(k)+' / 100';}
+function setWord(t){const el=$('word');if(t){el.textContent=t;el.style.opacity=1;}else el.style.opacity=0;}
+function labels(list){const box=$('labs');box.innerHTML='';for(const [txt,x,y] of list){const d=document.createElement('div');d.className='lab';d.textContent=txt;d.style.left=x+'px';d.style.top=y+'px';d.style.display='block';box.appendChild(d);}}
+const scenes=[
+ {ch:'一 · 看云',h:'你一定在云里看见过东西',
+  run(t){labels([]);setWord('');$('sn').textContent='—';const p=start0;drawClouds(p,full(),t,1);
+   say(t,[[0,'小时候躺在草地上，一片乱糟糟的云，看着看着就成了一条龙、一头鲸鱼。'],[5,'云本身什么都不是。是你的眼睛，从一团乱里“看”出了形状。'],[10,'AI 画画用的扩散模型，学的就是这件事：从一团纯粹的噪声里，一点一点看出一幅画。']]);}},
+ {ch:'二 · 说一个词',h:'对着这片云说：“龙”',dur:DUR+4,
+  run(t){labels([]);const k=Math.max(0,(t-1.5)/DUR*100);setWord('龙');stepText(Math.min(100,k));makePath(0,0,0)(k,pos);drawClouds(pos,full(),t,1);
+   say(t,[[0,'这片云和上一段是同一片。现在给它一个词。'],[2.5,'模型每一步只做一件事：看着每一小团云，猜“这里哪一部分是乱的”，然后把乱的那部分抹掉一点。'],[6.5,'没有人告诉任何一团云该去哪。先出来的是大轮廓，龙的身子；细节，爪子和胡须，最后才长出来。']]);}},
+ {ch:'三 · 倒过来',h:'它是怎么练出这双眼睛的？',dur:10,
+  run(t){labels([]);setWord('');const x0=getF('base_0',25);const tt=Math.max(0,Math.min(99,Math.round((t-1)/6*99)));$('sn').textContent='加噪 '+tt;blow(x0,start0,tt,pos);drawClouds(pos,full(),t,1);
+   say(t,[[0,'训练时反过来做：拿一幅清楚的画，让风一阵一阵把它吹散，直到什么都看不出来。'],[4,'每吹一阵，就考它一次：“刚才这阵风往哪吹了？”猜对了，倒着放就能把云拼回来。'],[7.5,'看过成千上万幅画被吹散，它就记住了“画”大概长什么样，而不是记住某一幅画。']]);}},
+ {ch:'四 · 同一片云，不同的词',h:'同一片云，换一个词',dur:4*4.5+3,
+  run(t){const seg=Math.min(3,Math.floor(t/4.5));const lt=t-seg*4.5;const c=[1,2,3,4][seg];const k=Math.min(100,lt/3.6*100);
+   setWord(c===4?'（什么都不说）':WORDS[c]);stepText(k);makePath(c,0,0)(k,pos);drawClouds(pos,full(),t,1);labels([]);
+   say(t,[[0,'起点还是那一片云，一模一样的噪声。只换一个词。'],[9,'词就像在耳边提醒：“往鲸鱼的方向看”。同样的乱，被看成了完全不同的东西。'],[13.5,'什么都不说呢？它只知道“见过龙、鲸鱼、兔子、城堡”，于是看出一个四不像。']]);}},
+ {ch:'五 · 半路改口',h:'先说“龙”，半路改成“鲸鱼”',dur:DUR+7,
+  run(t){const k=Math.max(0,(t-1.5)/DUR*100);stepText(Math.min(100,k));setWord('');const R=panels(4);const sws=[80,60,40,20];const L=[];
+   R.forEach((r,i)=>{makePath(0,sws[i],1)(k,pos);drawClouds(pos,r,t,1);L.push([(k>=100-sws[i]?'第 '+(100-sws[i])+' 步改成鲸鱼':'龙…（第 '+(100-sws[i])+' 步改口）'),r[0]+r[2]/2,r[1]+r[3]-34]);});labels(L);
+   say(t,[[0,'四片一模一样的云，都先听到“龙”，只是改口的时间不同。'],[5,'这片云很听话：就算拖到第 80 步才改口，最后也变成了鲸鱼，只是边缘更毛糙，还挂着龙的残影。'],[11,'因为每一团云都能自由挪动。真正画图的模型要“固执”得多，构图在前几步就定下了，后面基本只补细节，所以前几步最要紧。']]]);}},
+ {ch:'六 · 你来试',h:'你来当说话的人',free:true,
+  run(t){const st=freeState;const k=Math.max(0,(t-st.t0-0.6)/DUR*100);stepText(Math.min(100,k));
+   const sw=+$('fs').value;const a=+$('fa').value,b=+$('fb').value;
+   const cur=(sw&&k>=100-sw&&a!==b)?(b===4?'（不说了）':WORDS[b]):(a===4?'（什么都不说）':WORDS[a]);setWord(cur);
+   st.path(k,pos);drawClouds(pos,full(),t,1);labels([]);
+   say(t,[[0,'选第一个词、改口的时间和第二个词，看看云会变成什么。“换一片云”会换一团新的噪声，同一个词也会长出不一样的样子。']]);}},
+];
+let lastSay='';function say(t,list){let s='';for(const [tt,txt] of list)if(t>=tt)s=txt;if(s!==lastSay){$('p').textContent=s;lastSay=s;}}
+// free mode
+const opts=WORDS.map((w,i)=>`<option value="${i}">${w}</option>`).join('');
+$('fa').innerHTML=opts+'<option value="4">什么都不说</option>';$('fb').innerHTML=opts;$('fb').value=1;
+let freeState={t0:0,seed:0,path:makePath(0,0,0)};
+function freeGo(){const a=+$('fa').value,b=+$('fb').value,sw=+$('fs').value;
+ const ok=sw&&a!==4&&a!==b&&!freeState.seed;freeState.path=makePath(a,ok?sw:0,b,freeState.seed);freeState.t0=clock;}
+$('fgo').onclick=freeGo;$('fseed').onclick=()=>{freeState.seed=(freeState.seed+1)%3;if(freeState.seed)$('fs').value=0;freeGo();};
+$('fs').onchange=()=>{if(+$('fs').value)freeState.seed=0;};
+let si=+(Q.get('s')||0),t0=performance.now()/1000,clock=0;
+const dots=$('dots');scenes.forEach((s,i)=>{const b=document.createElement('button');b.textContent=i+1;b.onclick=()=>go(i);dots.appendChild(b);});
+function go(i){si=Math.max(0,Math.min(scenes.length-1,i));t0=performance.now()/1000;lastSay='';const s=scenes[si];$('ch').textContent=s.ch;$('h').textContent=s.h;
+ [...dots.children].forEach((b,j)=>b.classList.toggle('on',j===si));$('free').style.display=s.free?'flex':'none';if(s.free){freeState.t0=0;freeGo();freeState.t0=performance.now()/1000-t0;}}
+$('prev').onclick=()=>go(si-1);$('next').onclick=()=>go(si+1);
+go(si);
+const autoAdv=!Q.has('manual');
+function frame(){resize();clock=performance.now()/1000-t0;drawBG();const s=scenes[si];s.run(clock);
+ if(autoAdv&&s.dur&&clock>s.dur+2.5&&si<scenes.length-1)go(si+1);
+ else if(autoAdv&&!s.dur&&!s.free&&clock>15)go(si+1);
+ requestAnimationFrame(frame);}
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

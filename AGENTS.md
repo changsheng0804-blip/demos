@@ -21,6 +21,7 @@
 | `yeyulongwu/` | 一夜鱼龙舞粒子动画（多版本） | `index.html` |
 | `fourier-series-video/` | 傅里叶级数中文旁白科普视频（mp4 + 播放页） | `index.html` |
 | `diffusion-model-video/` | 扩散模型中文旁白科普视频（mp4 + 播放页） | `index.html` |
+| `cloud-diffusion/` | 看云：预计算扩散轨迹播放（WebGL1，数据 clouds.bin + clouds.json） | `index.html` |
 | `diffusion-particles/` | 粒子扩散交互原型（WebGL2，模型权重内嵌 model.js） | `index.html` |
 
 **模型产物类演示的规则**（如 `prompt-showdown/`）：
