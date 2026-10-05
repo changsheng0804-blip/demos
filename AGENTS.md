@@ -19,6 +19,7 @@
 | `forge-strength-local-demo/` | 锻造力量私教单文件演示 | `index.html` |
 | `pascal-scene-viewer/` | Pascal 场景查看器（构建产物） | `viewer/v1/` |
 | `yeyulongwu/` | 一夜鱼龙舞粒子动画（多版本） | `index.html` |
+| `fourier-series-video/` | 傅里叶级数中文旁白科普视频（mp4 + 播放页） | `index.html` |
 
 **模型产物类演示的规则**（如 `prompt-showdown/`）：
 - 每个模型一个子目录（`deepseek-v4-pro/`、`gemini-36-flash/`、`gemini-37-flash/`），各放 `index.html` + 本地资源
