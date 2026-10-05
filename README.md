@@ -36,6 +36,7 @@ $experience-to-intent 我有一个还说不清的产品想法。请先给我可�
 | 体验驱动意图收敛 · 先看见，再决定 | 从真实试玩中发现条件，并把判断变成下一轮 AI 约束的可复用工作方式 | [打开](体验驱动意图收敛-ExperienceToIntent/index.html) |
 | 傅里叶级数科普视频 | 约 8 分钟中文旁白动画：历史、原理与真实应用 | [打开](fourier-series-video/index.html) |
 | 扩散模型科普视频 | 约 9 分钟中文旁白动画：原理、小实验与 Stable Diffusion 实拍过程 | [打开](diffusion-model-video/index.html) |
+| 粒子扩散（原型） | 真实训练的小扩散模型在浏览器里驱动上万粒子，从噪声聚成“傅”字、教堂、鲸鱼 | [打开](diffusion-particles/index.html) |
 
 ## 在线地址
 

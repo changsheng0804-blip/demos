@@ -21,6 +21,7 @@
 | `yeyulongwu/` | 一夜鱼龙舞粒子动画（多版本） | `index.html` |
 | `fourier-series-video/` | 傅里叶级数中文旁白科普视频（mp4 + 播放页） | `index.html` |
 | `diffusion-model-video/` | 扩散模型中文旁白科普视频（mp4 + 播放页） | `index.html` |
+| `diffusion-particles/` | 粒子扩散交互原型（WebGL2，模型权重内嵌 model.js） | `index.html` |
 
 **模型产物类演示的规则**（如 `prompt-showdown/`）：
 - 每个模型一个子目录（`deepseek-v4-pro/`、`gemini-36-flash/`、`gemini-37-flash/`），各放 `index.html` + 本地资源

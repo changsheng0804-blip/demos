@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>粒子扩散 · 一个真的会“想象”的小网络</title>
+<style>
+html,body{margin:0;height:100%;background:#05070d;color:#e8ecf4;font-family:-apple-system,"PingFang SC","Noto Sans SC","Microsoft YaHei",sans-serif;overflow:hidden}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
+#top{position:fixed;left:0;right:0;top:0;padding:18px 22px;pointer-events:none}
+#title{font-size:15px;letter-spacing:.12em;color:#8fa3c2}
+#phase{font-size:26px;font-weight:600;margin-top:8px;transition:opacity .4s}
+#sub{font-size:15px;color:#b9c4d8;margin-top:6px;max-width:640px;line-height:1.6;transition:opacity .4s}
+#stepbox{position:fixed;right:22px;top:18px;text-align:right;pointer-events:none}
+#tnum{font-size:30px;font-variant-numeric:tabular-nums;font-weight:600}
+#tlab{font-size:12px;color:#8fa3c2;letter-spacing:.1em}
+#bar{position:fixed;left:22px;right:22px;bottom:96px;height:3px;background:#1a2235;border-radius:2px}
+#barfill{height:100%;width:0;background:linear-gradient(90deg,#ffcf6b,#6be3ff);border-radius:2px}
+#ctl{position:fixed;left:0;right:0;bottom:0;padding:14px 18px 18px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center;background:linear-gradient(transparent,#05070dcc 40%)}
+button{background:#131b2c;color:#e8ecf4;border:1px solid #2a3652;border-radius:18px;padding:7px 15px;font-size:14px;cursor:pointer;font-family:inherit}
+button.on{background:#e8ecf4;color:#05070d;border-color:#e8ecf4}
+label{font-size:13px;color:#b9c4d8;display:flex;align-items:center;gap:6px}
+input[type=range]{width:110px;accent-color:#ffcf6b}
+#err{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:30px;text-align:center;font-size:16px;line-height:1.7}
+.sep{width:1px;height:22px;background:#2a3652}
+body.capture #ctl,body.capture #bar{display:none}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="top"><div id="title">粒子扩散 · 原型</div><div id="phase">准备中…</div><div id="sub"></div></div>
+<div id="stepbox"><div id="tnum">—</div><div id="tlab">噪声步 t</div></div>
+<div id="bar"><div id="barfill"></div></div>
+<div id="ctl">
+  <button data-c="0">傅</button><button data-c="1">教堂</button><button data-c="2">鲸鱼</button><button data-c="3">不给提示</button>
+  <button id="auto" class="on">自动轮播</button>
+  <span class="sep"></span>
+  <label>提示引导 <input id="w" type="range" min="0" max="4" step="0.1" value="1.5"><span id="wv">1.5</span></label>
+  <label>速度 <input id="spd" type="range" min="1" max="12" step="1" value="4"></label>
+  <label><input id="rnd" type="checkbox" checked>每步加一点随机</label>
+  <label><input id="trk" type="checkbox" checked>追踪 5 粒</label>
+</div>
+<div id="err"></div>
+<script src="model.js"></script>
+<script>
+(function(){
+const Q=new URLSearchParams(location.search);
+if(Q.has('capture'))document.body.classList.add('capture');
+const M=window.PMODEL, T=M.T, NAMES=['“傅”','教堂','鲸鱼','（没有提示词）'];
+const cv=document.getElementById('c');
+const gl=cv.getContext('webgl2',{antialias:false,alpha:false});
+function fail(m){const e=document.getElementById('err');e.style.display='flex';e.textContent=m;}
+if(!gl){fail('这个浏览器不支持 WebGL2，换 Chrome / Edge / Safari 新版试试。');return;}
+if(!gl.getExtension('EXT_color_buffer_float')){fail('这个设备的显卡不支持浮点渲染，暂时跑不了。');return;}
+const mobile=/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+const SIDE=+(Q.get('side')||(mobile?96:128)), N=SIDE*SIDE;
+
+// ---------- decode weights ----------
+const bin=Uint8Array.from(atob(M.data),c=>c.charCodeAt(0));
+const F=new Float32Array(bin.buffer);
+const L=M.layout; const get=k=>F.subarray(L[k][0],L[k][0]+L[k][1]);
+const W1=get('W1'),b1=get('b1'),W2=get('W2'),b2=get('b2'),W3=get('W3'),b3=get('b3'),W4=get('W4'),b4=get('b4'),Wo=get('Wo'),bo=get('bo'),Bf=get('B'),CE=get('cls');
+const H=128, NF=48, IN1=2*NF+64;
+function texF(w,h,data){const t=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,t);
+ gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA32F,w,h,0,gl.RGBA,gl.FLOAT,data);
+ gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);
+ gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);return t;}
+function packW(W,out,inn,cols){ // W row-major out x inn, take first cols columns
+ const w4=cols/4, d=new Float32Array(w4*4*out);
+ for(let o=0;o<out;o++)for(let i=0;i<cols;i++)d[o*cols+i]=W[o*inn+i];
+ return texF(w4,out,d);}
+const tW1=packW(W1,H,IN1,2*NF), tW2=packW(W2,H,H,H), tW3=packW(W3,H,H,H), tW4=packW(W4,H,H,H);
+const woPad=new Float32Array(H*4); woPad.set(Wo); const tWo=texF(H/4,2,woPad.subarray(0,H*2));
+const bd=new Float32Array(H*4); bd.set(b2,0);bd.set(b3,H);bd.set(b4,2*H);bd[3*H]=bo[0];bd[3*H+1]=bo[1];
+const tB=texF(H/4,4,bd);
+// effective first-layer bias for (t, class): b1 + W1[:,96:128]·te + W1[:,128:160]·ce
+const FR=[];for(let i=0;i<16;i++)FR.push(Math.exp(Math.log(200)*i/15));
+function b1eff(t,c){const te=new Float32Array(32);for(let i=0;i<16;i++){const a=t/T*FR[i];te[i]=Math.sin(a);te[16+i]=Math.cos(a);}
+ const r=new Float32Array(H);for(let o=0;o<H;o++){let s=b1[o];const base=o*IN1;
+  for(let i=0;i<32;i++)s+=W1[base+2*NF+i]*te[i]+W1[base+2*NF+32+i]*CE[c*32+i];r[o]=s;}return r;}
+const BETA=M.betas, AB=M.abar;
+
+// ---------- shaders ----------
+function sh(type,src){const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);
+ if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)){console.error(gl.getShaderInfoLog(s));fail('着色器编译失败：'+gl.getShaderInfoLog(s));throw 0;}return s;}
+function prog(vs,fs){const p=gl.createProgram();gl.attachShader(p,sh(gl.VERTEX_SHADER,vs));gl.attachShader(p,sh(gl.FRAGMENT_SHADER,fs));gl.linkProgram(p);
+ if(!gl.getProgramParameter(p,gl.LINK_STATUS)){fail('程序链接失败：'+gl.getProgramInfoLog(p));throw 0;}
+ const u={};const n=gl.getProgramParameter(p,gl.ACTIVE_UNIFORMS);for(let i=0;i<n;i++){const a=gl.getActiveUniform(p,i);const nm=a.name.replace(/\[0\]$/,'');u[nm]=gl.getUniformLocation(p,a.name);}return {p,u};}
+const QUADVS=`#version 300 es
+in vec2 a;out vec2 v;void main(){v=a*.5+.5;gl_Position=vec4(a,0,1);}`;
+let rowsCode='';
+const STEPFS=`#version 300 es
+precision highp float;precision highp int;precision highp sampler2D;
+uniform sampler2D uS,uE,uW1,uW2,uW3,uW4,uWo,uB;
+uniform vec4 uB1c[32];uniform vec4 uB1u[32];uniform vec2 uBf[48];
+uniform int uMode;uniform float uG;uniform bool uCfg;
+uniform float c1,c2,sig,sab,s1ab,sabp,s1abp,uSeed,fab,f1ab;
+out vec4 o;
+uint pcg(uint v){uint s=v*747796405u+2891336453u;uint w=((s>>((s>>28u)+4u))^s)*277803737u;return (w>>22u)^w;}
+float rnd(inout uint s){s=pcg(s);return (float(s)+.5)/4294967296.;}
+vec4 rowdot4(sampler2D W,int r,int n,vec4 x[32]){ vec4 acc=vec4(0);
+  for(int i=0;i<32;i++){ if(i>=n)break; vec4 xi=x[i];
+    acc.x+=dot(texelFetch(W,ivec2(i,r),0),xi);acc.y+=dot(texelFetch(W,ivec2(i,r+1),0),xi);
+    acc.z+=dot(texelFetch(W,ivec2(i,r+2),0),xi);acc.w+=dot(texelFetch(W,ivec2(i,r+3),0),xi);}
+  return acc;}
+vec4 silu(vec4 x){return x/(1.+exp(-x));}
+vec2 net(vec2 x,bool cond){
+  vec4 a[32];vec4 b[32];
+  for(int i=0;i<12;i++){vec4 p=vec4(dot(x,uBf[4*i]),dot(x,uBf[4*i+1]),dot(x,uBf[4*i+2]),dot(x,uBf[4*i+3]));a[i]=sin(p);a[i+12]=cos(p);}
+  for(int i=24;i<32;i++)a[i]=vec4(0);
+  for(int r=0;r<32;r++)b[r]=silu(rowdot4(uW1,4*r,24,a)+(cond?uB1c[r]:uB1u[r]));
+  for(int r=0;r<32;r++)a[r]=silu(rowdot4(uW2,4*r,32,b)+texelFetch(uB,ivec2(r,0),0));
+  for(int r=0;r<32;r++)b[r]=silu(rowdot4(uW3,4*r,32,a)+texelFetch(uB,ivec2(r,1),0));
+  for(int r=0;r<32;r++)a[r]=silu(rowdot4(uW4,4*r,32,b)+texelFetch(uB,ivec2(r,2),0));
+  vec2 e=vec2(0);for(int i=0;i<32;i++){e.x+=dot(texelFetch(uWo,ivec2(i,0),0),a[i]);e.y+=dot(texelFetch(uWo,ivec2(i,1),0),a[i]);}
+  return e+texelFetch(uB,ivec2(0,3),0).xy;}
+void main(){ivec2 p=ivec2(gl_FragCoord.xy);vec4 s=texelFetch(uS,p,0);
+  if(uMode==2){o=vec4(s.xy,s.xy);return;}                       // remember start
+  if(uMode==3){vec2 e=texelFetch(uE,p,0).xy;o=vec4(fab*s.zw+f1ab*e,s.zw);return;}  // forward: closed form
+  vec2 x=s.xy; vec2 e=net(x,true);
+  if(uCfg){vec2 eu=net(x,false);e=eu+uG*(e-eu);}
+  vec2 xn;
+  if(uMode==0){ xn=c1*(x-c2*e);
+    if(sig>0.){uint st=uint(p.x)*1973u+uint(p.y)*9277u+uint(uSeed)*26699u;float u1=rnd(st),u2=rnd(st);
+      xn+=sig*sqrt(-2.*log(u1))*vec2(cos(6.2831853*u2),sin(6.2831853*u2));}
+  } else { vec2 x0=clamp((x-s1ab*e)/sab,-4.,4.); xn=sabp*x0+s1abp*e; }
+  o=vec4(xn,s.zw);}`;
+const DRAWVS=`#version 300 es
+precision highp float;precision highp sampler2D;
+uniform sampler2D uP,uC;uniform float uF,uScale,uPt;uniform vec2 uAsp;uniform int uSide;uniform bool uTrk;
+out vec3 vc;out float vk;
+vec3 pal(float h){return .55+.45*cos(6.2831853*(vec3(.0,.33,.67)*.35+h*vec3(1.,.9,.8)+vec3(.05,.15,.3)));}
+void main(){int id=gl_VertexID;ivec2 q=ivec2(id%uSide,id/uSide);
+  vec2 x=mix(texelFetch(uP,q,0).xy,texelFetch(uC,q,0).xy,uF);
+  gl_Position=vec4(x*uScale*uAsp,0,1);
+  float h=fract(sin(float(id)*12.9898)*43758.5453);
+  bool tk=uTrk&&id<5; vk=tk?1.:0.;
+  vc=tk?vec3(1.,1.,1.):mix(vec3(1.,.72,.35),vec3(.35,.85,1.),h)*(.75+.25*fract(h*7.));
+  gl_PointSize=tk?uPt*4.:uPt;}`;
+const DRAWFS=`#version 300 es
+precision highp float;in vec3 vc;in float vk;uniform float uI;out vec4 o;
+void main(){vec2 d=gl_PointCoord-.5;float r=dot(d,d)*4.;if(r>1.)discard;float a=exp(-r*3.);o=vec4(vc*a*(vk>.5?1.6:uI),1);}`;
+const FADEFS=`#version 300 es
+precision highp float;uniform float uK;out vec4 o;void main(){o=vec4(0,0,0,uK);}`;
+const SHOWFS=`#version 300 es
+precision highp float;uniform sampler2D uT;in vec2 v;out vec4 o;
+void main(){vec3 c=texture(uT,v).rgb;c=1.-exp(-c*1.4);o=vec4(pow(c,vec3(.9)),1);}`;
+const PS=prog(QUADVS,STEPFS),PD=prog(DRAWVS,DRAWFS),PF=prog(QUADVS,FADEFS),PV=prog(QUADVS,SHOWFS);
+const qb=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,qb);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
+const vao=gl.createVertexArray();gl.bindVertexArray(vao);gl.enableVertexAttribArray(0);gl.vertexAttribPointer(0,2,gl.FLOAT,false,0,0);
+const evao=gl.createVertexArray();
+for(const P of [PS,PF,PV])gl.bindAttribLocation(P.p,0,'a');
+
+// ---------- particle state ----------
+function gauss(){let u=0,v=0;while(u===0)u=Math.random();v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+const eps=new Float32Array(N*4);for(let i=0;i<N;i++){eps[4*i]=gauss();eps[4*i+1]=gauss();}
+const tE=texF(SIDE,SIDE,eps);
+const init=new Float32Array(N*4);for(let i=0;i<N;i++){init[4*i]=eps[4*i];init[4*i+1]=eps[4*i+1];init[4*i+2]=eps[4*i];init[4*i+3]=eps[4*i+1];}
+const S=[0,1,2].map(()=>{const t=texF(SIDE,SIDE,init);const f=gl.createFramebuffer();gl.bindFramebuffer(gl.FRAMEBUFFER,f);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,t,0);return {t,f};});
+let iP=0,iC=1; // prev, cur
+let trail=null,tw=0,th=0;
+function resize(){const dpr=Math.min(devicePixelRatio||1,2);const w=Math.round(cv.clientWidth*dpr),h=Math.round(cv.clientHeight*dpr);
+ if(w===tw&&h===th)return;tw=w;th=h;cv.width=w;cv.height=h;
+ if(trail){gl.deleteTexture(trail.t);gl.deleteFramebuffer(trail.f);}
+ const t=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,t);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA16F,w,h,0,gl.RGBA,gl.HALF_FLOAT,null);
+ gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+ const f=gl.createFramebuffer();gl.bindFramebuffer(gl.FRAMEBUFFER,f);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,t,0);
+ gl.clearColor(0,0,0,1);gl.clear(gl.COLOR_BUFFER_BIT);trail={t,f};}
+function bindTex(P,name,unit,tex){gl.activeTexture(gl.TEXTURE0+unit);gl.bindTexture(gl.TEXTURE_2D,tex);gl.uniform1i(P.u[name],unit);}
+function pass(mode,t,cls,opt){ // writes into the free slot, rotates
+ const iN=3-iP-iC;gl.useProgram(PS.p);gl.bindFramebuffer(gl.FRAMEBUFFER,S[iN].f);gl.viewport(0,0,SIDE,SIDE);gl.disable(gl.BLEND);
+ bindTex(PS,'uS',0,S[iC].t);bindTex(PS,'uE',1,tE);
+ [['uW1',tW1],['uW2',tW2],['uW3',tW3],['uW4',tW4],['uWo',tWo],['uB',tB]].forEach(([n,tx],k)=>bindTex(PS,n,2+k,tx));
+ gl.uniform1i(PS.u.uMode,mode);
+ if(mode===3){gl.uniform1f(PS.u.fab,Math.sqrt(opt.ab));gl.uniform1f(PS.u.f1ab,Math.sqrt(1-opt.ab));}
+ if(mode<2){
+  const c=cls, g=opt.g, cfg=(c!==3)&&Math.abs(g-1)>1e-3;
+  gl.uniform4fv(PS.u.uB1c,b1eff(t,c));gl.uniform4fv(PS.u.uB1u,b1eff(t,3));gl.uniform2fv(PS.u.uBf,BFV);
+  gl.uniform1i(PS.u.uCfg,cfg?1:0);gl.uniform1f(PS.u.uG,g);
+  const be=BETA[t],al=1-be,ab=AB[t],abp=t>0?AB[t-1]:1;
+  gl.uniform1f(PS.u.c1,1/Math.sqrt(al));gl.uniform1f(PS.u.c2,be/Math.sqrt(1-ab));
+  gl.uniform1f(PS.u.sig,t>0?Math.sqrt(be*(1-abp)/(1-ab)):0);
+  gl.uniform1f(PS.u.sab,Math.sqrt(ab));gl.uniform1f(PS.u.s1ab,Math.sqrt(1-ab));gl.uniform1f(PS.u.sabp,Math.sqrt(abp));gl.uniform1f(PS.u.s1abp,Math.sqrt(1-abp));
+  gl.uniform1f(PS.u.uSeed,(Math.random()*1e6)|0);}
+ gl.bindVertexArray(vao);gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+ iP=iC;iC=iN;}
+const BFV=new Float32Array(2*NF);for(let j=0;j<NF;j++){BFV[2*j]=Bf[j];BFV[2*j+1]=Bf[NF+j];}
+
+// ---------- story / state machine ----------
+const ui={phase:document.getElementById('phase'),sub:document.getElementById('sub'),tnum:document.getElementById('tnum'),bar:document.getElementById('barfill')};
+function say(a,b){if(ui.phase.textContent!==a)ui.phase.textContent=a;if(ui.sub.textContent!==b)ui.sub.textContent=b;}
+let st={mode:'denoise',t:T-1,cls:0,frame:0,hold:0}, queue=[0,1,2], qi=0, auto=true, pending=null;
+const $=id=>document.getElementById(id);
+const wEl=$('w');wEl.oninput=()=>$('wv').textContent=(+wEl.value).toFixed(1);
+document.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{auto=false;$('auto').classList.remove('on');go(+b.dataset.c);});
+$('auto').onclick=()=>{auto=!auto;$('auto').classList.toggle('on',auto);};
+function mark(){document.querySelectorAll('[data-c]').forEach(b=>b.classList.toggle('on',+b.dataset.c===st.cls));}
+function go(c){ if(st.mode==='scatter'){pending=c;return;}
+  if(st.mode==='denoise'&&st.t>T*0.85){st.cls=c;mark();return;}  // still mostly noise: just switch prompt
+  pending=c;startScatter();}
+function startScatter(){pass(2,0,0,{});st.mode='scatter';st.t=0;st.frame=0;}
+mark();
+function framesPerStep(){return Math.max(1,13-(+$('spd').value));}
+let last=performance.now();
+function tick(){
+ resize();
+ const fps=framesPerStep(); let f=0;
+ if(st.mode==='denoise'){
+   f=st.frame/fps;
+   if(st.frame===0){const rand=$('rnd').checked;pass(rand?0:1,st.t,st.cls,{g:+wEl.value});}
+   st.frame++;
+   const name=NAMES[st.cls];
+   if(st.t>T*0.7)say('从一团噪声开始，目标：'+name,'网络每一步只做一件事：看着每个粒子现在的位置，猜“这里混进了什么噪声”。减掉一点，粒子就往更像'+(st.cls===3?'“随便什么形状”':name)+'的地方挪一小步。');
+   else if(st.t>T*0.3)say('轮廓慢慢浮出来','没有人告诉任何一个粒子它该去哪。它们只是顺着网络算出的“坡”往下走，大轮廓先出现，细节最后才到。');
+   else say('细节补齐','最后几步噪声很小，粒子只做微调。换一次提示词，同一团粒子会走向完全不同的地方。');
+   ui.tnum.textContent=(st.t)+' / '+T; ui.bar.style.width=(100*st.t/T)+'%';
+   if(st.frame>=fps){st.frame=0;st.t--; if(st.t<0){st.t=0;st.mode='hold';st.hold=0;f=1;}}
+ } else if(st.mode==='hold'){
+   f=1;st.hold++;ui.tnum.textContent='0 / '+T;ui.bar.style.width='0%';
+   say('画好了：'+NAMES[st.cls],st.cls===3?'不给提示词时，网络只知道“训练时见过这三种东西”，于是画出一个四不像的混合体。':'这是模型自己“想”出来的一张图。拖动“提示引导”再看：引导越强，形状越干净，但也越死板。');
+   if(pending!==null){startScatter();}
+   else if(auto&&st.hold>150){qi=(queue.indexOf(st.cls)+1)%3;pending=queue[qi];startScatter();}
+ } else if(st.mode==='scatter'){
+   const sf=Math.max(1,Math.round(fps*0.45));
+   if(st.frame%sf===0){st.t=Math.min(T-1,st.t+1);pass(3,0,0,{ab:AB[st.t]});}
+   f=1; st.frame++;
+   say('加噪：把画好的东西一点点淹没','这是训练时做的事：往干净的图里加噪声，让网络练习“猜出加了什么”。加到最后，什么形状都看不出来了。');
+   ui.tnum.textContent=st.t+' / '+T; ui.bar.style.width=(100*st.t/T)+'%';
+   if(st.t>=T-1){st.mode='denoise';st.t=T-1;st.frame=0;st.cls=pending===null?st.cls:pending;pending=null;mark();}
+ }
+ // ---- draw ----
+ gl.bindFramebuffer(gl.FRAMEBUFFER,trail.f);gl.viewport(0,0,tw,th);gl.enable(gl.BLEND);
+ gl.useProgram(PF.p);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.uniform1f(PF.u.uK,$('trk').checked?0.16:0.45);gl.bindVertexArray(vao);gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+ gl.useProgram(PD.p);gl.blendFunc(gl.ONE,gl.ONE);
+ bindTex(PD,'uP',0,S[iP].t);bindTex(PD,'uC',1,S[iC].t);
+ const sm=Math.min(tw,th);gl.uniform2f(PD.u.uAsp,sm/tw,sm/th);gl.uniform1f(PD.u.uScale,0.36);gl.uniform1f(PD.u.uF,Math.min(1,f));
+ gl.uniform1i(PD.u.uSide,SIDE);gl.uniform1i(PD.u.uTrk,$('trk').checked?1:0);
+ const dpr=Math.min(devicePixelRatio||1,2);gl.uniform1f(PD.u.uPt,2.6*dpr);gl.uniform1f(PD.u.uI,Math.min(0.5,0.32*16384/N*Math.sqrt(sm/900)));
+ gl.bindVertexArray(evao);gl.drawArrays(gl.POINTS,0,N);
+ gl.disable(gl.BLEND);gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.useProgram(PV.p);bindTex(PV,'uT',0,trail.t);gl.bindVertexArray(vao);gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+ requestAnimationFrame(tick);}
+requestAnimationFrame(tick);
+window.__diag=()=>({N,mode:st.mode,t:st.t,cls:st.cls});
+})();
+</script>
+</body>
+</html>
