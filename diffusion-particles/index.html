@@ -45,11 +45,13 @@ body.capture #ctl,body.capture #bar{display:none}
 <script>
 (function(){
 const Q=new URLSearchParams(location.search);
+window.addEventListener('error',e=>{const el=document.getElementById('err');el.style.display='flex';el.textContent='出错了：'+(e.message||e)+'（把这句话截图发我）';});
 if(Q.has('capture'))document.body.classList.add('capture');
 const M=window.PMODEL, T=M.T, NAMES=['“傅”','教堂','鲸鱼','（没有提示词）'];
 const cv=document.getElementById('c');
 const gl=cv.getContext('webgl2',{antialias:false,alpha:false});
 function fail(m){const e=document.getElementById('err');e.style.display='flex';e.textContent=m;}
+cv.addEventListener('webglcontextlost',e=>{e.preventDefault();fail('显卡跑不动这么多粒子，已停止。试试在网址后面加 ?side=64 再打开。');});
 if(!gl){fail('这个浏览器不支持 WebGL2，换 Chrome / Edge / Safari 新版试试。');return;}
 if(!gl.getExtension('EXT_color_buffer_float')){fail('这个设备的显卡不支持浮点渲染，暂时跑不了。');return;}
 const mobile=/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
@@ -83,48 +85,56 @@ const BETA=M.betas, AB=M.abar;
 // ---------- shaders ----------
 function sh(type,src){const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);
  if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)){console.error(gl.getShaderInfoLog(s));fail('着色器编译失败：'+gl.getShaderInfoLog(s));throw 0;}return s;}
-function prog(vs,fs){const p=gl.createProgram();gl.attachShader(p,sh(gl.VERTEX_SHADER,vs));gl.attachShader(p,sh(gl.FRAGMENT_SHADER,fs));gl.linkProgram(p);
+function prog(vs,fs){const p=gl.createProgram();gl.attachShader(p,sh(gl.VERTEX_SHADER,vs));gl.attachShader(p,sh(gl.FRAGMENT_SHADER,fs));gl.bindAttribLocation(p,0,'a');gl.linkProgram(p);
  if(!gl.getProgramParameter(p,gl.LINK_STATUS)){fail('程序链接失败：'+gl.getProgramInfoLog(p));throw 0;}
  const u={};const n=gl.getProgramParameter(p,gl.ACTIVE_UNIFORMS);for(let i=0;i<n;i++){const a=gl.getActiveUniform(p,i);const nm=a.name.replace(/\[0\]$/,'');u[nm]=gl.getUniformLocation(p,a.name);}return {p,u};}
 const QUADVS=`#version 300 es
 in vec2 a;out vec2 v;void main(){v=a*.5+.5;gl_Position=vec4(a,0,1);}`;
 let rowsCode='';
-const STEPFS=`#version 300 es
+const HDR=`#version 300 es
 precision highp float;precision highp int;precision highp sampler2D;
-uniform sampler2D uS,uE,uW1,uW2,uW3,uW4,uWo,uB;
-uniform vec4 uB1c[32];uniform vec4 uB1u[32];uniform vec2 uBf[48];
-uniform int uMode;uniform float uG;uniform bool uCfg;
+uniform int uSide;out vec4 o;
+vec4 silu(vec4 x){return x/(1.+exp(-x));}
+`;
+// hidden layout: particle (px,py), group r(0..31) -> X=px*8+r%8, Y=br*S*4+py*4+r/8
+const L1FS=HDR+`uniform sampler2D uS,uW1;uniform vec4 uB1c[32];uniform vec4 uB1u[32];uniform vec2 uBf[48];
+void main(){ivec2 q=ivec2(gl_FragCoord.xy);int S4=uSide*4;int br=q.y/S4;int yy=q.y-br*S4;
+ int px=q.x/8;int r=(q.x-px*8)+8*(yy%4);int py=yy/4;
+ vec2 x=texelFetch(uS,ivec2(px,py),0).xy;int o0=4*r;vec4 acc=vec4(0);
+ for(int i=0;i<12;i++){vec4 p=vec4(dot(x,uBf[4*i]),dot(x,uBf[4*i+1]),dot(x,uBf[4*i+2]),dot(x,uBf[4*i+3]));vec4 s=sin(p),c=cos(p);
+  acc.x+=dot(texelFetch(uW1,ivec2(i,o0),0),s)+dot(texelFetch(uW1,ivec2(i+12,o0),0),c);
+  acc.y+=dot(texelFetch(uW1,ivec2(i,o0+1),0),s)+dot(texelFetch(uW1,ivec2(i+12,o0+1),0),c);
+  acc.z+=dot(texelFetch(uW1,ivec2(i,o0+2),0),s)+dot(texelFetch(uW1,ivec2(i+12,o0+2),0),c);
+  acc.w+=dot(texelFetch(uW1,ivec2(i,o0+3),0),s)+dot(texelFetch(uW1,ivec2(i+12,o0+3),0),c);}
+ acc+=(br==0)?uB1c[r]:uB1u[r];o=silu(acc);}`;
+const LHFS=HDR+`uniform sampler2D uH,uW,uB;uniform int uL;
+void main(){ivec2 q=ivec2(gl_FragCoord.xy);int S4=uSide*4;int br=q.y/S4;int yy=q.y-br*S4;
+ int px=q.x/8;int r=(q.x-px*8)+8*(yy%4);int py=yy/4;int o0=4*r;vec4 acc=vec4(0);
+ for(int i=0;i<32;i++){vec4 h=texelFetch(uH,ivec2(px*8+i%8,br*S4+py*4+i/8),0);
+  acc.x+=dot(texelFetch(uW,ivec2(i,o0),0),h);acc.y+=dot(texelFetch(uW,ivec2(i,o0+1),0),h);
+  acc.z+=dot(texelFetch(uW,ivec2(i,o0+2),0),h);acc.w+=dot(texelFetch(uW,ivec2(i,o0+3),0),h);}
+ o=silu(acc+texelFetch(uB,ivec2(r,uL),0));}`;
+const OUTFS=HDR+`uniform sampler2D uH,uWo,uB;
+void main(){ivec2 q=ivec2(gl_FragCoord.xy);int br=q.y/uSide;int py=q.y-br*uSide;int px=q.x;int S4=uSide*4;vec2 e=vec2(0);
+ for(int i=0;i<32;i++){vec4 h=texelFetch(uH,ivec2(px*8+i%8,br*S4+py*4+i/8),0);
+  e.x+=dot(texelFetch(uWo,ivec2(i,0),0),h);e.y+=dot(texelFetch(uWo,ivec2(i,1),0),h);}
+ o=vec4(e+texelFetch(uB,ivec2(0,3),0).xy,0,1);}`;
+const UPDFS=HDR+`uniform sampler2D uS,uE,uO;uniform int uMode;uniform float uG;uniform bool uCfg;
 uniform float c1,c2,sig,sab,s1ab,sabp,s1abp,uSeed,fab,f1ab;
-out vec4 o;
 uint pcg(uint v){uint s=v*747796405u+2891336453u;uint w=((s>>((s>>28u)+4u))^s)*277803737u;return (w>>22u)^w;}
 float rnd(inout uint s){s=pcg(s);return (float(s)+.5)/4294967296.;}
-vec4 rowdot4(sampler2D W,int r,int n,vec4 x[32]){ vec4 acc=vec4(0);
-  for(int i=0;i<32;i++){ if(i>=n)break; vec4 xi=x[i];
-    acc.x+=dot(texelFetch(W,ivec2(i,r),0),xi);acc.y+=dot(texelFetch(W,ivec2(i,r+1),0),xi);
-    acc.z+=dot(texelFetch(W,ivec2(i,r+2),0),xi);acc.w+=dot(texelFetch(W,ivec2(i,r+3),0),xi);}
-  return acc;}
-vec4 silu(vec4 x){return x/(1.+exp(-x));}
-vec2 net(vec2 x,bool cond){
-  vec4 a[32];vec4 b[32];
-  for(int i=0;i<12;i++){vec4 p=vec4(dot(x,uBf[4*i]),dot(x,uBf[4*i+1]),dot(x,uBf[4*i+2]),dot(x,uBf[4*i+3]));a[i]=sin(p);a[i+12]=cos(p);}
-  for(int i=24;i<32;i++)a[i]=vec4(0);
-  for(int r=0;r<32;r++)b[r]=silu(rowdot4(uW1,4*r,24,a)+(cond?uB1c[r]:uB1u[r]));
-  for(int r=0;r<32;r++)a[r]=silu(rowdot4(uW2,4*r,32,b)+texelFetch(uB,ivec2(r,0),0));
-  for(int r=0;r<32;r++)b[r]=silu(rowdot4(uW3,4*r,32,a)+texelFetch(uB,ivec2(r,1),0));
-  for(int r=0;r<32;r++)a[r]=silu(rowdot4(uW4,4*r,32,b)+texelFetch(uB,ivec2(r,2),0));
-  vec2 e=vec2(0);for(int i=0;i<32;i++){e.x+=dot(texelFetch(uWo,ivec2(i,0),0),a[i]);e.y+=dot(texelFetch(uWo,ivec2(i,1),0),a[i]);}
-  return e+texelFetch(uB,ivec2(0,3),0).xy;}
 void main(){ivec2 p=ivec2(gl_FragCoord.xy);vec4 s=texelFetch(uS,p,0);
-  if(uMode==2){o=vec4(s.xy,s.xy);return;}                       // remember start
-  if(uMode==3){vec2 e=texelFetch(uE,p,0).xy;o=vec4(fab*s.zw+f1ab*e,s.zw);return;}  // forward: closed form
-  vec2 x=s.xy; vec2 e=net(x,true);
-  if(uCfg){vec2 eu=net(x,false);e=eu+uG*(e-eu);}
-  vec2 xn;
-  if(uMode==0){ xn=c1*(x-c2*e);
-    if(sig>0.){uint st=uint(p.x)*1973u+uint(p.y)*9277u+uint(uSeed)*26699u;float u1=rnd(st),u2=rnd(st);
-      xn+=sig*sqrt(-2.*log(u1))*vec2(cos(6.2831853*u2),sin(6.2831853*u2));}
-  } else { vec2 x0=clamp((x-s1ab*e)/sab,-4.,4.); xn=sabp*x0+s1abp*e; }
-  o=vec4(xn,s.zw);}`;
+ if(uMode==2){o=vec4(s.xy,s.xy);return;}
+ if(uMode==3){vec2 e=texelFetch(uE,p,0).xy;o=vec4(fab*s.zw+f1ab*e,s.zw);return;}
+ vec2 x=s.xy;vec2 e=texelFetch(uO,p,0).xy;
+ if(uCfg){vec2 eu=texelFetch(uO,ivec2(p.x,p.y+uSide),0).xy;e=eu+uG*(e-eu);}
+ vec2 xn;
+ if(uMode==0){xn=c1*(x-c2*e);
+  if(sig>0.){uint st=uint(p.x)*1973u+uint(p.y)*9277u+uint(uSeed)*26699u;float u1=rnd(st),u2=rnd(st);
+   xn+=sig*sqrt(-2.*log(u1))*vec2(cos(6.2831853*u2),sin(6.2831853*u2));}
+ }else{vec2 x0=clamp((x-s1ab*e)/sab,-4.,4.);xn=sabp*x0+s1abp*e;}
+ if(!(abs(xn.x)<50.&&abs(xn.y)<50.))xn=vec2(0);
+ o=vec4(xn,s.zw);}`;
 const DRAWVS=`#version 300 es
 precision highp float;precision highp sampler2D;
 uniform sampler2D uP,uC;uniform float uF,uScale,uPt;uniform vec2 uAsp;uniform int uSide;uniform bool uTrk;
@@ -145,11 +155,11 @@ precision highp float;uniform float uK;out vec4 o;void main(){o=vec4(0,0,0,uK);}
 const SHOWFS=`#version 300 es
 precision highp float;uniform sampler2D uT;in vec2 v;out vec4 o;
 void main(){vec3 c=texture(uT,v).rgb;c=1.-exp(-c*1.4);o=vec4(pow(c,vec3(.9)),1);}`;
-const PS=prog(QUADVS,STEPFS),PD=prog(DRAWVS,DRAWFS),PF=prog(QUADVS,FADEFS),PV=prog(QUADVS,SHOWFS);
+const P1=prog(QUADVS,L1FS),PH=prog(QUADVS,LHFS),PO=prog(QUADVS,OUTFS),PS=prog(QUADVS,UPDFS),PD=prog(DRAWVS,DRAWFS),PF=prog(QUADVS,FADEFS),PV=prog(QUADVS,SHOWFS);
 const qb=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,qb);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
 const vao=gl.createVertexArray();gl.bindVertexArray(vao);gl.enableVertexAttribArray(0);gl.vertexAttribPointer(0,2,gl.FLOAT,false,0,0);
 const evao=gl.createVertexArray();
-for(const P of [PS,PF,PV])gl.bindAttribLocation(P.p,0,'a');
+
 
 // ---------- particle state ----------
 function gauss(){let u=0,v=0;while(u===0)u=Math.random();v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
@@ -167,22 +177,33 @@ function resize(){const dpr=Math.min(devicePixelRatio||1,2);const w=Math.round(c
  const f=gl.createFramebuffer();gl.bindFramebuffer(gl.FRAMEBUFFER,f);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,t,0);
  gl.clearColor(0,0,0,1);gl.clear(gl.COLOR_BUFFER_BIT);trail={t,f};}
 function bindTex(P,name,unit,tex){gl.activeTexture(gl.TEXTURE0+unit);gl.bindTexture(gl.TEXTURE_2D,tex);gl.uniform1i(P.u[name],unit);}
-function pass(mode,t,cls,opt){ // writes into the free slot, rotates
- const iN=3-iP-iC;gl.useProgram(PS.p);gl.bindFramebuffer(gl.FRAMEBUFFER,S[iN].f);gl.viewport(0,0,SIDE,SIDE);gl.disable(gl.BLEND);
- bindTex(PS,'uS',0,S[iC].t);bindTex(PS,'uE',1,tE);
- [['uW1',tW1],['uW2',tW2],['uW3',tW3],['uW4',tW4],['uWo',tWo],['uB',tB]].forEach(([n,tx],k)=>bindTex(PS,n,2+k,tx));
- gl.uniform1i(PS.u.uMode,mode);
- if(mode===3){gl.uniform1f(PS.u.fab,Math.sqrt(opt.ab));gl.uniform1f(PS.u.f1ab,Math.sqrt(1-opt.ab));}
+function rt(w,h){const t=texF(w,h,null);const f=gl.createFramebuffer();gl.bindFramebuffer(gl.FRAMEBUFFER,f);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,t,0);
+ if(gl.checkFramebufferStatus(gl.FRAMEBUFFER)!==gl.FRAMEBUFFER_COMPLETE){fail('这块显卡不能往浮点纹理里写数据，暂时跑不了。');throw 0;}return {t,f};}
+const HA=rt(SIDE*8,SIDE*8),HB=rt(SIDE*8,SIDE*8),OUT=rt(SIDE,SIDE*2);
+function run(P,target,w,h){gl.bindFramebuffer(gl.FRAMEBUFFER,target.f);gl.viewport(0,0,w,h);gl.uniform1i(P.u.uSide,SIDE);gl.bindVertexArray(vao);gl.drawArrays(gl.TRIANGLE_STRIP,0,4);}
+function pass(mode,t,cls,opt){
+ const iN=3-iP-iC;gl.disable(gl.BLEND);
+ let cfg=false;
  if(mode<2){
-  const c=cls, g=opt.g, cfg=(c!==3)&&Math.abs(g-1)>1e-3;
-  gl.uniform4fv(PS.u.uB1c,b1eff(t,c));gl.uniform4fv(PS.u.uB1u,b1eff(t,3));gl.uniform2fv(PS.u.uBf,BFV);
-  gl.uniform1i(PS.u.uCfg,cfg?1:0);gl.uniform1f(PS.u.uG,g);
+  const c=cls,g=opt.g;cfg=(c!==3)&&Math.abs(g-1)>1e-3;const br=cfg?2:1;
+  gl.useProgram(P1.p);bindTex(P1,'uS',0,S[iC].t);bindTex(P1,'uW1',1,tW1);
+  gl.uniform4fv(P1.u.uB1c,b1eff(t,c));gl.uniform4fv(P1.u.uB1u,b1eff(t,3));gl.uniform2fv(P1.u.uBf,BFV);
+  run(P1,HA,SIDE*8,SIDE*4*br);
+  const hs=[[HA,HB,tW2,0],[HB,HA,tW3,1],[HA,HB,tW4,2]];
+  gl.useProgram(PH.p);
+  for(const [src,dst,w,l] of hs){bindTex(PH,'uH',0,src.t);bindTex(PH,'uW',1,w);bindTex(PH,'uB',2,tB);gl.uniform1i(PH.u.uL,l);run(PH,dst,SIDE*8,SIDE*4*br);}
+  gl.useProgram(PO.p);bindTex(PO,'uH',0,HB.t);bindTex(PO,'uWo',1,tWo);bindTex(PO,'uB',2,tB);run(PO,OUT,SIDE,SIDE*br);
+ }
+ gl.useProgram(PS.p);bindTex(PS,'uS',0,S[iC].t);bindTex(PS,'uE',1,tE);bindTex(PS,'uO',2,OUT.t);
+ gl.uniform1i(PS.u.uMode,mode);gl.uniform1i(PS.u.uCfg,cfg?1:0);
+ if(mode===3){gl.uniform1f(PS.u.fab,Math.sqrt(opt.ab));gl.uniform1f(PS.u.f1ab,Math.sqrt(1-opt.ab));}
+ if(mode<2){gl.uniform1f(PS.u.uG,opt.g);
   const be=BETA[t],al=1-be,ab=AB[t],abp=t>0?AB[t-1]:1;
   gl.uniform1f(PS.u.c1,1/Math.sqrt(al));gl.uniform1f(PS.u.c2,be/Math.sqrt(1-ab));
   gl.uniform1f(PS.u.sig,t>0?Math.sqrt(be*(1-abp)/(1-ab)):0);
   gl.uniform1f(PS.u.sab,Math.sqrt(ab));gl.uniform1f(PS.u.s1ab,Math.sqrt(1-ab));gl.uniform1f(PS.u.sabp,Math.sqrt(abp));gl.uniform1f(PS.u.s1abp,Math.sqrt(1-abp));
   gl.uniform1f(PS.u.uSeed,(Math.random()*1e6)|0);}
- gl.bindVertexArray(vao);gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+ run(PS,S[iN],SIDE,SIDE);
  iP=iC;iC=iN;}
 const BFV=new Float32Array(2*NF);for(let j=0;j<NF;j++){BFV[2*j]=Bf[j];BFV[2*j+1]=Bf[NF+j];}
 
@@ -238,7 +259,10 @@ function tick(){
  const dpr=Math.min(devicePixelRatio||1,2);gl.uniform1f(PD.u.uPt,2.6*dpr);gl.uniform1f(PD.u.uI,Math.min(0.5,0.32*16384/N*Math.sqrt(sm/900)));
  gl.bindVertexArray(evao);gl.drawArrays(gl.POINTS,0,N);
  gl.disable(gl.BLEND);gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.useProgram(PV.p);bindTex(PV,'uT',0,trail.t);gl.bindVertexArray(vao);gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+ frames++;if(dbg&&frames%30===0){const now=performance.now();dbg.textContent=GPU+' · '+N+' 粒 · '+(30000/(now-dlast)).toFixed(0)+' fps';dlast=now;}
  requestAnimationFrame(tick);}
+let frames=0,dlast=performance.now();const dbgi=gl.getExtension('WEBGL_debug_renderer_info');const GPU=dbgi?gl.getParameter(dbgi.UNMASKED_RENDERER_WEBGL):'GPU';
+let dbg=null;if(Q.has('debug')){dbg=document.createElement('div');dbg.style.cssText='position:fixed;left:22px;bottom:110px;font-size:12px;color:#8fa3c2';document.body.appendChild(dbg);}
 requestAnimationFrame(tick);
 window.__diag=()=>({N,mode:st.mode,t:st.t,cls:st.cls});
 })();
