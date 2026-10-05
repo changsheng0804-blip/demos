@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>扩散模型：AI 是怎么从噪声里画出图的</title>
+<style>
+  body{margin:0;background:#0d1b2a;color:#e0e1dd;font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;line-height:1.7}
+  main{max-width:960px;margin:0 auto;padding:32px 20px 60px}
+  h1{font-size:28px;margin:0 0 6px} .sub{color:#778da9;margin:0 0 20px}
+  video{width:100%;border-radius:10px;background:#000}
+  h2{font-size:19px;margin:28px 0 8px;color:#ffd166}
+  ul{padding-left:20px;margin:0} li{margin:4px 0} .t{color:#5bc0eb;font-variant-numeric:tabular-nums;margin-right:8px}
+  .back{margin:0 0 14px;font-size:14px} .back a{color:#7dd3fc;text-decoration:none}
+  .note{color:#778da9;font-size:13px;margin-top:28px}
+</style>
+</head>
+<body><main>
+<p class="back"><a href="../">← 演示合集</a></p>
+<h1>扩散模型：AI 是怎么从噪声里画出图的</h1>
+<p class="sub">中文旁白科普视频 · 约 9 分钟 · 原理、亲手训练的小实验、真实模型的 40 步</p>
+<video controls preload="metadata" poster="poster.jpg" playsinline>
+  <source src="diffusion-model.mp4" type="video/mp4">
+  你的浏览器不支持视频播放，可以 <a href="diffusion-model.mp4">直接下载</a>。
+</video>
+<h2>章节</h2>
+<ul>
+<li><span class="t">00:00</span>开场</li>
+<li><span class="t">00:22</span>墨水在水里散开：什么是“扩散”</li>
+<li><span class="t">00:54</span>正向扩散：一步步加噪声</li>
+<li><span class="t">01:25</span>核心思路：把一大步拆成很多小步</li>
+<li><span class="t">01:53</span>训练：让网络猜出噪声</li>
+<li><span class="t">02:28</span>小实验：在平面上还原一个“傅”字</li>
+<li><span class="t">03:56</span>从平面到图片：像素空间与潜在空间</li>
+<li><span class="t">04:51</span>真实模型：Stable Diffusion 的 40 步</li>
+<li><span class="t">05:15</span>先定轮廓再添细节：从傅里叶的角度看</li>
+<li><span class="t">05:57</span>文字怎么指挥画面：文本引导与引导强度</li>
+<li><span class="t">06:49</span>历史：十年间的几次关键突破</li>
+<li><span class="t">07:45</span>应用：视频、蛋白质设计、天气预报</li>
+<li><span class="t">08:31</span>三句话总结</li>
+</ul>
+<p class="note">真实生成画面来自 Stable Diffusion v1.5（Colab T4 显卡，DDIM 40 步）；“傅”字小实验为 PyTorch 自写 6 层全连接网络、Colab T4 训练；频率分析是对生成过程的实际计算。标注“示意”的画面为插图。其余动画与图表均由 Python 代码生成，旁白为 AI 语音合成。</p>
+</main></body></html>
