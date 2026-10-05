@@ -112,10 +112,10 @@ function drawClouds(pos,rect,time,fade){
  gl.bindBuffer(gl.ARRAY_BUFFER,rndB);gl.enableVertexAttribArray(1);gl.vertexAttribPointer(1,2,gl.FLOAT,false,0,0);
  const sc=m*0.5/2.1; // world 2.1 -> half panel
  gl.uniform2f(U('uS'),sc*2/W,sc*2/H);gl.uniform2f(U('uC'),(x+w/2)/W*2-1,1-(y+h/2)/H*2);
- gl.uniform1f(U('uPx'),sc*0.30);gl.uniform1f(U('uTime'),time);gl.uniform1i(U('uT'),0);
+ gl.uniform1f(U('uPx'),sc*0.21);gl.uniform1f(U('uTime'),time);gl.uniform1i(U('uT'),0);
  gl.enable(gl.SCISSOR_TEST);gl.scissor(x,H-y-h,w,h);
  gl.uniform1f(U('uOff'),sc*0.05*2/H);gl.uniform3f(U('uCol'),.55,.63,.75);gl.uniform1f(U('uA'),0.35*fade);gl.drawArrays(gl.POINTS,0,N);
- gl.uniform1f(U('uOff'),0);gl.uniform3f(U('uCol'),1,1,1);gl.uniform1f(U('uA'),0.55*fade);gl.drawArrays(gl.POINTS,0,N);
+ gl.uniform1f(U('uOff'),0);gl.uniform3f(U('uCol'),1,1,1);gl.uniform1f(U('uA'),0.62*fade);gl.drawArrays(gl.POINTS,0,N);
  gl.disable(gl.SCISSOR_TEST);}
 
 // ---------- story ----------
