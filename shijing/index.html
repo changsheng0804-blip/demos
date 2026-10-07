@@ -277,7 +277,7 @@ function range(g,o){
   gr.addColorStop(0,rgba(col,al));gr.addColorStop(.5,rgba(col,al*.6));gr.addColorStop(1,rgba(col,0));
   g.fillStyle=gr;g.beginPath();g.moveTo(-20,o.base+o.amp);for(const p of pts)g.lineTo(p[0],p[1]);g.lineTo(W+20,o.base+o.amp);g.closePath();g.fill();
   if(o.tex){const cnt=Math.floor(W/3*o.tex);for(let i=0;i<cnt;i++){const p=pts[ri(0,pts.length-1)];const depth=o.base-p[1];if(depth<6)continue;const f=Math.pow(R(),2)*.6;const y0=p[1]+depth*f+1;const L=rr(.08,.3)*depth;const ang=Math.PI/2+rr(-.55,.55);g.strokeStyle=rgba(col,al*rr(.3,.8)*(1-f));g.lineWidth=rr(.5,1.8);g.beginPath();g.moveTo(p[0]+rr(-6,6),y0);g.quadraticCurveTo(p[0]+Math.cos(ang)*L*.5+rr(-4,4),y0+Math.sin(ang)*L*.5,p[0]+Math.cos(ang)*L,y0+Math.sin(ang)*L);g.stroke()}}
-  if(o.snow){g.fillStyle='rgba(250,248,243,.93)';g.beginPath();pts.forEach((p,i)=>i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]));for(let i=pts.length-1;i>=0;i--){const p=pts[i];const d=o.base-p[1];g.lineTo(p[0],p[1]+Math.min(d*.45,o.amp*(.04+.13*fbm(n,p[0]/50+3,3))))}g.closePath();g.fill()}
+  if(o.snow){g.fillStyle='rgba(250,248,243,.93)';g.beginPath();pts.forEach((p,i)=>i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]));for(let i=pts.length-1;i>=0;i--){const p=pts[i];const d=o.base-p[1];const rel=clamp((d/o.amp-.28)/.72,0,1);const cap=rel*o.amp*(.05+.2*rel)*(.55+.9*fbm(n,p[0]/45+3,3))*(.75+.5*n(p[0]/7+50));g.lineTo(p[0],p[1]+Math.min(d*.5,cap))}g.closePath();g.fill()}
   if(o.line){g.strokeStyle=rgba(col,Math.min(1,al*1.35));for(let i=1;i<pts.length;i++){g.lineWidth=o.line*(.25+1.5*fbm(n,i*.04+11,3));g.beginPath();g.moveTo(pts[i-1][0],pts[i-1][1]);g.lineTo(pts[i][0],pts[i][1]);g.stroke()}}
   if(o.dots){for(let i=0;i<o.dots;i++){const p=pts[ri(0,pts.length-1)];if(o.base-p[1]<o.amp*.25)continue;g.fillStyle=rgba(col,rr(.5,.9));g.beginPath();g.ellipse(p[0]+rr(-3,3),p[1]+rr(-1,3),rr(1,2.6),rr(.8,1.8),rr(0,3),0,TAU);g.fill()}}
   return pts;
@@ -329,9 +329,9 @@ function blossomTree(g,x,y,h,col,maple){
 function willow(g,x,y,h,col){
   const tips=[],mids=[];branch(g,x,y,-Math.PI/2+rr(-.2,.2),h*.34,h*.05,3,col,tips,mids);
   const wc=S.night?[40,60,40]:[92,124,62];
-  for(const[tx,ty]of tips){for(let k=0;k<7;k++){const L=h*rr(.25,.6);const sx=tx+rr(-8,8),sy=ty+rr(-5,5);const dir=sx<x?-1:1;const ex=sx+dir*L*.18+rr(-.05,.05)*L,ey=sy+L;
+  const anchors=tips.concat(mids.filter(m=>m[2]<=1).map(m=>[m[0],m[1]]));for(const[tx,ty]of anchors){for(let k=0;k<5;k++){const L=h*rr(.25,.6);const sx=tx+rr(-8,8),sy=ty+rr(-5,5);const dir=sx<x?-1:1;const ex=sx+dir*L*.18+rr(-.05,.05)*L,ey=sy+L;
     g.setLineDash([]);g.strokeStyle=rgba(wc,.35);g.lineWidth=.7;g.beginPath();g.moveTo(sx,sy);g.quadraticCurveTo(sx+dir*L*.16,sy-L*.06,ex,ey);g.stroke();
-    g.setLineDash([2.5,3.5]);g.strokeStyle=rgba(wc,rr(.35,.6));g.lineWidth=2.2;g.beginPath();g.moveTo(sx,sy+L*.1);g.quadraticCurveTo(sx+dir*L*.16,sy-L*.02,ex,ey);g.stroke()}}
+    g.setLineDash([2,4.5]);g.strokeStyle=rgba(wc,rr(.3,.5));g.lineWidth=1.8;g.beginPath();g.moveTo(sx,sy+L*.1);g.quadraticCurveTo(sx+dir*L*.16,sy-L*.02,ex,ey);g.stroke()}}
   g.setLineDash([]);
 }
 function bamboo(g,x,y,h){
@@ -370,7 +370,7 @@ function build(text){
   sun=S.sun?{x:W*rr(.28,.6),r:mn*(S.dusk?rr(.06,.08):rr(.035,.05))}:null;
   if(sun)sun.y=S.dusk?hy-H*.05-sun.r*rr(0,.8):hy*rr(.22,.36);
   wf=S.waterfall?{x:W*rr(.38,.5),w:Math.max(9,W*.024),top:H*rr(.13,.2),bot:hy+H*.015}:null;
-  boat=(S.boat&&S.water)?{x:W*rr(.44,.6),y:hy+(H-hy)*rr(.28,.4),L:mn*rr(.1,.13),fisher:S.fisher||R()<.5}:null;
+  boat=(S.boat&&S.water)?{x:W*rr(.44,.6),y:hy+(H-hy)*rr(.28,.4),L:mn*rr(.1,.13),fisher:S.fisher||(!S.scripted&&R()<.5)}:null;
   S.bankX=W*rr(.3,.4);
   const house=S.house?{x:W*(wf?rr(.62,.7):rr(.5,.68)),y:hy+(S.water?1:H*.04),s:mn*rr(.035,.05),tall:S.tall}:null;
   const avoid=[];if(sun&&S.dusk)avoid.push({x:sun.x,w:sun.r*3});if(moon&&moon.y>hy*.3)avoid.push({x:moon.x,w:moon.r*2.5});if(wf)avoid.push({x:wf.x,w:W*.18});
@@ -379,7 +379,7 @@ function build(text){
   mists=[];const nm=S.mist?ri(8,11):ri(4,7);for(let i=0;i<nm;i++)mists.push({x:rr(0,W),y:hy-H*rr(-.02,.2),w:W*rr(.3,.6),h:H*rr(.04,.09),v:rr(5,13)*(S.wind?3:1),a:night?rr(.12,.22):rr(.3,.55)});
   birds=[];for(let i=0;i<S.birdN;i++){if(S.lineBirds)birds.push({i,x:W*.16+i*W*.035,y:hy*.82-i*H*.035,vx:W*.018,vy:-H*.007,s:mn*.012,ph:i*.7,line:true});else birds.push({i,x:rr(0,W*.7),y:hy*rr(.15,.6),vx:W*rr(.01,.025)*(R()<.75?1:-1),vy:rr(-3,3),s:mn*rr(.008,.014),ph:rr(0,TAU)})}
   P=[];const k=W*H/(1280*800);const add=(type,n)=>{for(let i=0;i<n;i++)P.push(spawn(type,true))};
-  if(S.snowfall)add('snow',Math.round(170*k));if(S.rain)add('rain',Math.round(200*k));if(S.petals)add('petal',Math.round(34*k));if(S.leaves)add('leaf',Math.round(24*k));if(S.fireflies)add('fly',Math.round(30*k));
+  if(S.snowfall)add('snow',Math.round(170*k));if(S.rain)add('rain',Math.round(200*k));if(S.petals)add('petal',Math.round(34*k));if(S.leaves)add('leaf',Math.round(24*k));if(S.fireflies)add('fly',Math.round((S.lanterns?9:30)*k));
 
   layers=[];const L=(s,front,fn)=>layers.push({s,front,fn,c:null,merged:false});
   // sky
@@ -437,7 +437,7 @@ function build(text){
   // foreground bank
   L(4.0,true,g=>{
     const n=makeNoise();const bx=S.bankX;const top=H*rr(.74,.8);const pts=[];
-    for(let x=-20;x<=bx+W*.06;x+=3){const tt=clamp((x-bx*.55)/(bx*.5),0,1);pts.push([x,top-H*.06*fbm(n,x/90,4)+tt*tt*(H*.97-top)])}
+    const xEnd=bx+W*.08;for(let x=-20;x<=xEnd;x+=3){const tt=clamp((x-bx*.5)/(xEnd-bx*.5),0,1);pts.push([x,top-H*.06*fbm(n,x/90,4)*(1-tt)+tt*tt*(H+12-top)])}
     S.bankY=x=>{const i=clamp(Math.round((x+20)/3),0,pts.length-1);return pts[i][1]};
     const sand=S.desert;const c=sand?[150,110,66]:INKc;
     g.beginPath();g.moveTo(-20,H+5);pts.forEach(p=>g.lineTo(p[0],p[1]));g.lineTo(pts[pts.length-1][0],H+5);g.closePath();
@@ -469,7 +469,7 @@ function spawn(type,init){const p={type,x:Math.random()*W,y:init?Math.random()*H
   if(type==='snow'){p.r=.8+p.s*2.4;p.vy=18+p.s*40}
   else if(type==='rain'){p.vy=520+p.s*300;p.len=10+p.s*14}
   else if(type==='petal'||type==='leaf'){p.vy=22+p.s*30;p.r=3+p.s*3;p.rot=Math.random()*TAU;p.vr=(Math.random()-.5)*3}
-  else if(type==='fly'){p.y=(S?S.hy:H*.6)+(Math.random()-.4)*H*.3;p.r=S&&S.lanterns?2.4+p.s*2:1.4+p.s*1.6}
+  else if(type==='fly'){if(S&&S.lanterns){p.x=W*(.05+Math.random()*.7);p.y=S.hy+(Math.random()-.75)*H*.04;p.r=2+p.s*1.6;p.lamp=true}else{p.y=(S?S.hy:H*.6)+(Math.random()-.4)*H*.3;p.r=1.4+p.s*1.6}}
   return p}
 
 /* ---------- calligraphy ---------- */
@@ -558,7 +558,8 @@ function drawBoat(t,a){const b=boat,L=b.L,x=b.x+Math.sin(t*.12)*W*.012,y=b.y+Mat
     if(S.snow){ctx.fillStyle='rgba(250,248,243,.95)';ctx.beginPath();ctx.moveTo(fx-L*.06,-L*.27);ctx.quadraticCurveTo(fx-L*.01,-L*.34,fx+L*.04,-L*.27);ctx.closePath();ctx.fill()}
     ctx.strokeStyle=rgba(c,.85);ctx.lineWidth=1.1;ctx.beginPath();ctx.moveTo(fx+L*.03,-L*.15);ctx.quadraticCurveTo(L*.45,-L*.42,L*.86,-L*.5);ctx.stroke();
     ctx.lineWidth=.6;ctx.strokeStyle=rgba(c,.5);ctx.beginPath();ctx.moveTo(L*.86,-L*.5);ctx.quadraticCurveTo(L*.9,-L*.2,L*.87+Math.sin(t)*2,L*.06);ctx.stroke()}
-  else{ctx.fillStyle=rgba(c,.82);ctx.beginPath();ctx.moveTo(-L*.2,-L*.06);ctx.quadraticCurveTo(-L*.05,-L*.24,L*.14,-L*.07);ctx.closePath();ctx.fill()}
+  if(S.lanterns){const gl=ctx.createRadialGradient(-L*.3,-L*.16,0,-L*.3,-L*.16,L*.35);gl.addColorStop(0,'rgba(252,184,96,.75)');gl.addColorStop(1,'rgba(252,184,96,0)');ctx.fillStyle=gl;ctx.fillRect(-L*.65,-L*.5,L*.7,L*.7);ctx.fillStyle='rgba(255,205,120,.95)';ctx.fillRect(-L*.32,-L*.2,L*.04,L*.06)}
+  if(!b.fisher){ctx.fillStyle=rgba(c,.82);ctx.beginPath();ctx.moveTo(-L*.2,-L*.06);ctx.quadraticCurveTo(-L*.05,-L*.24,L*.14,-L*.07);ctx.closePath();ctx.fill()}
   ctx.restore()}
 function drawBirds(t,dt,a){const c=S.night?[230,222,205]:INK;ctx.lineCap='round';
   for(const b of birds){b.x+=b.vx*dt;b.y+=b.vy*dt+Math.sin(t*.8+b.ph)*.15;
@@ -570,7 +571,7 @@ function drawParticles(t,dt,a){const wind=S.wind?45:8;
     if(p.type==='snow'){p.y+=p.vy*dt;p.x+=(Math.sin(t*.8+p.ph)*12+wind)*dt;ctx.fillStyle=`rgba(253,251,246,${(.55+p.s*.4)*a})`;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,TAU);ctx.fill()}
     else if(p.type==='rain'){p.y+=p.vy*dt;p.x+=(wind+50)*dt;ctx.strokeStyle=S.night?`rgba(200,206,220,${.3*a})`:`rgba(40,44,50,${.22*a})`;ctx.lineWidth=.8;ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(p.x-p.len*.12,p.y-p.len);ctx.stroke()}
     else if(p.type==='petal'||p.type==='leaf'){p.y+=p.vy*dt;p.x+=(Math.sin(t*1.2+p.ph)*25+wind*1.4)*dt;p.rot+=p.vr*dt;ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.rot);ctx.fillStyle=p.type==='petal'?`rgba(236,150,170,${.85*a})`:rgba(p.s<.4?[196,58,32]:p.s<.7?[218,120,40]:[160,40,30],.85*a);ctx.beginPath();ctx.ellipse(0,0,p.r,p.r*.55,0,0,TAU);ctx.fill();ctx.restore()}
-    else if(p.type==='fly'){p.x+=Math.cos(t*.7+p.ph)*22*dt;p.y+=Math.sin(t*.9+p.ph*2)*14*dt;const gl=(.4+.6*Math.pow(Math.sin(t*2.5+p.ph),2))*a;const g2=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r*6);const fc=S.lanterns?'252,178,92':'235,240,150';g2.addColorStop(0,`rgba(${fc},${gl})`);g2.addColorStop(1,`rgba(${fc},0)`);ctx.fillStyle=g2;ctx.fillRect(p.x-p.r*6,p.y-p.r*6,p.r*12,p.r*12)}
+    else if(p.type==='fly'){const mv=p.lamp?.12:1;p.x+=Math.cos(t*.7+p.ph)*22*dt*mv;p.y+=Math.sin(t*.9+p.ph*2)*14*dt*mv;if(p.lamp){ctx.fillStyle=`rgba(252,178,92,${.18*a})`;ctx.fillRect(p.x-.6,p.y+p.r*2,1.2,H*.03)}const gl=(.4+.6*Math.pow(Math.sin(t*2.5+p.ph),2))*a;const g2=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r*6);const fc=S.lanterns?'252,178,92':'235,240,150';g2.addColorStop(0,`rgba(${fc},${gl})`);g2.addColorStop(1,`rgba(${fc},0)`);ctx.fillStyle=g2;ctx.fillRect(p.x-p.r*6,p.y-p.r*6,p.r*12,p.r*12)}
     if(p.y>H+30||p.x>W+40||p.x<-40){const np=spawn(p.type,false);if(p.type==='fly'){np.x=Math.random()*W}else if(Math.random()<.35){np.x=-30;np.y=Math.random()*H*.7}Object.assign(p,np)}}}
 function drawText(t){
   const base=S.night?[236,226,204]:INK;
