@@ -52,6 +52,27 @@
   .end p + p { margin-top: 10px; }
   .end a { color: #7dd3fc; }
   .foot { font-size: .82rem; margin-top: 30px; color: #64748b; }
+  .phases { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 8px; }
+  @media (max-width: 560px) { .phases { grid-template-columns: repeat(2, 1fr); } }
+  .ph { border: 1px solid rgba(255,255,255,.1); border-radius: 10px; padding: 7px 8px; font-size: .74rem; line-height: 1.45; color: #94a3b8; opacity: .5; transition: all .3s; }
+  .ph b { display: block; color: #e2e8f0; font-size: .82rem; }
+  .ph .st { margin-top: 4px; font-weight: 700; color: #64748b; }
+  .ph.on { opacity: 1; border-color: #38bdf8; background: rgba(56,189,248,.09); }
+  .ph.on .st { color: #38bdf8; }
+  .ph.done { opacity: .9; border-color: rgba(34,197,94,.55); }
+  .ph.done .st { color: #4ade80; }
+  .chips { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; margin-top: 10px; }
+  .chip { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .76rem; padding: 1px 7px; border-radius: 6px; background: rgba(255,255,255,.1); color: #e2e8f0; transition: all .2s; }
+  .chip.off { opacity: .16; text-decoration: line-through; }
+  .chip.now { background: #facc15; color: #111; }
+  .legend4 { text-align: center; color: #64748b; font-size: .74rem; margin-top: 4px; }
+  .trail4 { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .82rem; line-height: 1.8; margin-top: 8px; min-height: 1.8em; }
+  .trail4 .seg { display: block; }
+  .trail4 .seg i { font-style: normal; color: #94a3b8; font-family: sans-serif; margin-right: 6px; }
+  .trail4 .mv { padding: 0 3px; border-radius: 4px; }
+  .trail4 .mv.done { color: #475569; }
+  .trail4 .mv.cur { background: #0ea5e9; color: #04121f; }
+  .trail4 .total { color: #fde68a; font-family: sans-serif; }
 </style>
 </head>
 <body>
@@ -59,7 +80,7 @@
   <div class="hero">
     <h1>拧魔方，其实是在<em>地图上找路</em></h1>
     <p>不背公式，电脑也能找到最快的复原方法。秘诀只有一个：把魔方变成一张地图。</p>
-    <p class="small">这里用二阶魔方（2×2）。道理和三阶一样，只是它小到电脑能把整张地图全部画出来。</p>
+    <p class="small">前三步用二阶魔方（2×2）把道理讲清楚，第四步用同样的办法，真的把三阶魔方解开。</p>
   </div>
 
   <section class="ch">
@@ -113,15 +134,39 @@
     </div>
   </section>
 
+  <section class="ch flip">
+    <div class="txt">
+      <span class="no">第四步</span>
+      <h2>真正的三阶魔方：地图太大，就拆成四张小地图</h2>
+      <p>三阶魔方大约有 4300 亿亿种样子，一张地图根本装不下，没法像二阶那样整张数一遍。</p>
+      <p>办法是<span class="key">分四段走</span>，每段只完成一个小目标。而且越往后，能用的拧法越少（18 → 14 → 10 → 6 种），地图也就小到电脑能数完。像回家先上高速，再走主路，最后拐进小区。</p>
+      <p>每张小地图，电脑都像第二步那样一圈圈数过；走的时候照第三步，一路往数字小的地方走。四段接起来，任何打乱都能复原，一般 30 步左右。</p>
+      <p class="aside">每一段内都是最短的，但四段接起来不一定是全局最短：数学家已证明三阶魔方任何打乱最多 20 步就够，只是找那条路要难得多。这个分段方法叫 Thistlethwaite 算法。</p>
+    </div>
+    <div class="stage">
+      <canvas id="c4"></canvas>
+      <div class="phases" id="phases"></div>
+      <div class="chips" id="chips"></div>
+      <div class="legend4">U 顶 · D 底 · R 右 · L 左 · F 前 · B 后 · 带 ' 是逆时针 · 带 2 是转半圈 · 划掉的是这一段不准用的拧法</div>
+      <div class="trail4" id="trail4"></div>
+      <div class="btns">
+        <button id="b4mix">打乱</button>
+        <button id="b4solve" class="pri">分四段解开</button>
+        <button id="b4reset">复原</button>
+      </div>
+      <div class="tip" id="tip4">正在给四张小地图贴数字…</div>
+    </div>
+  </section>
+
   <div class="end">
-    <h2>那三阶魔方呢？</h2>
-    <p>三阶魔方的地图大得离谱：大约 4300 亿亿个路口，全世界的电脑加起来也没法给每个路口都贴上数字。</p>
-    <p>所以真正的三阶解法还是“找路”，只是走得更聪明：先走到一片好走的区域，再在小范围里找路，像先上高速、再下匝道。数学家已经证明，三阶魔方不管怎么打乱，最多 20 步就能复原，这个数被叫做“上帝之数”。</p>
+    <h2>一句话总结</h2>
+    <p>解魔方，就是在一张巨大的地图上找回家的路。地图小，就整张数一遍，一路往数字小的地方走（二阶）；地图太大，就拆成几张小地图，一段一段走（三阶）。</p>
     <p class="foot">想看数学版（节点、边、广度优先搜索的细节）：<a href="./advanced.html">进阶版</a> · <a href="../">返回演示合集</a></p>
   </div>
 </div>
 
 <script src="./cube-core.js"></script>
+<script src="./cube3-core.js"></script>
 <script>
 (function () {
   "use strict";
@@ -344,8 +389,8 @@
   var cr1 = new Crossroads(document.getElementById("c1"), false);
   var cr3 = new Crossroads(document.getElementById("c3"), true);
   var ripple = new Ripple(document.getElementById("c2"));
-  function redrawAll() { cr1.draw(); cr3.draw(); ripple.draw(); }
-  function resize() { ["c1", "c2", "c3"].forEach(function (id) { fitCanvas(document.getElementById(id)); }); redrawAll(); }
+  function redrawAll() { cr1.draw(); cr3.draw(); ripple.draw(); if (typeof draw4 === "function") draw4(); }
+  function resize() { ["c1", "c2", "c3", "c4"].forEach(function (id) { fitCanvas(document.getElementById(id)); }); redrawAll(); }
   window.addEventListener("resize", resize);
 
   document.getElementById("b1reset").onclick = function () { cr1.set(C.SOLVED.slice()); };
@@ -393,8 +438,121 @@
   function crunch() {
     bfsDone = bfs.step(250000);
     if (!bfsDone) { requestAnimationFrame(crunch); return; }
-    scramble(); maybePlay(); cr3.draw();
+    scramble(); maybePlay(); cr3.draw(); setTimeout(prep3, 60);
   }
+
+  // ================= 第四步：三阶魔方 =================
+  var C3 = window.Cube3;
+  var COL3 = ["#f4f4f5", "#dc2626", "#16a34a", "#fcd34d", "#f97316", "#2563eb"]; // U R F D L B
+  var KEY3 = {}; C3.STICKERS.forEach(function (s, i) { KEY3[s.p.join() + "|" + s.n.join()] = i; });
+  function renderCube3(c, fl, cx, cy, sc, anim) {
+    var D = 9, polys = [], ax = -1, sgn = 0, ang = 0;
+    if (anim) { var g = C3.FACE_GEO[(anim.m / 3) | 0].n; ax = g[0] ? 0 : g[1] ? 1 : 2; sgn = g[ax];
+      var t = anim.t, e = t < .5 ? 2*t*t : 1 - Math.pow(-2*t+2, 2)/2; ang = -sgn * [1, 2, -1][anim.m % 3] * Math.PI / 2 * e; }
+    for (var x = -1; x <= 1; x++) for (var y = -1; y <= 1; y++) for (var z = -1; z <= 1; z++) {
+      if (!x && !y && !z) continue;
+      var p = [x, y, z], turning = anim && p[ax] === sgn;
+      for (var f = 0; f < 6; f++) {
+        var n = FACES[f], uv = axesOf(n), q = quad(p, n, uv[0], uv[1], 0.48);
+        var outer = p[0]*n[0] + p[1]*n[1] + p[2]*n[2] === 1, sid = outer ? KEY3[p.join() + "|" + n.join()] : -1;
+        var nn = n, sq = sid >= 0 ? inset(q, 0.84) : null;
+        if (turning) { q = q.map(function (v) { return rotA(v, ax, ang); }); nn = rotA(n, ax, ang); if (sq) sq = sq.map(function (v) { return rotA(v, ax, ang); }); }
+        var vq = q.map(view), vn = view(nn), m = [0,0,0];
+        vq.forEach(function (v) { m[0] += v[0]/4; m[1] += v[1]/4; m[2] += v[2]/4; });
+        if (vn[0]*(-m[0]) + vn[1]*(-m[1]) + vn[2]*(D-m[2]) <= 0) continue;
+        polys.push({ z: m[2], q: vq, sq: sq ? sq.map(view) : null, col: sid >= 0 ? COL3[fl[sid]] : null, shade: 0.55 + 0.45 * Math.max(0, vn[2]*0.8 + vn[1]*0.35) });
+      }
+    }
+    polys.sort(function (a, b) { return a.z - b.z; });
+    function pth(q) { c.beginPath(); q.forEach(function (v, i) { var f = D / (D - v[2]), X = cx + v[0]*f*sc, Y = cy - v[1]*f*sc; if (i) c.lineTo(X, Y); else c.moveTo(X, Y); }); c.closePath(); }
+    polys.forEach(function (P) {
+      pth(P.q); c.fillStyle = "#0a0a0d"; c.fill();
+      if (P.sq) { pth(P.sq); c.fillStyle = P.col; c.fill(); c.fillStyle = "rgba(0,0,0," + (1 - P.shade).toFixed(3) + ")"; c.fill(); }
+    });
+  }
+  var cv4 = document.getElementById("c4"), ctx4 = cv4.getContext("2d");
+  var cube3 = C3.solved(), anim3 = null, q3 = [], bfs3 = null, ready3 = false, sol3 = null, solPos3 = 0;
+  var PH = [
+    { t: "第一段", g: "把 12 个棱块的朝向摆正", s: "2,048 个路口 · 18 种拧法" },
+    { t: "第二段", g: "角块朝向摆正，中层棱块回中层", s: "108 万个路口 · 14 种（前后只转半圈）" },
+    { t: "第三段", g: "每块到“只拧半圈就能复原”的位置", s: "282 万个路口 · 10 种（只有顶底转 90°）" },
+    { t: "第四段", g: "只拧半圈，全部复原", s: "66 万个路口 · 6 种（全部只转半圈）" }
+  ];
+  var phEl = document.getElementById("phases"), chipEl = document.getElementById("chips");
+  PH.forEach(function (x, i) { var d = document.createElement("div"); d.className = "ph"; d.id = "ph" + i; d.innerHTML = "<b>" + x.t + "：" + x.g + "</b>" + x.s + '<div class="st" id="phs' + i + '"></div>'; phEl.appendChild(d); });
+  C3.MOVE_NAMES.forEach(function (nm, m) { var s = document.createElement("span"); s.className = "chip"; s.id = "chip" + m; s.textContent = nm; chipEl.appendChild(s); });
+  function draw4() { var W = cv4.width, H = cv4.height, mm = Math.min(W, H); ctx4.clearRect(0, 0, W, H);
+    var g = ctx4.createRadialGradient(W/2, H/2, 0, W/2, H/2, mm*0.45); g.addColorStop(0, "rgba(56,189,248,0.12)"); g.addColorStop(1, "rgba(56,189,248,0)");
+    ctx4.fillStyle = g; ctx4.fillRect(0, 0, W, H);
+    renderCube3(ctx4, C3.facelets(cube3), W/2, H/2, mm * 0.165, anim3); }
+  function phaseNow() { if (!ready3) return { p: -1 }; for (var p = 0; p < 4; p++) { var d = C3.phaseDist(cube3, bfs3, p); if (d > 0) return { p: p, d: d }; } return { p: 4, d: 0 }; }
+  function ui4() {
+    var busy = !!anim3 || q3.length > 0, scrambling = anim3 && anim3.it.fast, st = scrambling ? { p: -1 } : phaseNow();
+    for (var i = 0; i < 4; i++) {
+      var el = document.getElementById("ph" + i), s = document.getElementById("phs" + i);
+      el.className = "ph" + (st.p > i ? " done" : st.p === i ? " on" : "");
+      s.textContent = st.p > i ? "✓ 完成" : st.p === i ? "这一段还差 " + st.d + " 步" : "";
+    }
+    var allowed = st.p >= 0 && st.p < 4 ? C3.PHASE_MOVES[st.p] : null;
+    for (var m = 0; m < 18; m++) { var c = document.getElementById("chip" + m);
+      c.className = "chip" + (allowed && allowed.indexOf(m) < 0 ? " off" : "") + (anim3 && anim3.m === m && !anim3.it.fast ? " now" : ""); }
+    document.getElementById("b4mix").disabled = !ready3 || busy;
+    document.getElementById("b4solve").disabled = !ready3 || busy || C3.isSolved(cube3);
+    document.getElementById("b4reset").disabled = busy;
+    var tr = document.getElementById("trail4");
+    if (!sol3) { tr.innerHTML = ""; return; }
+    var k = 0, total = sol3.reduce(function (a, s) { return a + s.length; }, 0);
+    tr.innerHTML = sol3.map(function (seq, p) {
+      return '<span class="seg"><i>' + PH[p].t + "（" + seq.length + " 步）</i>" + (seq.length ? seq.map(function (m) {
+        var cls = k < solPos3 ? "done" : (k === solPos3 && busy) ? "cur" : ""; k++;
+        return '<span class="mv ' + cls + '">' + C3.MOVE_NAMES[m] + "</span>";
+      }).join(" ") : '<span class="mv done">已经满足，跳过</span>') + "</span>";
+    }).join("") + '<span class="seg total">一共 ' + total + " 步" + (solPos3 >= total && !busy ? "，复原啦！" : "") + "</span>";
+  }
+  function run3(items) { q3 = q3.concat(items); if (!anim3) next3(); }
+  function next3() {
+    if (!q3.length) { anim3 = null; ui4(); draw4(); return; }
+    var it = q3.shift();
+    anim3 = { m: it.m, t: 0, start: performance.now() + (it.gap || 0), dur: it.fast ? 120 : (it.m % 3 === 1 ? 520 : 400), it: it };
+    ui4(); requestAnimationFrame(f3);
+  }
+  function f3(now) {
+    var a = anim3; if (!a) return;
+    a.t = Math.max(0, Math.min(1, (now - a.start) / a.dur));
+    if (a.t >= 1) { cube3 = C3.apply(cube3, a.m); if (a.it.sol) solPos3++; anim3 = null; next3(); return; }
+    draw4(); requestAnimationFrame(f3);
+  }
+  document.getElementById("b4mix").onclick = function () {
+    sol3 = null; solPos3 = 0; var seq = [], last = -1;
+    while (seq.length < 25) { var m = Math.floor(Math.random() * 18), fc = (m / 3) | 0; if (fc === last) continue; last = fc; seq.push({ m: m, fast: true }); }
+    run3(seq);
+  };
+  document.getElementById("b4solve").onclick = function () {
+    sol3 = C3.solve(cube3, bfs3); solPos3 = 0; var items = [];
+    sol3.forEach(function (seq) { seq.forEach(function (m, i) { items.push({ m: m, sol: true, gap: i === 0 ? 800 : 110 }); }); });
+    ui4(); run3(items);
+  };
+  document.getElementById("b4reset").onclick = function () { cube3 = C3.solved(); sol3 = null; solPos3 = 0; ui4(); draw4(); };
+  (function () {
+    var down = null;
+    cv4.addEventListener("pointerdown", function (e) { down = [e.clientX, e.clientY]; cv4.setPointerCapture(e.pointerId); });
+    cv4.addEventListener("pointermove", function (e) { if (!down) return; yaw += (e.clientX - down[0]) * 0.01; pitch = Math.max(-1.3, Math.min(1.3, pitch + (e.clientY - down[1]) * 0.01)); down = [e.clientX, e.clientY]; redrawAll(); });
+    cv4.addEventListener("pointerup", function () { down = null; });
+    cv4.style.cursor = "grab";
+  })();
+  function prep3() {
+    var tip = document.getElementById("tip4");
+    C3.buildTables(); bfs3 = [0, 1, 2, 3].map(function (p) { return C3.phaseBFS(p); });
+    var p = 0;
+    function go() {
+      if (bfs3[p].step(300000)) p++;
+      if (p < 4) { tip.textContent = "正在给第 " + (p + 1) + " 张小地图贴数字…"; requestAnimationFrame(go); return; }
+      ready3 = true; tip.textContent = "四张小地图都数好了。先打乱，再看它分四段解开 · 拖动可以转动视角";
+      ui4();
+    }
+    requestAnimationFrame(go);
+  }
+  ui4();
   resize(); updateBtns(); requestAnimationFrame(crunch);
 })();
 </script>

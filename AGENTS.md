@@ -24,7 +24,7 @@
 | `cloud-diffusion/` | 看云：预计算扩散轨迹播放（WebGL1，数据 clouds.bin + clouds.json） | `index.html` |
 | `diffusion-particles/` | 粒子扩散交互原型（WebGL2，模型权重内嵌 model.js） | `index.html` |
 | `shijing/` | 诗境：诗句生成动态水墨画 + 古筝曲（单文件，场景剧本内嵌 SCENE_SRC；加 `?skip` 跳过开场） | `index.html` |
-| `rubik-graph/` | 拧魔方，其实是在地图上找路：通俗科普版（三步互动）+ 进阶版 `advanced.html`（图/BFS 细节），核心算法 cube-core.js | `index.html` |
+| `rubik-graph/` | 拧魔方，其实是在地图上找路：通俗科普版（二阶三步 + 三阶四段 Thistlethwaite 实解）+ 进阶版 `advanced.html`；算法在 cube-core.js（二阶）/ cube3-core.js（三阶） | `index.html` |
 
 **模型产物类演示的规则**（如 `prompt-showdown/`）：
 - 每个模型一个子目录（`deepseek-v4-pro/`、`gemini-36-flash/`、`gemini-37-flash/`），各放 `index.html` + 本地资源
