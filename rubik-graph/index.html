@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>魔方是一张图 · 用 BFS 最短路求解二阶魔方</title>
+<style>
+  :root { --panel: rgba(255,255,255,.045); --line: rgba(255,255,255,.1); --txt: #e2e8f0; --mut: #94a3b8; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+         background: radial-gradient(1200px 700px at 15% -10%, #1e293b, #0b1020 70%); background-color: #0b1020;
+         color: var(--txt); min-height: 100vh; padding: 22px 14px 30px; }
+  .wrap { max-width: 1200px; margin: 0 auto; }
+  header h1 { font-size: 1.55rem; font-weight: 650; letter-spacing: .02em; }
+  header p { color: var(--mut); margin-top: 6px; font-size: .9rem; line-height: 1.65; max-width: 860px; }
+  .grid { display: grid; grid-template-columns: 410px 1fr; gap: 16px; margin-top: 18px; }
+  @media (max-width: 920px) { .grid { grid-template-columns: 1fr; } }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px; }
+  .panel h2 { font-size: .95rem; font-weight: 600; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .panel h2 small { color: var(--mut); font-weight: 400; font-size: .76rem; text-align: right; }
+  canvas { display: block; width: 100%; }
+  #cube { aspect-ratio: 1 / 1; cursor: grab; touch-action: none; }
+  #cube:active { cursor: grabbing; }
+  .stats { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 8px; margin: 10px 0 4px; }
+  .stat { background: rgba(0,0,0,.28); border-radius: 10px; padding: 7px 10px; }
+  .stat .k { font-size: .7rem; color: var(--mut); }
+  .stat .v { font-size: 1.15rem; font-weight: 650; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .btns { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
+  button { background: rgba(255,255,255,.07); color: var(--txt); border: 1px solid var(--line); border-radius: 9px;
+           padding: 8px 12px; font-size: .86rem; cursor: pointer; font-family: inherit; }
+  button:hover:not(:disabled) { background: rgba(255,255,255,.15); }
+  button:disabled { opacity: .38; cursor: not-allowed; }
+  button.pri { background: #0ea5e9; border-color: #0ea5e9; color: #04121f; font-weight: 650; }
+  button.pri:hover:not(:disabled) { background: #38bdf8; }
+  .moves { display: grid; grid-template-columns: repeat(9, 1fr); gap: 5px; margin-top: 10px; }
+  .moves button { padding: 7px 0; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .85rem; }
+  .sol { font-family: ui-monospace, Menlo, Consolas, monospace; margin-top: 10px; min-height: 1.9em; font-size: .92rem; line-height: 1.9; }
+  .sol .lbl { color: var(--mut); font-family: inherit; font-size: .78rem; margin-right: 6px; }
+  .sol span.mv { padding: 2px 5px; border-radius: 5px; margin-right: 2px; display: inline-block; }
+  .sol span.done { color: #475569; }
+  .sol span.cur { background: #0ea5e9; color: #04121f; }
+  .row { display: flex; align-items: center; gap: 8px; color: var(--mut); font-size: .78rem; margin-top: 10px; }
+  .row input { flex: 1; accent-color: #0ea5e9; }
+  .hint { color: #64748b; font-size: .74rem; margin-top: 8px; line-height: 1.5; }
+  #graph { height: 330px; }
+  #hist { height: 190px; }
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: .74rem; color: var(--mut); margin-top: 6px; }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; }
+  .right { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+  .explain { color: #cbd5e1; font-size: .87rem; line-height: 1.8; }
+  .explain p + p { margin-top: 8px; }
+  .explain b { color: #fff; font-weight: 600; }
+  .explain code { font-family: ui-monospace, Menlo, Consolas, monospace; background: rgba(255,255,255,.08); padding: 1px 5px; border-radius: 4px; font-size: .82rem; }
+  footer { text-align: center; color: #64748b; font-size: .76rem; margin-top: 22px; }
+  footer a { color: #64748b; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>魔方是一张图：用广度优先搜索找最短解</h1>
+    <p>把魔方的每一种状态看成图上的一个<b>节点</b>，每一次转动看成一条<b>边</b>。二阶魔方（固定左下后角）一共 3,674,160 个节点，每个节点 9 条边。从“复原”出发跑一遍 BFS，整张图的每个节点就都知道自己离终点多远，之后任何打乱都能沿着“下坡边”走回来，而且步数一定最少。</p>
+  </header>
+
+  <div class="grid">
+    <div class="panel">
+      <h2>二阶魔方 <small>拖动旋转视角 · 键盘 U R F（Shift 反向）</small></h2>
+      <canvas id="cube"></canvas>
+      <div class="stats">
+        <div class="stat"><div class="k">当前节点编号</div><div class="v" id="sIdx">—</div></div>
+        <div class="stat"><div class="k">离复原的距离</div><div class="v" id="sDist">—</div></div>
+        <div class="stat"><div class="k">BFS 已探索</div><div class="v" id="sBfs">0%</div></div>
+      </div>
+      <div class="btns">
+        <button id="bScramble">随机打乱 20 步</button>
+        <button id="bRandom" title="从 367 万个节点里均匀抽一个">随机抽一个节点</button>
+        <button id="bSolve" class="pri" disabled>求最短解</button>
+        <button id="bStep" disabled>走一步</button>
+        <button id="bReset">复原</button>
+      </div>
+      <div class="moves" id="moves"></div>
+      <div class="row">动画速度 <input type="range" id="speed" min="0.4" max="4" step="0.1" value="1.4"></div>
+      <div class="sol" id="sol"></div>
+      <div class="hint">左下后角（D·B·L 三色那块）当作参照不动，所以只需要 U、R、F 三个面的转动，其余转法都等价于它们加整体翻转。</div>
+    </div>
+
+    <div class="right">
+      <div class="panel">
+        <h2>你在图里的位置 <small>每一列是一层 BFS（同一距离的所有节点）· 点邻居节点就沿那条边走</small></h2>
+        <canvas id="graph"></canvas>
+        <div class="legend">
+          <span><i style="background:#facc15"></i>当前节点</span>
+          <span><i style="background:#22c55e"></i>下坡邻居（距离 −1）</span>
+          <span><i style="background:#94a3b8"></i>同层邻居</span>
+          <span><i style="background:#f43f5e"></i>上坡邻居（距离 +1）</span>
+          <span><i style="background:#38bdf8"></i>最短路径</span>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>BFS 一层层展开 <small id="histNote">正在从复原状态出发探索整张图…</small></h2>
+        <canvas id="hist"></canvas>
+      </div>
+      <div class="panel explain">
+        <p><b>节点</b>：一个状态 = 7 个可动角块的排列（7! = 5040 种）× 朝向（3⁶ = 729 种，第 7 块的朝向由前 6 块决定），合计 5040 × 729 = 3,674,160。每个状态被编成一个整数编号，整张图的“距离表”只占 3.6 MB。</p>
+        <p><b>边</b>：U、R、F 各有顺时针、180°、逆时针三种转法，所以每个节点正好 9 条边。边是双向的（<code>R</code> 的反方向就是 <code>R'</code>），这是一张无向的 9-正则图，也就是魔方群的凯莱图。</p>
+        <p><b>求解</b>：从复原节点做广度优先搜索，第 d 层就是“恰好需要 d 步”的全部状态。打开页面那一两秒，浏览器就在跑这件事。求解时站在当前节点，每次挑一条通向 d−1 层的边走，走 d 步必到终点，不可能更短。最远的一层是 11，这就是二阶魔方在这种计步方式下的“上帝之数”，那一层只有 2,644 个状态。</p>
+        <p><b>三阶呢？</b>三阶有约 4.3×10¹⁹ 个节点，整张图存不下也搜不完。实际的求解器还是图论思路：Thistlethwaite / Kociemba 算法把大图按子群拆成几张能搜的小图分段走，或者用 IDA* 加模式数据库在图上做启发式搜索。三阶的上帝之数是 20。</p>
+      </div>
+    </div>
+  </div>
+  <footer><a href="../">← 返回演示合集</a></footer>
+</div>
+
+<script src="./cube-core.js"></script>
+<script>
+(function () {
+  "use strict";
+  var C = window.Cube2;
+  var NAMES = C.MOVE_NAMES;
+  var COLORS = ["#f4f4f5", "#fcd34d", "#16a34a", "#2563eb", "#dc2626", "#f97316"];
+  var DEPTH_HUE = function (d) { return "hsl(" + (200 - d * 14) + ",80%,60%)"; };
+
+  // ---------- 状态 ----------
+  var state = C.SOLVED.slice();
+  var idx = C.stateIndex(state);
+  var bfs = C.createBFS(), bfsDone = false;
+  var queue = [], anim = null, solution = null, solPos = 0;
+  var speed = 1.4;
+
+  // ---------- 3D 渲染 ----------
+  var cv = document.getElementById("cube"), ctx = cv.getContext("2d");
+  var yaw = -0.62, pitch = 0.52, dpr = Math.max(1, window.devicePixelRatio || 1);
+  function rotA(v, ax, a) {
+    var c = Math.cos(a), s = Math.sin(a), x = v[0], y = v[1], z = v[2];
+    if (ax === 0) return [x, y * c - z * s, y * s + z * c];
+    if (ax === 1) return [x * c + z * s, y, -x * s + z * c];
+    return [x * c - y * s, x * s + y * c, z];
+  }
+  function view(v) { return rotA(rotA(v, 1, yaw), 0, pitch); }
+  var FACES = [[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];
+  function axesOf(n) { return n[0] ? [[0,1,0],[0,0,1]] : n[1] ? [[1,0,0],[0,0,1]] : [[1,0,0],[0,1,0]]; }
+  function quad(c, n, u, v, h) {
+    var out = [], sg = [[-1,-1],[1,-1],[1,1],[-1,1]];
+    for (var i = 0; i < 4; i++) out.push([c[0]+n[0]*h+u[0]*h*sg[i][0]+v[0]*h*sg[i][1], c[1]+n[1]*h+u[1]*h*sg[i][0]+v[1]*h*sg[i][1], c[2]+n[2]*h+u[2]*h*sg[i][0]+v[2]*h*sg[i][1]]);
+    return out;
+  }
+  function inset(q, k) {
+    var cx = 0, cy = 0, cz = 0; q.forEach(function (p) { cx += p[0]; cy += p[1]; cz += p[2]; }); cx /= 4; cy /= 4; cz /= 4;
+    return q.map(function (p) { return [cx + (p[0]-cx)*k, cy + (p[1]-cy)*k, cz + (p[2]-cz)*k]; });
+  }
+  function resize() {
+    [cv, gcv, hcv].forEach(function (c) { var r = c.getBoundingClientRect(); c.width = Math.round(r.width * dpr); c.height = Math.round(r.height * dpr); });
+    drawAll();
+  }
+  function drawCube() {
+    var W = cv.width, H = cv.height, D = 7, sc = Math.min(W, H) * 0.25;
+    ctx.clearRect(0, 0, W, H);
+    var g = ctx.createRadialGradient(W/2, H*0.55, 10, W/2, H*0.55, W*0.55);
+    g.addColorStop(0, "rgba(56,189,248,0.10)"); g.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    var polys = [], ax = -1, ang = 0;
+    if (anim) { ax = C.MOVE_AXIS[anim.m]; var t = anim.t, e = t < .5 ? 2*t*t : 1 - Math.pow(-2*t+2, 2)/2; ang = C.MOVE_Q[anim.m] * Math.PI / 2 * e; }
+    for (var j = 0; j < 8; j++) {
+      var p = C.CORNERS[j], center = [p[0]*.5, p[1]*.5, p[2]*.5];
+      var turning = anim && p[ax] > 0;
+      for (var f = 0; f < 6; f++) {
+        var n = FACES[f], uv = axesOf(n), q = quad(center, n, uv[0], uv[1], 0.485);
+        var st = -1;
+        for (var k = 0; k < 3; k++) { var s = C.STICKERS[3*j+k]; if (s.n[0]===n[0] && s.n[1]===n[1] && s.n[2]===n[2]) st = 3*j+k; }
+        var nn = n, sq = st >= 0 ? inset(q, 0.84) : null;
+        if (turning) {
+          q = q.map(function (v) { return rotA(v, ax, ang); }); nn = rotA(n, ax, ang);
+          if (sq) sq = sq.map(function (v) { return rotA(v, ax, ang); });
+        }
+        var vq = q.map(view), vn = view(nn);
+        var cz = 0, cx = 0, cy = 0; vq.forEach(function (v) { cx += v[0]; cy += v[1]; cz += v[2]; }); cx /= 4; cy /= 4; cz /= 4;
+        if (vn[0]*(0-cx) + vn[1]*(0-cy) + vn[2]*(D-cz) <= 0) continue;
+        polys.push({ z: cz, q: vq, sq: sq ? sq.map(view) : null, col: st >= 0 ? COLORS[state[st]] : null, shade: 0.55 + 0.45 * Math.max(0, vn[2]*0.8 + vn[1]*0.35) });
+      }
+    }
+    polys.sort(function (a, b) { return a.z - b.z; });
+    function proj(v) { var f = D / (D - v[2]); return [W/2 + v[0]*f*sc, H/2 - v[1]*f*sc]; }
+    function path(q) { ctx.beginPath(); q.forEach(function (v, i) { var s = proj(v); if (i) ctx.lineTo(s[0], s[1]); else ctx.moveTo(s[0], s[1]); }); ctx.closePath(); }
+    polys.forEach(function (P) {
+      path(P.q); ctx.fillStyle = "#0b0b0f"; ctx.fill(); ctx.lineWidth = 1*dpr; ctx.strokeStyle = "#000"; ctx.stroke();
+      if (P.sq) {
+        path(P.sq); ctx.fillStyle = P.col; ctx.fill();
+        ctx.fillStyle = "rgba(0,0,0," + (1 - P.shade).toFixed(3) + ")"; ctx.fill();
+      }
+    });
+  }
+  var drag = null;
+  cv.addEventListener("pointerdown", function (e) { drag = [e.clientX, e.clientY]; cv.setPointerCapture(e.pointerId); });
+  cv.addEventListener("pointermove", function (e) {
+    if (!drag) return;
+    yaw += (e.clientX - drag[0]) * 0.01; pitch += (e.clientY - drag[1]) * 0.01;
+    pitch = Math.max(-1.45, Math.min(1.45, pitch)); drag = [e.clientX, e.clientY]; drawCube();
+  });
+  cv.addEventListener("pointerup", function () { drag = null; });
+
+  // ---------- 图视图 ----------
+  var gcv = document.getElementById("graph"), gctx = gcv.getContext("2d"), hitNodes = [], hover = -1;
+  function fmt(n) { return n >= 1e6 ? (n/1e6).toFixed(2) + "M" : n >= 1e4 ? (n/1e3).toFixed(0) + "k" : n >= 1e3 ? (n/1e3).toFixed(1) + "k" : String(n); }
+  function drawGraph() {
+    var W = gcv.width, H = gcv.height, c = gctx, u = dpr;
+    c.clearRect(0, 0, W, H); hitNodes = [];
+    var padL = 30*u, padR = 30*u, cy = H*0.46, maxD = 11;
+    var X = function (d) { return padL + d * (W - padL - padR) / maxD; };
+    var counts = bfs.counts, maxLog = Math.log10(1887748);
+    for (var d = 0; d <= maxD; d++) {
+      var n = counts[d] || 0, h = n ? (0.12 + 0.88 * Math.log10(n + 1) / maxLog) * H * 0.72 : 0, w = 16*u;
+      c.fillStyle = n ? DEPTH_HUE(d).replace("60%)", "60%,0.13)").replace("hsl", "hsla") : "rgba(255,255,255,0.03)";
+      roundRect(c, X(d) - w/2, cy - h/2, w, h || 4*u, 8*u); c.fill();
+      c.fillStyle = "#64748b"; c.font = (11*u) + "px sans-serif"; c.textAlign = "center";
+      c.fillText(String(d), X(d), H - 22*u);
+      c.fillStyle = "#475569"; c.font = (9.5*u) + "px sans-serif";
+      c.fillText(n ? fmt(n) : "", X(d), H - 9*u);
+    }
+    c.fillStyle = "#475569"; c.font = (10*u) + "px sans-serif"; c.textAlign = "left";
+    c.fillText("距离 →", 4*u, H - 22*u);
+    if (!bfsDone || bfs.dist[idx] === 255) {
+      c.fillStyle = "#94a3b8"; c.textAlign = "center"; c.font = (13*u) + "px sans-serif";
+      c.fillText("BFS 完成后显示当前节点和它的邻居", W/2, cy); return;
+    }
+    var dist = bfs.dist, d0 = dist[idx];
+    var path = C.shortestPath(dist, idx);
+    // 邻居分组
+    var groups = {}, nb = [];
+    for (var m = 0; m < 9; m++) { var y = C.neighbor(idx, m), dy = dist[y]; nb.push({ m: m, d: dy }); (groups[dy] = groups[dy] || []).push(nb[m]); }
+    var step = 24*u, pos = {};
+    function place(list, col, skipCenter) {
+      var k = 0;
+      list.forEach(function (o) {
+        if (skipCenter && o.m === path[0]) { o.x = X(col); o.y = cy; return; }
+        var off = skipCenter ? (k % 2 === 0 ? -1 : 1) * (Math.floor(k/2) + 1) : (list.length === 1 ? 0 : (k - (list.length - 1)/2));
+        if (!skipCenter && col === d0) off = (k % 2 === 0 ? -1 : 1) * (Math.floor(k/2) + 1);
+        o.x = X(col); o.y = cy + off * step; k++;
+      });
+    }
+    if (groups[d0-1]) place(groups[d0-1], d0-1, true);
+    if (groups[d0]) place(groups[d0], d0, false);
+    if (groups[d0+1]) place(groups[d0+1], d0+1, false);
+    var cx0 = X(d0);
+    // 邻居边
+    nb.forEach(function (o) {
+      var col = o.d < d0 ? "#22c55e" : o.d > d0 ? "#f43f5e" : "#94a3b8";
+      var onPath = o.m === path[0];
+      c.strokeStyle = onPath ? "#38bdf8" : col; c.globalAlpha = onPath ? 1 : (hover === o.m ? 1 : 0.55);
+      c.lineWidth = (onPath ? 3 : 1.4) * u;
+      c.beginPath(); c.moveTo(cx0, cy);
+      if (o.d === d0) c.quadraticCurveTo(cx0 + 26*u, (cy + o.y)/2, o.x, o.y); else c.lineTo(o.x, o.y);
+      c.stroke(); c.globalAlpha = 1;
+    });
+    // 最短路径链
+    var px = X(d0 - 1), cur = idx;
+    if (path.length) cur = C.neighbor(idx, path[0]);
+    for (var i = 1; i < path.length; i++) {
+      var nx = X(d0 - 1 - i);
+      c.strokeStyle = "#38bdf8"; c.lineWidth = 3*u; c.beginPath(); c.moveTo(px, cy); c.lineTo(nx, cy); c.stroke();
+      c.fillStyle = "#7dd3fc"; c.font = "bold " + (11*u) + "px ui-monospace, monospace"; c.textAlign = "center";
+      c.fillText(NAMES[path[i]], (px + nx)/2, cy - 8*u);
+      px = nx;
+    }
+    if (path.length) { c.fillStyle = "#7dd3fc"; c.font = "bold " + (11*u) + "px ui-monospace, monospace"; c.textAlign = "center"; }
+    for (i = 1; i < path.length; i++) { node(c, X(d0 - 1 - i), cy, (i === path.length - 1) ? 7*u : 5*u, i === path.length - 1 ? "#facc15" : "#38bdf8"); }
+    // 邻居节点和标签
+    nb.forEach(function (o) {
+      var col = o.m === path[0] ? "#38bdf8" : o.d < d0 ? "#22c55e" : o.d > d0 ? "#f43f5e" : "#94a3b8";
+      node(c, o.x, o.y, (hover === o.m ? 7 : 5.5)*u, col);
+      c.fillStyle = hover === o.m ? "#fff" : "#cbd5e1"; c.font = (10.5*u) + "px ui-monospace, monospace";
+      c.textAlign = "left"; c.fillText(NAMES[o.m], o.x + 8*u, o.y + 4*u);
+      hitNodes.push({ x: o.x, y: o.y, m: o.m });
+    });
+    // 当前节点
+    c.fillStyle = "rgba(250,204,21,0.18)"; c.beginPath(); c.arc(cx0, cy, 17*u, 0, 7); c.fill();
+    node(c, cx0, cy, 9*u, "#facc15");
+    if (d0 === 0) { c.fillStyle = "#fde68a"; c.font = (11*u) + "px sans-serif"; c.textAlign = "center"; c.fillText("复原（终点）", cx0, cy - 22*u); }
+    else if (path.length) { c.fillStyle = "#fde68a"; c.font = (11*u) + "px sans-serif"; c.textAlign = "center"; c.fillText("你在这里", cx0, cy - 22*u); c.fillText("复原", X(0), cy + 22*u); }
+  }
+  function node(c, x, y, r, col) { c.beginPath(); c.arc(x, y, r, 0, 7); c.fillStyle = col; c.fill(); c.lineWidth = 1.5*dpr; c.strokeStyle = "#0b1020"; c.stroke(); }
+  function roundRect(c, x, y, w, h, r) { r = Math.min(r, w/2, h/2); c.beginPath(); c.moveTo(x+r, y); c.arcTo(x+w, y, x+w, y+h, r); c.arcTo(x+w, y+h, x, y+h, r); c.arcTo(x, y+h, x, y, r); c.arcTo(x, y, x+w, y, r); c.closePath(); }
+  function hitTest(e) {
+    var r = gcv.getBoundingClientRect(), x = (e.clientX - r.left) * dpr, y = (e.clientY - r.top) * dpr, best = -1, bd = 14*dpr;
+    hitNodes.forEach(function (h) { var dd = Math.hypot(h.x - x, h.y - y); if (dd < bd) { bd = dd; best = h.m; } });
+    return best;
+  }
+  gcv.addEventListener("mousemove", function (e) { var h = hitTest(e); if (h !== hover) { hover = h; gcv.style.cursor = h >= 0 ? "pointer" : "default"; drawGraph(); } });
+  gcv.addEventListener("mouseleave", function () { hover = -1; drawGraph(); });
+  gcv.addEventListener("click", function (e) { var h = hitTest(e); if (h >= 0 && !anim && !queue.length) { clearSolution(); enqueue([h]); } });
+
+  // ---------- BFS 直方图 ----------
+  var hcv = document.getElementById("hist"), hctx = hcv.getContext("2d");
+  function drawHist() {
+    var W = hcv.width, H = hcv.height, c = hctx, u = dpr, counts = bfs.counts, maxD = 11;
+    c.clearRect(0, 0, W, H);
+    var padB = 22*u, padT = 18*u, bw = (W - 20*u) / (maxD + 1), max = 1887748;
+    var cd = bfsDone ? bfs.dist[idx] : -1;
+    for (var d = 0; d <= maxD; d++) {
+      var n = counts[d] || 0, h = n / max * (H - padB - padT), x = 10*u + d * bw;
+      c.fillStyle = d === cd ? "#facc15" : DEPTH_HUE(d);
+      c.globalAlpha = d === cd ? 1 : 0.8;
+      roundRect(c, x + bw*0.14, H - padB - Math.max(h, n ? 2*u : 0), bw*0.72, Math.max(h, n ? 2*u : 0), 4*u); if (n) c.fill();
+      c.globalAlpha = 1;
+      c.fillStyle = "#cbd5e1"; c.font = (10*u) + "px sans-serif"; c.textAlign = "center";
+      if (n) c.fillText(n.toLocaleString(), x + bw/2, H - padB - Math.max(h, 2*u) - 5*u);
+      c.fillStyle = d === cd ? "#facc15" : "#64748b"; c.font = (11*u) + "px sans-serif";
+      c.fillText(d + " 步", x + bw/2, H - 6*u);
+    }
+  }
+
+  // ---------- 动画与流程 ----------
+  function enqueue(ms) { queue = queue.concat(ms); if (!anim) nextAnim(); }
+  function nextAnim() {
+    if (!queue.length) { anim = null; updateUI(); return; }
+    var m = queue.shift(), dur = (C.MOVE_Q[m] === -2 ? 420 : 300) / speed;
+    anim = { m: m, t: 0, start: performance.now(), dur: dur };
+    updateUI();
+  }
+  function tick(now) {
+    if (anim) {
+      anim.t = Math.min(1, (now - anim.start) / anim.dur);
+      if (anim.t >= 1) {
+        state = C.applyMove(state, anim.m); idx = C.neighbor(idx, anim.m);
+        if (solution && solPos < solution.length) solPos++;
+        anim = null; drawGraph(); drawHist(); nextAnim();
+      }
+      drawCube();
+    }
+    if (!bfsDone) {
+      bfsDone = bfs.step(110000);
+      document.getElementById("sBfs").textContent = bfsDone ? "100%" : (bfs.visited() / C.N * 100).toFixed(1) + "%";
+      if (bfsDone) {
+        document.getElementById("histNote").textContent = "3,674,160 个节点全部探索完 · 最远 11 步（上帝之数）";
+        updateUI();
+      }
+      drawHist(); drawGraph();
+    }
+    requestAnimationFrame(tick);
+  }
+  function clearSolution() { solution = null; solPos = 0; renderSolution(); }
+  function renderSolution() {
+    var el = document.getElementById("sol");
+    if (!solution) { el.innerHTML = ""; return; }
+    if (!solution.length) { el.innerHTML = '<span class="lbl">已经是复原状态</span>'; return; }
+    el.innerHTML = '<span class="lbl">最短解 ' + solution.length + ' 步：</span>' + solution.map(function (m, i) {
+      var cls = i < solPos ? "done" : (i === solPos && (anim || queue.length)) ? "cur" : "";
+      return '<span class="mv ' + cls + '">' + NAMES[m] + "</span>";
+    }).join("");
+  }
+  function updateUI() {
+    var busy = !!anim || queue.length > 0;
+    document.getElementById("sIdx").textContent = "#" + idx.toLocaleString();
+    document.getElementById("sDist").textContent = bfsDone ? bfs.dist[idx] + " 步" : "…";
+    document.getElementById("bSolve").disabled = !bfsDone || busy || bfs.dist[idx] === 0;
+    document.getElementById("bStep").disabled = !bfsDone || busy || bfs.dist[idx] === 0;
+    ["bScramble", "bRandom", "bReset"].forEach(function (id) { document.getElementById(id).disabled = busy; });
+    document.querySelectorAll("#moves button").forEach(function (b) { b.disabled = busy; });
+    renderSolution();
+  }
+  function setState(s) { state = s; idx = C.stateIndex(s); clearSolution(); drawAll(); updateUI(); }
+  function drawAll() { drawCube(); drawGraph(); drawHist(); }
+
+  var mv = document.getElementById("moves");
+  [0, 2, 1, 3, 5, 4, 6, 8, 7].forEach(function (m) {
+    var b = document.createElement("button"); b.textContent = NAMES[m];
+    b.onclick = function () { clearSolution(); enqueue([m]); }; mv.appendChild(b);
+  });
+  document.getElementById("bScramble").onclick = function () {
+    clearSolution(); var seq = [], last = -1;
+    while (seq.length < 20) { var m = Math.floor(Math.random() * 9); if (((m/3)|0) === last) continue; last = (m/3)|0; seq.push(m); }
+    var el = document.getElementById("sol");
+    speedBoost(seq);
+    el.innerHTML = '<span class="lbl">打乱：</span>' + seq.map(function (m) { return '<span class="mv done">' + NAMES[m] + "</span>"; }).join("");
+  };
+  function speedBoost(seq) { var old = speed; speed = Math.max(speed, 3.2); enqueue(seq); var chk = setInterval(function () { if (!anim && !queue.length) { speed = parseFloat(document.getElementById("speed").value); clearInterval(chk); } }, 100); }
+  document.getElementById("bRandom").onclick = function () { setState(C.stateFromIndex(Math.floor(Math.random() * C.N))); };
+  document.getElementById("bReset").onclick = function () { setState(C.SOLVED.slice()); };
+  document.getElementById("bSolve").onclick = function () {
+    solution = C.shortestPath(bfs.dist, idx); solPos = 0; enqueue(solution.slice());
+  };
+  document.getElementById("bStep").onclick = function () {
+    var p = C.shortestPath(bfs.dist, idx); if (!p.length) return;
+    if (!solution || solPos >= solution.length || solution[solPos] !== p[0]) { solution = p; solPos = 0; }
+    enqueue([p[0]]);
+  };
+  document.getElementById("speed").oninput = function (e) { speed = parseFloat(e.target.value); };
+  window.addEventListener("keydown", function (e) {
+    if (anim || queue.length) return;
+    var k = e.key.toLowerCase(), f = { u: 0, r: 3, f: 6 }[k];
+    if (f === undefined) return;
+    clearSolution(); enqueue([f + (e.shiftKey ? 2 : 0)]);
+  });
+  window.addEventListener("resize", resize);
+  resize(); updateUI(); requestAnimationFrame(tick);
+})();
+</script>
+</body>
+</html>
