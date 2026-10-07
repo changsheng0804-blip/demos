@@ -3,133 +3,138 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>魔方是一张图 · 用 BFS 最短路求解二阶魔方</title>
+<title>拧魔方，其实是在地图上找路</title>
 <style>
-  :root { --panel: rgba(255,255,255,.045); --line: rgba(255,255,255,.1); --txt: #e2e8f0; --mut: #94a3b8; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
-         background: radial-gradient(1200px 700px at 15% -10%, #1e293b, #0b1020 70%); background-color: #0b1020;
-         color: var(--txt); min-height: 100vh; padding: 22px 14px 30px; }
-  .wrap { max-width: 1200px; margin: 0 auto; }
-  header h1 { font-size: 1.55rem; font-weight: 650; letter-spacing: .02em; }
-  header p { color: var(--mut); margin-top: 6px; font-size: .9rem; line-height: 1.65; max-width: 860px; }
-  .grid { display: grid; grid-template-columns: 410px 1fr; gap: 16px; margin-top: 18px; }
-  @media (max-width: 920px) { .grid { grid-template-columns: 1fr; } }
-  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px; }
-  .panel h2 { font-size: .95rem; font-weight: 600; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
-  .panel h2 small { color: var(--mut); font-weight: 400; font-size: .76rem; text-align: right; }
-  canvas { display: block; width: 100%; }
-  #cube { aspect-ratio: 1 / 1; cursor: grab; touch-action: none; }
-  #cube:active { cursor: grabbing; }
-  .stats { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 8px; margin: 10px 0 4px; }
-  .stat { background: rgba(0,0,0,.28); border-radius: 10px; padding: 7px 10px; }
-  .stat .k { font-size: .7rem; color: var(--mut); }
-  .stat .v { font-size: 1.15rem; font-weight: 650; font-variant-numeric: tabular-nums; white-space: nowrap; }
-  .btns { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
-  button { background: rgba(255,255,255,.07); color: var(--txt); border: 1px solid var(--line); border-radius: 9px;
-           padding: 8px 12px; font-size: .86rem; cursor: pointer; font-family: inherit; }
-  button:hover:not(:disabled) { background: rgba(255,255,255,.15); }
-  button:disabled { opacity: .38; cursor: not-allowed; }
-  button.pri { background: #0ea5e9; border-color: #0ea5e9; color: #04121f; font-weight: 650; }
-  button.pri:hover:not(:disabled) { background: #38bdf8; }
-  .moves { display: grid; grid-template-columns: repeat(9, 1fr); gap: 5px; margin-top: 10px; }
-  .moves button { padding: 7px 0; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .85rem; }
-  .sol { font-family: ui-monospace, Menlo, Consolas, monospace; margin-top: 10px; min-height: 1.9em; font-size: .92rem; line-height: 1.9; }
-  .sol .lbl { color: var(--mut); font-family: inherit; font-size: .78rem; margin-right: 6px; }
-  .sol span.mv { padding: 2px 5px; border-radius: 5px; margin-right: 2px; display: inline-block; }
-  .sol span.done { color: #475569; }
-  .sol span.cur { background: #0ea5e9; color: #04121f; }
-  .row { display: flex; align-items: center; gap: 8px; color: var(--mut); font-size: .78rem; margin-top: 10px; }
-  .row input { flex: 1; accent-color: #0ea5e9; }
-  .hint { color: #64748b; font-size: .74rem; margin-top: 8px; line-height: 1.5; }
-  #graph { height: 330px; }
-  #hist { height: 190px; }
-  .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: .74rem; color: var(--mut); margin-top: 6px; }
-  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; }
-  .right { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
-  .explain { color: #cbd5e1; font-size: .87rem; line-height: 1.8; }
-  .explain p + p { margin-top: 8px; }
-  .explain b { color: #fff; font-weight: 600; }
-  .explain code { font-family: ui-monospace, Menlo, Consolas, monospace; background: rgba(255,255,255,.08); padding: 1px 5px; border-radius: 4px; font-size: .82rem; }
-  footer { text-align: center; color: #64748b; font-size: .76rem; margin-top: 22px; }
-  footer a { color: #64748b; }
+         background: #0b1020; background-image: radial-gradient(1100px 600px at 50% -10%, #1e293b, #0b1020 70%);
+         color: #e2e8f0; line-height: 1.8; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 18px; }
+  .hero { text-align: center; padding: 64px 0 30px; }
+  .hero h1 { font-size: clamp(1.8rem, 4.6vw, 2.8rem); font-weight: 700; letter-spacing: .04em; line-height: 1.35; }
+  .hero h1 em { font-style: normal; color: #38bdf8; }
+  .hero p { color: #94a3b8; font-size: 1.05rem; margin-top: 14px; }
+  .hero .small { font-size: .85rem; color: #64748b; margin-top: 6px; }
+  .ch { display: grid; grid-template-columns: 1fr 1.25fr; gap: 34px; align-items: center; padding: 46px 0; border-top: 1px solid rgba(255,255,255,.07); }
+  .ch.flip .txt { order: 2; }
+  @media (max-width: 860px) { .ch { grid-template-columns: 1fr; gap: 14px; } .ch.flip .txt { order: 0; } }
+  .no { display: inline-block; font-size: .8rem; color: #0b1020; background: #38bdf8; border-radius: 99px; padding: 1px 12px; font-weight: 700; letter-spacing: .1em; }
+  .txt h2 { font-size: clamp(1.35rem, 3vw, 1.75rem); margin: 10px 0 12px; line-height: 1.4; }
+  .txt p { color: #cbd5e1; font-size: 1rem; }
+  .txt p + p { margin-top: 10px; }
+  .txt .key { color: #fde68a; }
+  .txt .aside { color: #64748b; font-size: .86rem; }
+  .stage { background: rgba(255,255,255,.035); border: 1px solid rgba(255,255,255,.08); border-radius: 18px; padding: 12px; }
+  canvas { display: block; width: 100%; aspect-ratio: 1 / 1; touch-action: none; }
+  .btns { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 8px; }
+  button { background: rgba(255,255,255,.08); color: #e2e8f0; border: 1px solid rgba(255,255,255,.12); border-radius: 99px;
+           padding: 8px 16px; font-size: .92rem; cursor: pointer; font-family: inherit; }
+  button:hover:not(:disabled) { background: rgba(255,255,255,.16); }
+  button:disabled { opacity: .35; cursor: not-allowed; }
+  button.pri { background: #22c55e; border-color: #22c55e; color: #052e14; font-weight: 700; }
+  button.pri:hover:not(:disabled) { background: #4ade80; }
+  .tip { text-align: center; color: #64748b; font-size: .82rem; margin-top: 6px; }
+  .trail { text-align: center; min-height: 2.2em; margin-top: 8px; font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+  .trail b { color: #4ade80; }
+  .trail .done { color: #facc15; font-weight: 700; }
+  .bars { margin-top: 14px; font-size: .86rem; }
+  .bar { display: grid; grid-template-columns: 4.6em 1fr 6.4em; align-items: center; gap: 8px; opacity: .18; transition: opacity .4s; }
+  .bar.on { opacity: 1; }
+  .bar .lbl { color: #94a3b8; }
+  .bar .track { height: 10px; background: rgba(255,255,255,.05); border-radius: 99px; overflow: hidden; }
+  .bar .fill { height: 100%; border-radius: 99px; min-width: 3px; }
+  .bar .num { text-align: right; font-variant-numeric: tabular-nums; color: #e2e8f0; }
+  .bar.me .lbl, .bar.me .num { color: #facc15; font-weight: 700; }
+  .big { font-size: 2.1rem; font-weight: 800; color: #38bdf8; font-variant-numeric: tabular-nums; letter-spacing: .02em; }
+  .end { text-align: center; padding: 50px 0 70px; border-top: 1px solid rgba(255,255,255,.07); color: #94a3b8; }
+  .end h2 { color: #e2e8f0; font-size: 1.5rem; margin-bottom: 12px; }
+  .end p { max-width: 720px; margin: 0 auto; }
+  .end p + p { margin-top: 10px; }
+  .end a { color: #7dd3fc; }
+  .foot { font-size: .82rem; margin-top: 30px; color: #64748b; }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header>
-    <h1>魔方是一张图：用广度优先搜索找最短解</h1>
-    <p>把魔方的每一种状态看成图上的一个<b>节点</b>，每一次转动看成一条<b>边</b>。二阶魔方（固定左下后角）一共 3,674,160 个节点，每个节点 9 条边。从“复原”出发跑一遍 BFS，整张图的每个节点就都知道自己离终点多远，之后任何打乱都能沿着“下坡边”走回来，而且步数一定最少。</p>
-  </header>
-
-  <div class="grid">
-    <div class="panel">
-      <h2>二阶魔方 <small>拖动旋转视角 · 键盘 U R F（Shift 反向）</small></h2>
-      <canvas id="cube"></canvas>
-      <div class="stats">
-        <div class="stat"><div class="k">当前节点编号</div><div class="v" id="sIdx">—</div></div>
-        <div class="stat"><div class="k">离复原的距离</div><div class="v" id="sDist">—</div></div>
-        <div class="stat"><div class="k">BFS 已探索</div><div class="v" id="sBfs">0%</div></div>
-      </div>
-      <div class="btns">
-        <button id="bScramble">随机打乱 20 步</button>
-        <button id="bRandom" title="从 367 万个节点里均匀抽一个">随机抽一个节点</button>
-        <button id="bSolve" class="pri" disabled>求最短解</button>
-        <button id="bStep" disabled>走一步</button>
-        <button id="bReset">复原</button>
-      </div>
-      <div class="moves" id="moves"></div>
-      <div class="row">动画速度 <input type="range" id="speed" min="0.4" max="4" step="0.1" value="1.4"></div>
-      <div class="sol" id="sol"></div>
-      <div class="hint">左下后角（D·B·L 三色那块）当作参照不动，所以只需要 U、R、F 三个面的转动，其余转法都等价于它们加整体翻转。</div>
-    </div>
-
-    <div class="right">
-      <div class="panel">
-        <h2>你在图里的位置 <small>每一列是一层 BFS（同一距离的所有节点）· 点邻居节点就沿那条边走</small></h2>
-        <canvas id="graph"></canvas>
-        <div class="legend">
-          <span><i style="background:#facc15"></i>当前节点</span>
-          <span><i style="background:#22c55e"></i>下坡邻居（距离 −1）</span>
-          <span><i style="background:#94a3b8"></i>同层邻居</span>
-          <span><i style="background:#f43f5e"></i>上坡邻居（距离 +1）</span>
-          <span><i style="background:#38bdf8"></i>最短路径</span>
-        </div>
-      </div>
-      <div class="panel">
-        <h2>BFS 一层层展开 <small id="histNote">正在从复原状态出发探索整张图…</small></h2>
-        <canvas id="hist"></canvas>
-      </div>
-      <div class="panel explain">
-        <p><b>节点</b>：一个状态 = 7 个可动角块的排列（7! = 5040 种）× 朝向（3⁶ = 729 种，第 7 块的朝向由前 6 块决定），合计 5040 × 729 = 3,674,160。每个状态被编成一个整数编号，整张图的“距离表”只占 3.6 MB。</p>
-        <p><b>边</b>：U、R、F 各有顺时针、180°、逆时针三种转法，所以每个节点正好 9 条边。边是双向的（<code>R</code> 的反方向就是 <code>R'</code>），这是一张无向的 9-正则图，也就是魔方群的凯莱图。</p>
-        <p><b>求解</b>：从复原节点做广度优先搜索，第 d 层就是“恰好需要 d 步”的全部状态。打开页面那一两秒，浏览器就在跑这件事。求解时站在当前节点，每次挑一条通向 d−1 层的边走，走 d 步必到终点，不可能更短。最远的一层是 11，这就是二阶魔方在这种计步方式下的“上帝之数”，那一层只有 2,644 个状态。</p>
-        <p><b>三阶呢？</b>三阶有约 4.3×10¹⁹ 个节点，整张图存不下也搜不完。实际的求解器还是图论思路：Thistlethwaite / Kociemba 算法把大图按子群拆成几张能搜的小图分段走，或者用 IDA* 加模式数据库在图上做启发式搜索。三阶的上帝之数是 20。</p>
-      </div>
-    </div>
+  <div class="hero">
+    <h1>拧魔方，其实是在<em>地图上找路</em></h1>
+    <p>不背公式，电脑也能找到最快的复原方法。秘诀只有一个：把魔方变成一张地图。</p>
+    <p class="small">这里用二阶魔方（2×2）。道理和三阶一样，只是它小到电脑能把整张地图全部画出来。</p>
   </div>
-  <footer><a href="../">← 返回演示合集</a></footer>
+
+  <section class="ch">
+    <div class="txt">
+      <span class="no">第一步</span>
+      <h2>魔方的每一个样子，都是地图上的一个路口</h2>
+      <p>中间这个魔方，就是你现在站着的路口。拧一下，它变成另一个样子，就等于走到了旁边的路口。</p>
+      <p>我们只拧<span class="key">顶层、右层、前层</span>，每层可以顺时针、逆时针、或者转半圈。所以每个路口<span class="key">正好有 9 条路</span>，通向周围这 9 个魔方。</p>
+      <p>点一点周围的小魔方，走过去看看。走着走着你会发现：路口太多了，很快就绕晕了。</p>
+    </div>
+    <div class="stage">
+      <canvas id="c1"></canvas>
+      <div class="btns"><button id="b1reset">回到复原</button></div>
+      <div class="tip">点小魔方 = 走那条路 · 拖动可以转动视角</div>
+    </div>
+  </section>
+
+  <section class="ch flip">
+    <div class="txt">
+      <span class="no">第二步</span>
+      <h2>这张地图有多大？电脑从终点出发，一圈圈往外数</h2>
+      <p>二阶魔方一共有 <span class="big" id="total">3,674,160</span> 种样子，也就是 367 万个路口。每秒走一个，不吃不睡也要走 42 天。乱拧碰运气，基本回不了家。</p>
+      <p>电脑的办法像往水里丢一颗石子：从“复原”这个终点开始，<span class="key">拧 1 下能到的有 9 种，拧 2 下能到的有 54 种，3 下有 321 种……</span>一圈一圈往外数，数到第 11 圈，367 万个路口全部数完。</p>
+      <p>所以：<span class="key">任何打乱的二阶魔方，最多 11 下就能复原。</span>大部分落在第 9 圈，最外面第 11 圈的不到千分之一。</p>
+      <p class="aside">数学上，这种“路口 + 路”叫做“图”，一圈圈往外数叫做“广度优先搜索”。打开这个页面时，你的浏览器已经在后台把这 367 万个路口数了一遍。</p>
+    </div>
+    <div class="stage">
+      <canvas id="c2"></canvas>
+      <div class="bars" id="bars"></div>
+      <div class="btns"><button id="b2replay">再看一遍扩散</button></div>
+    </div>
+  </section>
+
+  <section class="ch">
+    <div class="txt">
+      <span class="no">第三步</span>
+      <h2>回家：一直往数字小的路口走</h2>
+      <p>数完之后，每个路口都贴上了一个数字：<span class="key">离复原还差几步</span>。</p>
+      <p>现在回家就太简单了：看看身边 9 条路，选那条<span class="key">数字比自己小 1</span> 的（绿色那条）走过去。再看，再走。数字变成 0，魔方就复原了。</p>
+      <p>这样走出来的一定是最短的路，因为每一步都让距离少 1，不可能更快。就像手机导航，每个路口都知道离家还有多远。</p>
+    </div>
+    <div class="stage">
+      <canvas id="c3"></canvas>
+      <div class="trail" id="trail"></div>
+      <div class="btns">
+        <button id="b3mix">打乱一个</button>
+        <button id="b3step">走一步</button>
+        <button id="b3auto" class="pri">自动走回家</button>
+      </div>
+      <div class="tip">绿色 = 离家更近 · 灰色 = 一样远 · 红色 = 更远了</div>
+    </div>
+  </section>
+
+  <div class="end">
+    <h2>那三阶魔方呢？</h2>
+    <p>三阶魔方的地图大得离谱：大约 4300 亿亿个路口，全世界的电脑加起来也没法给每个路口都贴上数字。</p>
+    <p>所以真正的三阶解法还是“找路”，只是走得更聪明：先走到一片好走的区域，再在小范围里找路，像先上高速、再下匝道。数学家已经证明，三阶魔方不管怎么打乱，最多 20 步就能复原，这个数被叫做“上帝之数”。</p>
+    <p class="foot">想看数学版（节点、边、广度优先搜索的细节）：<a href="./advanced.html">进阶版</a> · <a href="../">返回演示合集</a></p>
+  </div>
 </div>
 
 <script src="./cube-core.js"></script>
 <script>
 (function () {
   "use strict";
-  var C = window.Cube2;
-  var NAMES = C.MOVE_NAMES;
+  var C = window.Cube2, N = C.N;
   var COLORS = ["#f4f4f5", "#fcd34d", "#16a34a", "#2563eb", "#dc2626", "#f97316"];
-  var DEPTH_HUE = function (d) { return "hsl(" + (200 - d * 14) + ",80%,60%)"; };
-
-  // ---------- 状态 ----------
-  var state = C.SOLVED.slice();
-  var idx = C.stateIndex(state);
+  var ORDER = [0, 2, 1, 3, 5, 4, 6, 8, 7];
+  var PLAIN = { 0: "顶层 ↻", 2: "顶层 ↺", 1: "顶层 半圈", 3: "右层 ↻", 5: "右层 ↺", 4: "右层 半圈", 6: "前层 ↻", 8: "前层 ↺", 7: "前层 半圈" };
+  var DEPTH_COL = ["#facc15", "#a3e635", "#4ade80", "#34d399", "#2dd4bf", "#22d3ee", "#38bdf8", "#60a5fa", "#818cf8", "#a78bfa", "#c084fc", "#f472b6"];
+  var dpr = Math.max(1, window.devicePixelRatio || 1);
+  var yaw = -0.62, pitch = 0.5;
   var bfs = C.createBFS(), bfsDone = false;
-  var queue = [], anim = null, solution = null, solPos = 0;
-  var speed = 1.4;
 
-  // ---------- 3D 渲染 ----------
-  var cv = document.getElementById("cube"), ctx = cv.getContext("2d");
-  var yaw = -0.62, pitch = 0.52, dpr = Math.max(1, window.devicePixelRatio || 1);
+  // ---------- 画一个魔方 ----------
   function rotA(v, ax, a) {
     var c = Math.cos(a), s = Math.sin(a), x = v[0], y = v[1], z = v[2];
     if (ax === 0) return [x, y * c - z * s, y * s + z * c];
@@ -140,258 +145,257 @@
   var FACES = [[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];
   function axesOf(n) { return n[0] ? [[0,1,0],[0,0,1]] : n[1] ? [[1,0,0],[0,0,1]] : [[1,0,0],[0,1,0]]; }
   function quad(c, n, u, v, h) {
-    var out = [], sg = [[-1,-1],[1,-1],[1,1],[-1,1]];
-    for (var i = 0; i < 4; i++) out.push([c[0]+n[0]*h+u[0]*h*sg[i][0]+v[0]*h*sg[i][1], c[1]+n[1]*h+u[1]*h*sg[i][0]+v[1]*h*sg[i][1], c[2]+n[2]*h+u[2]*h*sg[i][0]+v[2]*h*sg[i][1]]);
-    return out;
+    var sg = [[-1,-1],[1,-1],[1,1],[-1,1]];
+    return sg.map(function (g) { return [c[0]+n[0]*h+u[0]*h*g[0]+v[0]*h*g[1], c[1]+n[1]*h+u[1]*h*g[0]+v[1]*h*g[1], c[2]+n[2]*h+u[2]*h*g[0]+v[2]*h*g[1]]; });
   }
   function inset(q, k) {
-    var cx = 0, cy = 0, cz = 0; q.forEach(function (p) { cx += p[0]; cy += p[1]; cz += p[2]; }); cx /= 4; cy /= 4; cz /= 4;
-    return q.map(function (p) { return [cx + (p[0]-cx)*k, cy + (p[1]-cy)*k, cz + (p[2]-cz)*k]; });
+    var m = [0,0,0]; q.forEach(function (p) { m[0] += p[0]/4; m[1] += p[1]/4; m[2] += p[2]/4; });
+    return q.map(function (p) { return [m[0]+(p[0]-m[0])*k, m[1]+(p[1]-m[1])*k, m[2]+(p[2]-m[2])*k]; });
   }
-  function resize() {
-    [cv, gcv, hcv].forEach(function (c) { var r = c.getBoundingClientRect(); c.width = Math.round(r.width * dpr); c.height = Math.round(r.height * dpr); });
-    drawAll();
-  }
-  function drawCube() {
-    var W = cv.width, H = cv.height, D = 7, sc = Math.min(W, H) * 0.25;
-    ctx.clearRect(0, 0, W, H);
-    var g = ctx.createRadialGradient(W/2, H*0.55, 10, W/2, H*0.55, W*0.55);
-    g.addColorStop(0, "rgba(56,189,248,0.10)"); g.addColorStop(1, "rgba(0,0,0,0)");
-    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-    var polys = [], ax = -1, ang = 0;
+  function renderCube(c, st, cx, cy, sc, anim, alpha) {
+    var D = 7, polys = [], ax = -1, ang = 0;
     if (anim) { ax = C.MOVE_AXIS[anim.m]; var t = anim.t, e = t < .5 ? 2*t*t : 1 - Math.pow(-2*t+2, 2)/2; ang = C.MOVE_Q[anim.m] * Math.PI / 2 * e; }
     for (var j = 0; j < 8; j++) {
-      var p = C.CORNERS[j], center = [p[0]*.5, p[1]*.5, p[2]*.5];
-      var turning = anim && p[ax] > 0;
+      var p = C.CORNERS[j], ctr = [p[0]*.5, p[1]*.5, p[2]*.5], turning = anim && p[ax] > 0;
       for (var f = 0; f < 6; f++) {
-        var n = FACES[f], uv = axesOf(n), q = quad(center, n, uv[0], uv[1], 0.485);
-        var st = -1;
-        for (var k = 0; k < 3; k++) { var s = C.STICKERS[3*j+k]; if (s.n[0]===n[0] && s.n[1]===n[1] && s.n[2]===n[2]) st = 3*j+k; }
-        var nn = n, sq = st >= 0 ? inset(q, 0.84) : null;
-        if (turning) {
-          q = q.map(function (v) { return rotA(v, ax, ang); }); nn = rotA(n, ax, ang);
-          if (sq) sq = sq.map(function (v) { return rotA(v, ax, ang); });
-        }
-        var vq = q.map(view), vn = view(nn);
-        var cz = 0, cx = 0, cy = 0; vq.forEach(function (v) { cx += v[0]; cy += v[1]; cz += v[2]; }); cx /= 4; cy /= 4; cz /= 4;
-        if (vn[0]*(0-cx) + vn[1]*(0-cy) + vn[2]*(D-cz) <= 0) continue;
-        polys.push({ z: cz, q: vq, sq: sq ? sq.map(view) : null, col: st >= 0 ? COLORS[state[st]] : null, shade: 0.55 + 0.45 * Math.max(0, vn[2]*0.8 + vn[1]*0.35) });
+        var n = FACES[f], uv = axesOf(n), q = quad(ctr, n, uv[0], uv[1], 0.485), sid = -1;
+        for (var k = 0; k < 3; k++) { var s = C.STICKERS[3*j+k]; if (s.n[0]===n[0] && s.n[1]===n[1] && s.n[2]===n[2]) sid = 3*j+k; }
+        var nn = n, sq = sid >= 0 ? inset(q, 0.84) : null;
+        if (turning) { q = q.map(function (v) { return rotA(v, ax, ang); }); nn = rotA(n, ax, ang); if (sq) sq = sq.map(function (v) { return rotA(v, ax, ang); }); }
+        var vq = q.map(view), vn = view(nn), m = [0,0,0];
+        vq.forEach(function (v) { m[0] += v[0]/4; m[1] += v[1]/4; m[2] += v[2]/4; });
+        if (vn[0]*(-m[0]) + vn[1]*(-m[1]) + vn[2]*(D-m[2]) <= 0) continue;
+        polys.push({ z: m[2], q: vq, sq: sq ? sq.map(view) : null, col: sid >= 0 ? COLORS[st[sid]] : null, shade: 0.55 + 0.45 * Math.max(0, vn[2]*0.8 + vn[1]*0.35) });
       }
     }
     polys.sort(function (a, b) { return a.z - b.z; });
-    function proj(v) { var f = D / (D - v[2]); return [W/2 + v[0]*f*sc, H/2 - v[1]*f*sc]; }
-    function path(q) { ctx.beginPath(); q.forEach(function (v, i) { var s = proj(v); if (i) ctx.lineTo(s[0], s[1]); else ctx.moveTo(s[0], s[1]); }); ctx.closePath(); }
+    function pth(q) { c.beginPath(); q.forEach(function (v, i) { var f = D / (D - v[2]), x = cx + v[0]*f*sc, y = cy - v[1]*f*sc; if (i) c.lineTo(x, y); else c.moveTo(x, y); }); c.closePath(); }
+    c.save(); c.globalAlpha = alpha == null ? 1 : alpha;
     polys.forEach(function (P) {
-      path(P.q); ctx.fillStyle = "#0b0b0f"; ctx.fill(); ctx.lineWidth = 1*dpr; ctx.strokeStyle = "#000"; ctx.stroke();
-      if (P.sq) {
-        path(P.sq); ctx.fillStyle = P.col; ctx.fill();
-        ctx.fillStyle = "rgba(0,0,0," + (1 - P.shade).toFixed(3) + ")"; ctx.fill();
-      }
+      pth(P.q); c.fillStyle = "#0a0a0d"; c.fill();
+      if (P.sq) { pth(P.sq); c.fillStyle = P.col; c.fill(); c.fillStyle = "rgba(0,0,0," + (1 - P.shade).toFixed(3) + ")"; c.fill(); }
     });
+    c.restore();
   }
-  var drag = null;
-  cv.addEventListener("pointerdown", function (e) { drag = [e.clientX, e.clientY]; cv.setPointerCapture(e.pointerId); });
-  cv.addEventListener("pointermove", function (e) {
-    if (!drag) return;
-    yaw += (e.clientX - drag[0]) * 0.01; pitch += (e.clientY - drag[1]) * 0.01;
-    pitch = Math.max(-1.45, Math.min(1.45, pitch)); drag = [e.clientX, e.clientY]; drawCube();
-  });
-  cv.addEventListener("pointerup", function () { drag = null; });
+  function fitCanvas(cv) { var r = cv.getBoundingClientRect(); cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr); }
 
-  // ---------- 图视图 ----------
-  var gcv = document.getElementById("graph"), gctx = gcv.getContext("2d"), hitNodes = [], hover = -1;
-  function fmt(n) { return n >= 1e6 ? (n/1e6).toFixed(2) + "M" : n >= 1e4 ? (n/1e3).toFixed(0) + "k" : n >= 1e3 ? (n/1e3).toFixed(1) + "k" : String(n); }
-  function drawGraph() {
-    var W = gcv.width, H = gcv.height, c = gctx, u = dpr;
-    c.clearRect(0, 0, W, H); hitNodes = [];
-    var padL = 30*u, padR = 30*u, cy = H*0.46, maxD = 11;
-    var X = function (d) { return padL + d * (W - padL - padR) / maxD; };
-    var counts = bfs.counts, maxLog = Math.log10(1887748);
-    for (var d = 0; d <= maxD; d++) {
-      var n = counts[d] || 0, h = n ? (0.12 + 0.88 * Math.log10(n + 1) / maxLog) * H * 0.72 : 0, w = 16*u;
-      c.fillStyle = n ? DEPTH_HUE(d).replace("60%)", "60%,0.13)").replace("hsl", "hsla") : "rgba(255,255,255,0.03)";
-      roundRect(c, X(d) - w/2, cy - h/2, w, h || 4*u, 8*u); c.fill();
-      c.fillStyle = "#64748b"; c.font = (11*u) + "px sans-serif"; c.textAlign = "center";
-      c.fillText(String(d), X(d), H - 22*u);
-      c.fillStyle = "#475569"; c.font = (9.5*u) + "px sans-serif";
-      c.fillText(n ? fmt(n) : "", X(d), H - 9*u);
-    }
-    c.fillStyle = "#475569"; c.font = (10*u) + "px sans-serif"; c.textAlign = "left";
-    c.fillText("距离 →", 4*u, H - 22*u);
-    if (!bfsDone || bfs.dist[idx] === 255) {
-      c.fillStyle = "#94a3b8"; c.textAlign = "center"; c.font = (13*u) + "px sans-serif";
-      c.fillText("BFS 完成后显示当前节点和它的邻居", W/2, cy); return;
-    }
-    var dist = bfs.dist, d0 = dist[idx];
-    var path = C.shortestPath(dist, idx);
-    // 邻居分组
-    var groups = {}, nb = [];
-    for (var m = 0; m < 9; m++) { var y = C.neighbor(idx, m), dy = dist[y]; nb.push({ m: m, d: dy }); (groups[dy] = groups[dy] || []).push(nb[m]); }
-    var step = 24*u, pos = {};
-    function place(list, col, skipCenter) {
-      var k = 0;
-      list.forEach(function (o) {
-        if (skipCenter && o.m === path[0]) { o.x = X(col); o.y = cy; return; }
-        var off = skipCenter ? (k % 2 === 0 ? -1 : 1) * (Math.floor(k/2) + 1) : (list.length === 1 ? 0 : (k - (list.length - 1)/2));
-        if (!skipCenter && col === d0) off = (k % 2 === 0 ? -1 : 1) * (Math.floor(k/2) + 1);
-        o.x = X(col); o.y = cy + off * step; k++;
-      });
-    }
-    if (groups[d0-1]) place(groups[d0-1], d0-1, true);
-    if (groups[d0]) place(groups[d0], d0, false);
-    if (groups[d0+1]) place(groups[d0+1], d0+1, false);
-    var cx0 = X(d0);
-    // 邻居边
-    nb.forEach(function (o) {
-      var col = o.d < d0 ? "#22c55e" : o.d > d0 ? "#f43f5e" : "#94a3b8";
-      var onPath = o.m === path[0];
-      c.strokeStyle = onPath ? "#38bdf8" : col; c.globalAlpha = onPath ? 1 : (hover === o.m ? 1 : 0.55);
-      c.lineWidth = (onPath ? 3 : 1.4) * u;
-      c.beginPath(); c.moveTo(cx0, cy);
-      if (o.d === d0) c.quadraticCurveTo(cx0 + 26*u, (cy + o.y)/2, o.x, o.y); else c.lineTo(o.x, o.y);
-      c.stroke(); c.globalAlpha = 1;
+  // ---------- “路口”组件：中间一个魔方 + 周围 9 条路 ----------
+  function Crossroads(cv, withNumbers) {
+    var self = this;
+    this.cv = cv; this.c = cv.getContext("2d"); this.nums = withNumbers;
+    this.state = C.SOLVED.slice(); this.idx = C.stateIndex(this.state);
+    this.anim = null; this.queue = []; this.hover = -1; this.hits = []; this.gap = 0;
+    this.onStep = null; this.onIdle = null;
+    var down = null;
+    cv.addEventListener("pointerdown", function (e) { down = { x: e.clientX, y: e.clientY, moved: false }; cv.setPointerCapture(e.pointerId); });
+    cv.addEventListener("pointermove", function (e) {
+      if (down) {
+        var dx = e.clientX - down.x, dy = e.clientY - down.y;
+        if (down.moved || Math.abs(dx) + Math.abs(dy) > 6) {
+          down.moved = true; yaw += dx * 0.01; pitch = Math.max(-1.3, Math.min(1.3, pitch + dy * 0.01));
+          down.x = e.clientX; down.y = e.clientY; redrawAll();
+        }
+        return;
+      }
+      var h = self.hit(e); if (h !== self.hover) { self.hover = h; cv.style.cursor = h >= 0 ? "pointer" : "grab"; self.draw(); }
     });
-    // 最短路径链
-    var px = X(d0 - 1), cur = idx;
-    if (path.length) cur = C.neighbor(idx, path[0]);
-    for (var i = 1; i < path.length; i++) {
-      var nx = X(d0 - 1 - i);
-      c.strokeStyle = "#38bdf8"; c.lineWidth = 3*u; c.beginPath(); c.moveTo(px, cy); c.lineTo(nx, cy); c.stroke();
-      c.fillStyle = "#7dd3fc"; c.font = "bold " + (11*u) + "px ui-monospace, monospace"; c.textAlign = "center";
-      c.fillText(NAMES[path[i]], (px + nx)/2, cy - 8*u);
-      px = nx;
-    }
-    if (path.length) { c.fillStyle = "#7dd3fc"; c.font = "bold " + (11*u) + "px ui-monospace, monospace"; c.textAlign = "center"; }
-    for (i = 1; i < path.length; i++) { node(c, X(d0 - 1 - i), cy, (i === path.length - 1) ? 7*u : 5*u, i === path.length - 1 ? "#facc15" : "#38bdf8"); }
-    // 邻居节点和标签
-    nb.forEach(function (o) {
-      var col = o.m === path[0] ? "#38bdf8" : o.d < d0 ? "#22c55e" : o.d > d0 ? "#f43f5e" : "#94a3b8";
-      node(c, o.x, o.y, (hover === o.m ? 7 : 5.5)*u, col);
-      c.fillStyle = hover === o.m ? "#fff" : "#cbd5e1"; c.font = (10.5*u) + "px ui-monospace, monospace";
-      c.textAlign = "left"; c.fillText(NAMES[o.m], o.x + 8*u, o.y + 4*u);
-      hitNodes.push({ x: o.x, y: o.y, m: o.m });
+    cv.addEventListener("pointerup", function (e) {
+      if (down && !down.moved) { var h = self.hit(e); if (h >= 0 && !self.busy()) { if (self.onManual) self.onManual(h); self.go([h]); } }
+      down = null;
     });
-    // 当前节点
-    c.fillStyle = "rgba(250,204,21,0.18)"; c.beginPath(); c.arc(cx0, cy, 17*u, 0, 7); c.fill();
-    node(c, cx0, cy, 9*u, "#facc15");
-    if (d0 === 0) { c.fillStyle = "#fde68a"; c.font = (11*u) + "px sans-serif"; c.textAlign = "center"; c.fillText("复原（终点）", cx0, cy - 22*u); }
-    else if (path.length) { c.fillStyle = "#fde68a"; c.font = (11*u) + "px sans-serif"; c.textAlign = "center"; c.fillText("你在这里", cx0, cy - 22*u); c.fillText("复原", X(0), cy + 22*u); }
+    cv.addEventListener("pointerleave", function () { if (!down) { self.hover = -1; self.draw(); } });
   }
-  function node(c, x, y, r, col) { c.beginPath(); c.arc(x, y, r, 0, 7); c.fillStyle = col; c.fill(); c.lineWidth = 1.5*dpr; c.strokeStyle = "#0b1020"; c.stroke(); }
-  function roundRect(c, x, y, w, h, r) { r = Math.min(r, w/2, h/2); c.beginPath(); c.moveTo(x+r, y); c.arcTo(x+w, y, x+w, y+h, r); c.arcTo(x+w, y+h, x, y+h, r); c.arcTo(x, y+h, x, y, r); c.arcTo(x, y, x+w, y, r); c.closePath(); }
-  function hitTest(e) {
-    var r = gcv.getBoundingClientRect(), x = (e.clientX - r.left) * dpr, y = (e.clientY - r.top) * dpr, best = -1, bd = 14*dpr;
-    hitNodes.forEach(function (h) { var dd = Math.hypot(h.x - x, h.y - y); if (dd < bd) { bd = dd; best = h.m; } });
+  Crossroads.prototype.busy = function () { return !!this.anim || this.queue.length > 0; };
+  Crossroads.prototype.hit = function (e) {
+    var r = this.cv.getBoundingClientRect(), x = (e.clientX - r.left) * dpr, y = (e.clientY - r.top) * dpr, best = -1, bd = 1e9;
+    this.hits.forEach(function (h) { var d = Math.hypot(h.x - x, h.y - y); if (d < h.r && d < bd) { bd = d; best = h.m; } });
     return best;
-  }
-  gcv.addEventListener("mousemove", function (e) { var h = hitTest(e); if (h !== hover) { hover = h; gcv.style.cursor = h >= 0 ? "pointer" : "default"; drawGraph(); } });
-  gcv.addEventListener("mouseleave", function () { hover = -1; drawGraph(); });
-  gcv.addEventListener("click", function (e) { var h = hitTest(e); if (h >= 0 && !anim && !queue.length) { clearSolution(); enqueue([h]); } });
-
-  // ---------- BFS 直方图 ----------
-  var hcv = document.getElementById("hist"), hctx = hcv.getContext("2d");
-  function drawHist() {
-    var W = hcv.width, H = hcv.height, c = hctx, u = dpr, counts = bfs.counts, maxD = 11;
+  };
+  Crossroads.prototype.set = function (st) { this.state = st; this.idx = C.stateIndex(st); this.queue = []; this.anim = null; this.draw(); };
+  Crossroads.prototype.go = function (ms, gap) { this.gap = gap || 0; this.queue = this.queue.concat(ms); if (!this.anim) this.next(); };
+  Crossroads.prototype.next = function () {
+    var self = this;
+    if (!this.queue.length) { this.anim = null; this.draw(); if (this.onIdle) this.onIdle(); return; }
+    var m = this.queue.shift();
+    this.anim = { m: m, t: 0, start: performance.now() + this.gap, dur: C.MOVE_Q[m] === -2 ? 620 : 460 };
+    function frame(now) {
+      var a = self.anim; if (!a) return;
+      a.t = Math.max(0, Math.min(1, (now - a.start) / a.dur));
+      if (a.t >= 1) {
+        self.state = C.applyMove(self.state, a.m); self.idx = C.neighbor(self.idx, a.m);
+        self.anim = null; if (self.onStep) self.onStep(a.m); self.next(); return;
+      }
+      self.draw(); requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  };
+  Crossroads.prototype.draw = function () {
+    var c = this.c, W = this.cv.width, H = this.cv.height, u = dpr, mm = Math.min(W, H);
     c.clearRect(0, 0, W, H);
-    var padB = 22*u, padT = 18*u, bw = (W - 20*u) / (maxD + 1), max = 1887748;
-    var cd = bfsDone ? bfs.dist[idx] : -1;
-    for (var d = 0; d <= maxD; d++) {
-      var n = counts[d] || 0, h = n / max * (H - padB - padT), x = 10*u + d * bw;
-      c.fillStyle = d === cd ? "#facc15" : DEPTH_HUE(d);
-      c.globalAlpha = d === cd ? 1 : 0.8;
-      roundRect(c, x + bw*0.14, H - padB - Math.max(h, n ? 2*u : 0), bw*0.72, Math.max(h, n ? 2*u : 0), 4*u); if (n) c.fill();
+    var cx = W / 2, cy = H / 2, R = mm * 0.37, mainSc = mm * 0.125, th = mm * 0.05;
+    var showN = this.nums && bfsDone, dist = bfs.dist, d0 = showN ? dist[this.idx] : -1;
+    var best = showN && d0 > 0 ? C.shortestPath(dist, this.idx)[0] : -1;
+    var busy = !!this.anim, self = this;
+    this.hits = [];
+    var g = c.createRadialGradient(cx, cy, 0, cx, cy, mm * 0.3);
+    g.addColorStop(0, "rgba(56,189,248,0.12)"); g.addColorStop(1, "rgba(56,189,248,0)");
+    c.fillStyle = g; c.fillRect(0, 0, W, H);
+    var items = ORDER.map(function (m, k) {
+      var a = -Math.PI / 2 + k * 2 * Math.PI / 9;
+      var ni = C.neighbor(self.idx, m), nd = showN ? dist[ni] : -1;
+      var col = !showN ? "#64748b" : nd < d0 ? "#22c55e" : nd > d0 ? "#f43f5e" : "#94a3b8";
+      return { m: m, x: cx + R * Math.cos(a), y: cy + R * Math.sin(a) * 0.98, a: a, nd: nd, col: col };
+    });
+    // 路
+    items.forEach(function (it) {
+      var hl = self.hover === it.m || it.m === best;
+      c.save(); c.globalAlpha = busy ? 0.12 : hl ? 1 : 0.5;
+      c.strokeStyle = it.col; c.lineWidth = (it.m === best ? 4 : self.hover === it.m ? 3 : 2) * u;
+      if (!showN) c.setLineDash([6 * u, 6 * u]);
+      var r0 = mainSc * 1.75, r1 = th * 2.3;
+      c.beginPath(); c.moveTo(cx + Math.cos(it.a) * r0, cy + Math.sin(it.a) * r0); c.lineTo(it.x - Math.cos(it.a) * r1, it.y - Math.sin(it.a) * r1); c.stroke();
+      c.restore();
+    });
+    // 周围 9 个魔方
+    items.forEach(function (it) {
+      var hl = self.hover === it.m;
+      if (hl && !busy) { c.fillStyle = "rgba(255,255,255,0.08)"; c.beginPath(); c.arc(it.x, it.y, th * 2.4, 0, 7); c.fill(); }
+      renderCube(c, C.applyMove(self.state, it.m), it.x, it.y, th * (hl ? 1.12 : 1), null, busy ? 0.18 : 1);
+      c.globalAlpha = busy ? 0.2 : 1;
+      c.fillStyle = hl ? "#fff" : "#94a3b8"; c.font = (12 * u) + "px sans-serif"; c.textAlign = "center";
+      c.fillText(PLAIN[it.m], it.x, it.y + th * 2.2 + 8 * u);
+      if (showN) {
+        var bx = it.x + th * 1.55, by = it.y - th * 1.45;
+        c.beginPath(); c.arc(bx, by, 11 * u, 0, 7); c.fillStyle = it.col; c.fill();
+        c.fillStyle = "#0b1020"; c.font = "bold " + (12 * u) + "px sans-serif"; c.fillText(String(it.nd), bx, by + 4.2 * u);
+      }
       c.globalAlpha = 1;
-      c.fillStyle = "#cbd5e1"; c.font = (10*u) + "px sans-serif"; c.textAlign = "center";
-      if (n) c.fillText(n.toLocaleString(), x + bw/2, H - padB - Math.max(h, 2*u) - 5*u);
-      c.fillStyle = d === cd ? "#facc15" : "#64748b"; c.font = (11*u) + "px sans-serif";
-      c.fillText(d + " 步", x + bw/2, H - 6*u);
+      self.hits.push({ x: it.x, y: it.y, r: th * 2.4, m: it.m });
+    });
+    // 中间的魔方
+    renderCube(c, this.state, cx, cy, mainSc, this.anim, 1);
+    c.textAlign = "center";
+    if (showN) {
+      var txt = d0 === 0 ? "复原啦！" : "离复原还差 " + d0 + " 步";
+      c.font = "bold " + (15 * u) + "px sans-serif"; c.fillStyle = d0 === 0 ? "#facc15" : "#e2e8f0";
+      c.fillText(txt, cx, cy + mainSc * 2.15);
+    } else if (this.nums) {
+      c.font = (13 * u) + "px sans-serif"; c.fillStyle = "#94a3b8"; c.fillText("正在给所有路口贴数字…", cx, cy + mainSc * 2.15);
+    } else {
+      c.font = "bold " + (14 * u) + "px sans-serif"; c.fillStyle = "#facc15"; c.fillText("你在这里", cx, cy + mainSc * 2.15);
     }
-  }
+  };
 
-  // ---------- 动画与流程 ----------
-  function enqueue(ms) { queue = queue.concat(ms); if (!anim) nextAnim(); }
-  function nextAnim() {
-    if (!queue.length) { anim = null; updateUI(); return; }
-    var m = queue.shift(), dur = (C.MOVE_Q[m] === -2 ? 420 : 300) / speed;
-    anim = { m: m, t: 0, start: performance.now(), dur: dur };
-    updateUI();
-  }
-  function tick(now) {
-    if (anim) {
-      anim.t = Math.min(1, (now - anim.start) / anim.dur);
-      if (anim.t >= 1) {
-        state = C.applyMove(state, anim.m); idx = C.neighbor(idx, anim.m);
-        if (solution && solPos < solution.length) solPos++;
-        anim = null; drawGraph(); drawHist(); nextAnim();
-      }
-      drawCube();
+  // ---------- 水波扩散 ----------
+  function Ripple(cv) {
+    this.cv = cv; this.c = cv.getContext("2d"); this.p = 0; this.me = -1; this.playing = false;
+    var seed = 7; function rnd() { seed = (seed * 16807) % 2147483647; return seed / 2147483647; }
+    this.dots = [];
+    for (var d = 1; d <= 11; d++) {
+      var arr = [], n = d <= 3 ? [0, 9, 54, 321][d] : Math.min(2600, Math.round(320 + (Math.log10([0,9,54,321,1847,9992,50136,227536,870072,1887748,623800,2644][d]) - 2.5) * 700));
+      for (var i = 0; i < n; i++) arr.push([rnd(), rnd()]);
+      this.dots.push(arr);
     }
-    if (!bfsDone) {
-      bfsDone = bfs.step(110000);
-      document.getElementById("sBfs").textContent = bfsDone ? "100%" : (bfs.visited() / C.N * 100).toFixed(1) + "%";
-      if (bfsDone) {
-        document.getElementById("histNote").textContent = "3,674,160 个节点全部探索完 · 最远 11 步（上帝之数）";
-        updateUI();
+  }
+  Ripple.prototype.play = function () {
+    var self = this; if (this.playing) return; this.playing = true; var t0 = performance.now();
+    function f(now) { self.p = (now - t0) / 650; self.draw(); syncBars(self.p); if (self.p < 12.5) requestAnimationFrame(f); else self.playing = false; }
+    requestAnimationFrame(f);
+  };
+  Ripple.prototype.draw = function () {
+    var c = this.c, W = this.cv.width, H = this.cv.height, u = dpr, mm = Math.min(W, H), cx = W / 2, cy = H / 2;
+    var r0 = mm * 0.06, w = (mm * 0.48 - r0) / 11;
+    c.clearRect(0, 0, W, H);
+    for (var d = 1; d <= 11; d++) {
+      var vis = Math.max(0, Math.min(1, this.p - d)); if (vis <= 0) continue;
+      var a0 = r0 + (d - 1) * w, col = DEPTH_COL[d], arr = this.dots[d - 1], n = Math.floor(arr.length * vis);
+      c.strokeStyle = col; c.globalAlpha = d === this.me ? 0.7 : 0.18; c.lineWidth = (d === this.me ? 2 : 1) * u;
+      c.beginPath(); c.arc(cx, cy, a0 + w, 0, 7); c.stroke();
+      c.globalAlpha = 0.85; c.fillStyle = col;
+      var sz = (d <= 2 ? 3.2 : d === 3 ? 2 : 1.3) * u;
+      for (var i = 0; i < n; i++) {
+        var rr = a0 + w * (0.15 + 0.7 * arr[i][1]), aa = arr[i][0] * Math.PI * 2;
+        c.fillRect(cx + rr * Math.cos(aa) - sz / 2, cy + rr * Math.sin(aa) - sz / 2, sz, sz);
       }
-      drawHist(); drawGraph();
+      c.globalAlpha = 1;
     }
-    requestAnimationFrame(tick);
-  }
-  function clearSolution() { solution = null; solPos = 0; renderSolution(); }
-  function renderSolution() {
-    var el = document.getElementById("sol");
-    if (!solution) { el.innerHTML = ""; return; }
-    if (!solution.length) { el.innerHTML = '<span class="lbl">已经是复原状态</span>'; return; }
-    el.innerHTML = '<span class="lbl">最短解 ' + solution.length + ' 步：</span>' + solution.map(function (m, i) {
-      var cls = i < solPos ? "done" : (i === solPos && (anim || queue.length)) ? "cur" : "";
-      return '<span class="mv ' + cls + '">' + NAMES[m] + "</span>";
-    }).join("");
-  }
-  function updateUI() {
-    var busy = !!anim || queue.length > 0;
-    document.getElementById("sIdx").textContent = "#" + idx.toLocaleString();
-    document.getElementById("sDist").textContent = bfsDone ? bfs.dist[idx] + " 步" : "…";
-    document.getElementById("bSolve").disabled = !bfsDone || busy || bfs.dist[idx] === 0;
-    document.getElementById("bStep").disabled = !bfsDone || busy || bfs.dist[idx] === 0;
-    ["bScramble", "bRandom", "bReset"].forEach(function (id) { document.getElementById(id).disabled = busy; });
-    document.querySelectorAll("#moves button").forEach(function (b) { b.disabled = busy; });
-    renderSolution();
-  }
-  function setState(s) { state = s; idx = C.stateIndex(s); clearSolution(); drawAll(); updateUI(); }
-  function drawAll() { drawCube(); drawGraph(); drawHist(); }
+    renderCube(c, C.SOLVED, cx, cy, r0 * 0.55, null, 1);
+    c.fillStyle = "#facc15"; c.font = "bold " + (11 * u) + "px sans-serif"; c.textAlign = "center";
+    c.fillText("终点：复原", cx, cy + r0 + 12 * u);
+    if (this.me > 0 && this.p > this.me + 0.5) {
+      var rr2 = r0 + (this.me - 0.5) * w, ax = cx + rr2 * Math.cos(-0.6), ay = cy + rr2 * Math.sin(-0.6);
+      c.beginPath(); c.arc(ax, ay, 7 * u, 0, 7); c.fillStyle = "#facc15"; c.fill(); c.lineWidth = 2 * u; c.strokeStyle = "#0b1020"; c.stroke();
+      c.fillStyle = "#fde68a"; c.textAlign = "left"; c.font = "bold " + (12 * u) + "px sans-serif";
+      c.fillText("第三步里你的魔方在这圈", ax + 11 * u, ay - 8 * u);
+    }
+  };
+  var barsEl = document.getElementById("bars");
+  var COUNTS = [1, 9, 54, 321, 1847, 9992, 50136, 227536, 870072, 1887748, 623800, 2644];
+  COUNTS.forEach(function (n, d) {
+    var row = document.createElement("div"); row.className = "bar"; row.id = "bar" + d;
+    row.innerHTML = '<span class="lbl">' + (d === 0 ? "终点" : "拧 " + d + " 下") + '</span><span class="track"><span class="fill" style="display:block;width:' +
+      (n / 1887748 * 100).toFixed(2) + '%;background:' + DEPTH_COL[d] + '"></span></span><span class="num">' + n.toLocaleString() + " 种</span>";
+    barsEl.appendChild(row);
+  });
+  function syncBars(p) { for (var d = 0; d < 12; d++) document.getElementById("bar" + d).classList.toggle("on", p >= d); }
+  function markMe(d) { for (var k = 0; k < 12; k++) document.getElementById("bar" + k).classList.toggle("me", k === d && d > 0); ripple.me = d; ripple.draw(); }
 
-  var mv = document.getElementById("moves");
-  [0, 2, 1, 3, 5, 4, 6, 8, 7].forEach(function (m) {
-    var b = document.createElement("button"); b.textContent = NAMES[m];
-    b.onclick = function () { clearSolution(); enqueue([m]); }; mv.appendChild(b);
-  });
-  document.getElementById("bScramble").onclick = function () {
-    clearSolution(); var seq = [], last = -1;
-    while (seq.length < 20) { var m = Math.floor(Math.random() * 9); if (((m/3)|0) === last) continue; last = (m/3)|0; seq.push(m); }
-    var el = document.getElementById("sol");
-    speedBoost(seq);
-    el.innerHTML = '<span class="lbl">打乱：</span>' + seq.map(function (m) { return '<span class="mv done">' + NAMES[m] + "</span>"; }).join("");
-  };
-  function speedBoost(seq) { var old = speed; speed = Math.max(speed, 3.2); enqueue(seq); var chk = setInterval(function () { if (!anim && !queue.length) { speed = parseFloat(document.getElementById("speed").value); clearInterval(chk); } }, 100); }
-  document.getElementById("bRandom").onclick = function () { setState(C.stateFromIndex(Math.floor(Math.random() * C.N))); };
-  document.getElementById("bReset").onclick = function () { setState(C.SOLVED.slice()); };
-  document.getElementById("bSolve").onclick = function () {
-    solution = C.shortestPath(bfs.dist, idx); solPos = 0; enqueue(solution.slice());
-  };
-  document.getElementById("bStep").onclick = function () {
-    var p = C.shortestPath(bfs.dist, idx); if (!p.length) return;
-    if (!solution || solPos >= solution.length || solution[solPos] !== p[0]) { solution = p; solPos = 0; }
-    enqueue([p[0]]);
-  };
-  document.getElementById("speed").oninput = function (e) { speed = parseFloat(e.target.value); };
-  window.addEventListener("keydown", function (e) {
-    if (anim || queue.length) return;
-    var k = e.key.toLowerCase(), f = { u: 0, r: 3, f: 6 }[k];
-    if (f === undefined) return;
-    clearSolution(); enqueue([f + (e.shiftKey ? 2 : 0)]);
-  });
+  // ---------- 组装 ----------
+  var cr1 = new Crossroads(document.getElementById("c1"), false);
+  var cr3 = new Crossroads(document.getElementById("c3"), true);
+  var ripple = new Ripple(document.getElementById("c2"));
+  function redrawAll() { cr1.draw(); cr3.draw(); ripple.draw(); }
+  function resize() { ["c1", "c2", "c3"].forEach(function (id) { fitCanvas(document.getElementById(id)); }); redrawAll(); }
   window.addEventListener("resize", resize);
-  resize(); updateUI(); requestAnimationFrame(tick);
+
+  document.getElementById("b1reset").onclick = function () { cr1.set(C.SOLVED.slice()); };
+  document.getElementById("b2replay").onclick = function () { ripple.play(); };
+
+  var trailEl = document.getElementById("trail"), trail = [];
+  function renderTrail() {
+    if (!bfsDone) { trailEl.textContent = ""; return; }
+    var d = bfs.dist[cr3.idx];
+    if (!trail.length) { trailEl.innerHTML = d === 0 ? '<span class="done">已经是复原状态，点“打乱一个”</span>' : "现在离复原 <b>" + d + "</b> 步"; return; }
+    trailEl.innerHTML = trail.map(function (x) { return x === 0 ? '<span class="done">0 复原！</span>' : "<b>" + x + "</b>"; }).join(" → ");
+  }
+  function updateBtns() {
+    var busy = cr3.busy(), d = bfsDone ? bfs.dist[cr3.idx] : -1;
+    document.getElementById("b3mix").disabled = !bfsDone || busy;
+    document.getElementById("b3step").disabled = !bfsDone || busy || d === 0;
+    document.getElementById("b3auto").disabled = !bfsDone || busy || d === 0;
+  }
+  cr3.onStep = function () { trail.push(bfs.dist[cr3.idx]); renderTrail(); markMe(bfs.dist[cr3.idx]); };
+  cr3.onIdle = updateBtns;
+  cr3.onManual = function () { if (!trail.length) trail = [bfs.dist[cr3.idx]]; };
+  function scramble() {
+    var i, tries = 0;
+    do { i = Math.floor(Math.random() * N); tries++; } while ((bfs.dist[i] < 6 || bfs.dist[i] > 9) && tries < 1000);
+    cr3.set(C.stateFromIndex(i)); trail = []; renderTrail(); markMe(bfs.dist[i]); updateBtns();
+  }
+  document.getElementById("b3mix").onclick = scramble;
+  document.getElementById("b3step").onclick = function () {
+    var p = C.shortestPath(bfs.dist, cr3.idx); if (!p.length) return;
+    if (!trail.length) trail = [bfs.dist[cr3.idx]];
+    cr3.go([p[0]]); updateBtns();
+  };
+  document.getElementById("b3auto").onclick = function () {
+    var p = C.shortestPath(bfs.dist, cr3.idx); if (!p.length) return;
+    if (!trail.length) trail = [bfs.dist[cr3.idx]];
+    cr3.go(p, 450); updateBtns();
+  };
+
+  var rippleSeen = false;
+  function maybePlay() { if (bfsDone && rippleSeen && !ripple.played) { ripple.played = true; ripple.play(); } }
+  if ("IntersectionObserver" in window) {
+    new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { rippleSeen = true; maybePlay(); } }); }, { threshold: 0.35 }).observe(document.getElementById("c2"));
+  } else rippleSeen = true;
+
+  function crunch() {
+    bfsDone = bfs.step(250000);
+    if (!bfsDone) { requestAnimationFrame(crunch); return; }
+    scramble(); maybePlay(); cr3.draw();
+  }
+  resize(); updateBtns(); requestAnimationFrame(crunch);
 })();
 </script>
 </body>
