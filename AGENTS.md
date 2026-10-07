@@ -23,6 +23,7 @@
 | `diffusion-model-video/` | 扩散模型中文旁白科普视频（mp4 + 播放页） | `index.html` |
 | `cloud-diffusion/` | 看云：预计算扩散轨迹播放（WebGL1，数据 clouds.bin + clouds.json） | `index.html` |
 | `diffusion-particles/` | 粒子扩散交互原型（WebGL2，模型权重内嵌 model.js） | `index.html` |
+| `shijing/` | 诗境：诗句生成动态水墨画 + 古筝曲（单文件，场景剧本内嵌 SCENE_SRC；加 `?skip` 跳过开场） | `index.html` |
 
 **模型产物类演示的规则**（如 `prompt-showdown/`）：
 - 每个模型一个子目录（`deepseek-v4-pro/`、`gemini-36-flash/`、`gemini-37-flash/`），各放 `index.html` + 本地资源
