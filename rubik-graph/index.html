@@ -73,6 +73,11 @@
   .trail4 .mv.done { color: #475569; }
   .trail4 .mv.cur { background: #0ea5e9; color: #04121f; }
   .trail4 .total { color: #fde68a; font-family: sans-serif; }
+  .ch.wide { grid-template-columns: 1fr; }
+  .ch.wide .txt { max-width: 860px; }
+  .duo { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media (max-width: 640px) { .duo { grid-template-columns: 1fr; } }
+  .cap { text-align: center; color: #94a3b8; font-size: .8rem; margin-top: 2px; }
 </style>
 </head>
 <body>
@@ -134,17 +139,21 @@
     </div>
   </section>
 
-  <section class="ch flip">
+  <section class="ch wide">
     <div class="txt">
       <span class="no">第四步</span>
       <h2>真正的三阶魔方：地图太大，就拆成四张小地图</h2>
       <p>三阶魔方大约有 4300 亿亿种样子，一张地图根本装不下，没法像二阶那样整张数一遍。</p>
       <p>办法是<span class="key">分四段走</span>，每段只完成一个小目标。而且越往后，能用的拧法越少（18 → 14 → 10 → 6 种），地图也就小到电脑能数完。像回家先上高速，再走主路，最后拐进小区。</p>
       <p>每张小地图，电脑都像第二步那样一圈圈数过；走的时候照第三步，一路往数字小的地方走。四段接起来，任何打乱都能复原，一般 30 步左右。</p>
+      <p>魔方旁边那张圆圈图，是把 54 张贴纸摊平画出来的：<span class="key">每个点是一张贴纸，每一圈是一条轨道</span>。拧一层，那几圈会亮起来，圈上的点就沿着轨道滑过去。打乱时颜色混在一起，复原时同色的点各自聚成一团。</p>
       <p class="aside">每一段内都是最短的，但四段接起来不一定是全局最短：数学家已证明三阶魔方任何打乱最多 20 步就够，只是找那条路要难得多。这个分段方法叫 Thistlethwaite 算法。</p>
     </div>
     <div class="stage">
-      <canvas id="c4"></canvas>
+      <div class="duo">
+        <div><canvas id="c4"></canvas><div class="cap">魔方本身（可拖动）</div></div>
+        <div><canvas id="c4m"></canvas><div class="cap">54 张贴纸的圆圈图：点 = 贴纸，圈 = 轨道</div></div>
+      </div>
       <div class="phases" id="phases"></div>
       <div class="chips" id="chips"></div>
       <div class="legend4">U 顶 · D 底 · R 右 · L 左 · F 前 · B 后 · 带 ' 是逆时针 · 带 2 是转半圈 · 划掉的是这一段不准用的拧法</div>
@@ -390,7 +399,7 @@
   var cr3 = new Crossroads(document.getElementById("c3"), true);
   var ripple = new Ripple(document.getElementById("c2"));
   function redrawAll() { cr1.draw(); cr3.draw(); ripple.draw(); if (typeof draw4 === "function") draw4(); }
-  function resize() { ["c1", "c2", "c3", "c4"].forEach(function (id) { fitCanvas(document.getElementById(id)); }); redrawAll(); }
+  function resize() { ["c1", "c2", "c3", "c4", "c4m"].forEach(function (id) { fitCanvas(document.getElementById(id)); }); redrawAll(); }
   window.addEventListener("resize", resize);
 
   document.getElementById("b1reset").onclick = function () { cr1.set(C.SOLVED.slice()); };
@@ -484,7 +493,49 @@
   function draw4() { var W = cv4.width, H = cv4.height, mm = Math.min(W, H); ctx4.clearRect(0, 0, W, H);
     var g = ctx4.createRadialGradient(W/2, H/2, 0, W/2, H/2, mm*0.45); g.addColorStop(0, "rgba(56,189,248,0.12)"); g.addColorStop(1, "rgba(56,189,248,0)");
     ctx4.fillStyle = g; ctx4.fillRect(0, 0, W, H);
-    renderCube3(ctx4, C3.facelets(cube3), W/2, H/2, mm * 0.165, anim3); }
+    renderCube3(ctx4, C3.facelets(cube3), W/2, H/2, mm * 0.165, anim3); drawMap(); }
+  // ---- 贴纸圆圈图：贴纸放在球面上，从 URF 角的方向摊平 ----
+  var cvm = document.getElementById("c4m"), ctxm = cvm.getContext("2d");
+  function dot3(a, b) { return a[0]*b[0] + a[1]*b[1] + a[2]*b[2]; }
+  function cross3(a, b) { return [a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]]; }
+  function norm3(a) { var l = Math.sqrt(dot3(a, a)); return [a[0]/l, a[1]/l, a[2]/l]; }
+  var MA = norm3([1,1,1]), ME2 = norm3([-1,2,-1]), ME1 = norm3([1,0,-1]);
+  var SPH = C3.STICKERS.map(function (s) {
+    var pn = dot3(s.p, s.n), t = [0,1,2].map(function (a) { return (s.p[a] - s.n[a]*pn) * 0.5; }), hh = Math.sqrt(1 - dot3(t, t));
+    return [t[0] + hh*s.n[0], t[1] + hh*s.n[1], t[2] + hh*s.n[2]];
+  });
+  function mproj(p, cx, cy, R) {
+    var phi = Math.acos(Math.max(-1, Math.min(1, dot3(p, MA)))), tx = dot3(p, ME1), ty = dot3(p, ME2), L = Math.hypot(tx, ty);
+    if (L < 1e-9) return [cx, cy];
+    var r = phi / Math.PI * R; return [cx + r*tx/L, cy - r*ty/L];
+  }
+  var TRACKS = [];
+  function circle(n, lvl) { var u = norm3(cross3(n, [0.3,0.5,0.8])), v = cross3(n, u), r = Math.sqrt(1 - lvl*lvl), out = [];
+    for (var i = 0; i <= 220; i++) { var a = i / 220 * Math.PI * 2, ca = Math.cos(a), sa = Math.sin(a);
+      out.push([lvl*n[0] + r*(ca*u[0] + sa*v[0]), lvl*n[1] + r*(ca*u[1] + sa*v[1]), lvl*n[2] + r*(ca*u[2] + sa*v[2])]); }
+    return out; }
+  C3.FACE_GEO.forEach(function (g, f) { [0.5, Math.SQRT1_2, Math.sqrt(0.75)].forEach(function (lvl, j) { TRACKS.push({ f: f, main: j === 0, pts: circle(g.n, lvl) }); }); });
+  [[1,0,0],[0,1,0],[0,0,1]].forEach(function (n) { TRACKS.push({ f: -1, main: false, pts: circle(n, 0) }); });
+  function drawMap() {
+    var c = ctxm, W = cvm.width, H = cvm.height, mm = Math.min(W, H), cx = W/2, cy = H/2, R = mm * 0.46, u = dpr;
+    c.clearRect(0, 0, W, H);
+    var af = anim3 ? (anim3.m / 3) | 0 : -1, ax = -1, sgn = 0, ang = 0;
+    if (anim3) { var g = C3.FACE_GEO[af].n; ax = g[0] ? 0 : g[1] ? 1 : 2; sgn = g[ax];
+      var t = anim3.t, e = t < .5 ? 2*t*t : 1 - Math.pow(-2*t+2, 2)/2; ang = -sgn * [1, 2, -1][anim3.m % 3] * Math.PI / 2 * e; }
+    TRACKS.slice().sort(function (a, b) { return (a.f === af) - (b.f === af); }).forEach(function (tr) {
+      var hl = tr.f === af && af >= 0;
+      c.strokeStyle = hl ? "rgba(250,204,21,0.95)" : "rgba(148,163,184,0.26)"; c.lineWidth = (hl ? (tr.main ? 2.6 : 1.5) : 1) * u;
+      c.beginPath(); var prev = null;
+      tr.pts.forEach(function (p) { var s = mproj(p, cx, cy, R); if (prev && Math.hypot(s[0]-prev[0], s[1]-prev[1]) < R*0.3) c.lineTo(s[0], s[1]); else c.moveTo(s[0], s[1]); prev = s; });
+      c.stroke();
+    });
+    var fl = C3.facelets(cube3), r0 = mm * 0.021;
+    SPH.forEach(function (p, i) {
+      var moving = anim3 && C3.STICKERS[i].p[ax] === sgn, q = moving ? rotA(p, ax, ang) : p, s = mproj(q, cx, cy, R);
+      c.beginPath(); c.arc(s[0], s[1], moving ? r0 * 1.12 : r0, 0, 7); c.fillStyle = COL3[fl[i]]; c.fill();
+      c.lineWidth = 1.6 * u; c.strokeStyle = moving ? "#facc15" : "#0b1020"; c.stroke();
+    });
+  }
   function phaseNow() { if (!ready3) return { p: -1 }; for (var p = 0; p < 4; p++) { var d = C3.phaseDist(cube3, bfs3, p); if (d > 0) return { p: p, d: d }; } return { p: 4, d: 0 }; }
   function ui4() {
     var busy = !!anim3 || q3.length > 0, scrambling = anim3 && anim3.it.fast, st = scrambling ? { p: -1 } : phaseNow();
