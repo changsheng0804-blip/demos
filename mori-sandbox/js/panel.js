@@ -2,7 +2,8 @@
 // 所有 js/*.js 按 index.html 中顺序作为普通脚本加载，共享同一全局作用域（原单一 IIFE 拆分）。
 // power race
 const RACE = MAJORS;
-const PMAX = Math.max(...F.flatMap((f) => RACE.map((k) => f.power[k] || 0)));
+// 刻度不让「东军诸大名」这种合计值撑大（1600 年一家独大会把其他条压扁），超出部分封顶
+const PMAX = Math.max(...F.flatMap((f) => RACE.filter((k) => k !== "TOKUGAWA").map((k) => f.power[k] || 0)));
 const rows = {};
 RACE.forEach((k) => {
   const d = document.createElement("div");
@@ -13,10 +14,10 @@ RACE.forEach((k) => {
 });
 
 // timeline
-const Y0 = 1520, Y1 = 1574, pos = (y) => ((y - Y0) / (Y1 - Y0)) * 100 + "%";
+const Y0 = 1520, Y1 = F[F.length - 1].year + 3, pos = (y) => ((y - Y0) / (Y1 - Y0)) * 100 + "%";
 const tl = $("tl");
 for (let y = Y0; y <= Y1; y++) { const t = document.createElement("span"); t.className = "x-yt" + (y % 10 ? "" : " is-dec"); t.style.left = pos(y); tl.appendChild(t); }
-for (let y = 1520; y <= 1570; y += 10) { const t = document.createElement("span"); t.className = "x-tick"; t.style.left = pos(y); t.textContent = y; tl.appendChild(t); }
+for (let y = 1520; y <= Y1; y += 10) { const t = document.createElement("span"); t.className = "x-tick"; t.style.left = pos(y); t.textContent = y; tl.appendChild(t); }
 const nodes = F.map((f, i) => {
   const b = document.createElement("button");
   b.type = "button"; b.className = "x-node"; b.style.left = pos(f.year);
@@ -42,9 +43,9 @@ let cur = -1, playing = false, speed = 1, timer = null;
 
 // sparkline: x by actual year (first → last frame), y by power relative to the max
 const SY0 = F[0].year, SY1 = F[F.length - 1].year;
-const spX = (y) => (((y - SY0) / (SY1 - SY0 || 1)) * 480).toFixed(1), spY = (v) => (92 - (v / (PMAX || 1)) * 86).toFixed(1);
+const spX = (y) => (((y - SY0) / (SY1 - SY0 || 1)) * 480).toFixed(1), spY = (v) => (92 - (Math.min(v, PMAX) / (PMAX || 1)) * 86).toFixed(1);
 $("sy0").textContent = SY0; $("sy1").textContent = SY1;
-$("spark").setAttribute("aria-label", `四大势力领国数走势，${SY0}至${SY1}`);
+$("spark").setAttribute("aria-label", `主要势力领国数走势，${SY0}至${SY1}`);
 const spNow = el("line", { y1: 0, y2: 95, stroke: "rgba(43,38,34,.3)", "stroke-width": 1, "vector-effect": "non-scaling-stroke", "stroke-dasharray": "2 3" }, $("spark"));
 const sp = {};
 RACE.forEach((k) => (sp[k] = el("polyline", { stroke: FA[k].color }, $("spark"))));
