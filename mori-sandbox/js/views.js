@@ -4,7 +4,7 @@ const S = window.SANDBOX, F = S.frames, FA = S.factions, R = S.relations || {}, 
 const RM = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const $ = (id) => document.getElementById(id);
 const map = document.querySelector(".x-map"), cv = $("campView"), cols = $("cvCols");
-const LEAD = { otomo: "OTOMO", ouchi: "OUCHI", mori: "MORI", amago: "AMAGO" };
+const LEAD = { otomo: "OTOMO", ouchi: "OUCHI", mori: "MORI", amago: "AMAGO", oda: "ODA", toyotomi: "TOYOTOMI", tokugawa: "TOKUGAWA", seigun: "MORI" };
 const GREY = "#8a8073";
 const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 const hname = (h) => (HS[h] && HS[h].name) || h;
@@ -32,7 +32,8 @@ function draw(i, animate) {
   $("cvRels").innerHTML = (f.campRels || []).map((r) =>
     `<span class="x-cv-rel ${esc(r.type)}">${esc(cname(r.a))} ${SYM[r.type] || "·"} ${esc(cname(r.b))}${r.label ? "：" + esc(r.label) : ""}</span>`).join("");
 
-  cols.innerHTML = CAMPS.map((c) => {
+  // 只显示当年有成员的阵营列（1523–1600 共 9 个阵营，同时在场的不超过 5 个）
+  cols.innerHTML = CAMPS.filter((c) => c.id === "neutral" || Object.values(camps).some((x) => x.camp === c.id)).map((c) => {
     const hs = Object.keys(camps).filter((h) => camps[h].camp === c.id).sort((a, b) => (b === c.id) - (a === c.id));
     const bg = c.id === "neutral" ? GREY : ((FA[LEAD[c.id]] || {}).color || GREY);
     const chips = hs.map((h) => {
