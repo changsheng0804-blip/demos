@@ -65,10 +65,12 @@ S.regions.forEach((r, i) => {
   // contested: inner border in the challenger's colour, clipped to the region (10px non-scaling stroke → 5px inside)
   r.ct = el("path", { d: r.d, class: "x-ct", "clip-path": `url(#cfc${i})`, display: "none" }, gCt);
   r.cfo = el("path", { d: r.d, class: "x-cfo", "clip-path": `url(#cfc${i})`, display: "none" }, gConf);
-  const fs = r.level === "district" ? 8.5 : 13, bx = r.label[0] + (r.name.length * fs) / 2 + 8;
-  r.cfb = el("g", { class: "x-cfb", transform: `translate(${bx.toFixed(1)},${r.label[1]})`, display: "none" }, gCfB);
-  el("circle", { r: 6 }, r.cfb);
-  r.cfbt = el("text", { y: 0.5 }, r.cfb);
+  // badge sits right of the region label; anchored at the label point and counter-scaled (x-cz) so it keeps its screen size and offset at any zoom
+  const fs = r.level === "district" ? 8.5 : 13, bx = (r.name.length * fs) / 2 + 8;
+  r.cfb = el("g", { class: "x-cfb", transform: `translate(${r.label[0]},${r.label[1]})`, display: "none" }, gCfB);
+  const cfz = el("g", { transform: `translate(${bx.toFixed(1)},0)` }, el("g", { class: "x-cz" }, r.cfb));
+  el("circle", { r: 6 }, cfz);
+  r.cfbt = el("text", { y: 0.5 }, cfz);
 });
 function confPaint(f) {
   const C = f.conf || {};
