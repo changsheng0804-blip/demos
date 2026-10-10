@@ -19,7 +19,7 @@
       .x-reg{transition:fill 1.2s ease,fill-opacity .3s ease;fill-opacity:.68;stroke:var(--ink);stroke-opacity:.55;stroke-width:.7px;vector-effect:non-scaling-stroke;stroke-linejoin:round}
       .x-reg.is-minor{fill-opacity:.45}
       .x-reg.is-grey{fill-opacity:.25}
-      .x-reg.is-hatch{fill-opacity:.68}
+      .x-ct{fill:none;stroke-width:10px;stroke-opacity:.9;vector-effect:non-scaling-stroke;stroke-linejoin:round;pointer-events:none}
       .x-reg:hover{fill-opacity:.82}
       .x-reg.is-district{stroke-width:.45px;stroke-dasharray:3 2;stroke-opacity:.6}
       .x-still .x-reg{transition:none}
@@ -340,14 +340,26 @@
       /* castle layer */
       .x-cs{cursor:help}
       .x-cs-hit{fill:transparent}
-      .x-cs-halo{fill:var(--paper);stroke:var(--paper);stroke-width:2.6px;stroke-linejoin:round}
-      .x-cs-f{stroke-width:.9px;stroke-linejoin:round;transition:fill .3s ease,stroke .3s ease}
-      .x-cs-f.is-spec{stroke-dasharray:1.6 1.1}
+      .x-cs-disc{fill:var(--paper)}
+      .x-cs-edge{fill:none;stroke:var(--ink);stroke-width:.9px}
+      .x-cs-f{fill:none;transition:fill .3s ease,stroke .3s ease}
+      .x-cs-t1 .x-cs-f{stroke-width:3px}
+      .x-cs-t2 .x-cs-f{stroke-width:2.5px}
+      .x-cs-t1 .x-cs-f.is-spec{stroke-dasharray:3.2 2}
+      .x-cs-t2 .x-cs-f.is-spec{stroke-dasharray:2.6 1.8}
+      .x-cs-t3 .x-cs-f{stroke:var(--ink);stroke-width:1px;stroke-linejoin:round}
+      .x-cs-t3 .x-cs-f.is-spec{stroke-dasharray:1.6 1.1}
       .x-still .x-cs-f{transition:none}
+      .x-map .x-cs-mono{font:900 11px var(--serif);fill:var(--ink);stroke:none}
       .x-map .x-cs-l1{font:600 13px var(--serif);stroke-width:3px}
-      .x-map .x-cs-l2{font:600 12px var(--serif);stroke-width:3px;text-anchor:start;opacity:0;transition:opacity .3s ease}
-      .x-zin .x-cs-l2,.x-cs.is-hov .x-cs-l2{opacity:1}
-      .x-rec .x-cs-l2{display:none}
+      .x-map .x-cs-l2,.x-map .x-cs-l3{font:600 12px var(--serif);stroke-width:3px;text-anchor:start;opacity:0;transition:opacity .3s ease}
+      .x-zin .x-cs-l2,.x-cs.is-hov .x-cs-l2,.x-cs.is-hov .x-cs-l3{opacity:1}
+      .x-zin .x-cs-l2.is-cl{opacity:0}
+      .x-cs.is-hov .x-cs-l2.is-cl{opacity:1}
+      .x-rec .x-cs-l2,.x-rec .x-cs-l3{display:none}
+      .x-tip b.x-cs-tt{display:flex;align-items:center;gap:6px}
+      .x-cs-ci{flex:none;width:22px;height:22px;padding:2px;border-radius:50%;background:var(--paper);box-shadow:0 0 0 1px rgba(43,38,34,.25)}
+      .x-cs-cn{font:500 12px var(--sans);color:#574f47}
       .x-no-ca #castles{display:none}
       .x-cs-ring{fill:none;stroke-width:1.4px;vector-effect:non-scaling-stroke;pointer-events:none}
       .x-cs-h{list-style:none;margin:6px 0 0;padding:5px 0 0;border-top:1px solid rgba(43,38,34,.15);display:flex;flex-direction:column;gap:1px;color:#574f47}
@@ -356,16 +368,22 @@
       .x-cs-h .is-cur b{font-weight:600}
       .x-cs-lg{flex:none;width:12px;height:12px;overflow:visible}
       /* manual zoom & pan: labels and markers counter-scaled by 1/k; castles by --u (map units per screen px) */
-      #map{--k:1;--u:1;touch-action:none;user-select:none;-webkit-user-select:none}
+      #map{--k:1;--u:1;--cm:1;--cl:1;touch-action:none;user-select:none;-webkit-user-select:none}
       .x-grabbing #map,.x-grabbing #map *{cursor:grabbing!important}
       #map .x-lb-p{font-size:calc(13px / var(--k));stroke-width:calc(3px / var(--k))}
       #map .x-lb-d{font-size:calc(8.5px / var(--k));stroke-width:calc(2.8px / var(--k))}
       #map .x-lb-pl{font-size:calc(8px / var(--k));stroke-width:calc(2.6px / var(--k));transform:translateX(calc(5px / var(--k) - 5px))}
       #map .x-lb-sea{font-size:calc(15px / var(--k));stroke-width:calc(3px / var(--k))}
       #map .x-fxl,#map .x-fxb{font-size:calc(12px / var(--k));stroke-width:calc(3.5px / var(--k))}
-      #map .x-cs-m,#map .x-cs-l1,#map .x-cs-l2{transform:scale(var(--u))}
+      /* castles grow moderately with zoom: markers ×--cm = min(√k, 2.2), labels ×--cl = min(k^0.3, 1.5); labels sit just outside the scaled marker (--r = marker radius) */
+      #map .x-cs-m{transform:scale(calc(var(--u) * var(--cm)))}
+      #map .x-cs-l1{transform:scale(var(--u)) translateY(calc((var(--r) * var(--cm) + 9.5 * var(--cl)) * 1px)) scale(var(--cl))}
+      #map .x-cs-l2,#map .x-cs-l3{transform:scale(var(--u)) translateX(calc((var(--r) * var(--cm) + 4 * var(--cl)) * 1px)) scale(var(--cl))}
       #map .x-cz{transform:scale(calc(1 / var(--k)))}
       #map .x-cz .x-fxl,#map .x-cz .x-fxb{font-size:12px;stroke-width:3.5px}
+      #map .x-eco-zl{font-size:calc(9px / var(--k));stroke-width:calc(2.6px / var(--k))}
+      #map .x-eco-tl{font-size:calc(8.5px / var(--k));stroke-width:calc(2.4px / var(--k))}
+      #map .x-float{font-size:calc(16px / var(--k))!important;stroke-width:calc(3.5px / var(--k))!important}
       .x-zm{position:absolute;right:14px;bottom:14px;z-index:6;display:flex;flex-direction:column;overflow:hidden;border:1px solid rgba(43,38,34,.25);border-radius:8px;box-shadow:0 2px 8px rgba(43,38,34,.12)}
       .x-zm button{width:28px;height:28px;padding:0;border:0;background:rgba(243,237,225,.82);color:var(--ink);font:600 15px/1 var(--sans);cursor:pointer}
       .x-zm button+button{border-top:1px solid rgba(43,38,34,.2)}
@@ -530,6 +548,7 @@
         const defs = el("defs", {}, map);
         el("image", { href: "terrain_soft.webp", x: -165, y: -105.7, width: 1378.6, height: 1057.3, preserveAspectRatio: "none", class: "x-terrain", "pointer-events": "none", "aria-hidden": "true" }, map);
         const gR = el("g", { id: "regions" }, map);
+        const gCt = el("g", { id: "contest" }, map);
         const gConf = el("g", { id: "conf" }, map);
         el("path", { d: S.akiOutline, class: "x-aki" }, map);
         const gClaim = el("g", { id: "claims" }, map);
@@ -545,26 +564,6 @@
         const gRib = el("g", { id: "ribbon" }, map);
         const gFocus = el("g", { id: "focus", class: "x-focus" }, map);
 
-        // hatch stripes keep their on-screen width: patterns scale by 1/k, updated once per frame on zoom
-        const PATS = [];
-        let patK = 1, patRaf = 0;
-        const patT = () => `rotate(45) scale(${(1 / patK).toFixed(4)})`;
-        function patZoom(k) {
-          if (k === patK) return;
-          patK = k;
-          if (!patRaf) patRaf = requestAnimationFrame(() => { patRaf = 0; const t = patT(); PATS.forEach((p) => p.setAttribute("patternTransform", t)); });
-        }
-        function pat(v) {
-          const [a, b] = parts(v), id = "p-" + (concise ? "c-" : "") + a + "-" + b;
-          if (!document.getElementById(id)) {
-            const fc = (k) => (FA[k] || FA.OTHER).color;
-            const p = el("pattern", { id, patternUnits: "userSpaceOnUse", width: 10, height: 10, patternTransform: patT() }, defs);
-            PATS.push(p);
-            el("rect", { width: 10, height: 10, fill: fc(a) }, p);
-            el("rect", { width: 5, height: 10, fill: fc(b) }, p);
-          }
-          return "url(#" + id + ")";
-        }
         S.regions.forEach((r) => {
           r.el = el("path", { d: r.d, class: "x-reg" + (r.level === "district" ? " is-district" : ""), "aria-label": r.name }, gR);
           r.tok = 0;
@@ -585,6 +584,8 @@
         S.regions.forEach((r, i) => {
           const cp = el("clipPath", { id: "cfc" + i }, defs);
           el("path", { d: r.d }, cp);
+          // contested: inner border in the challenger's colour, clipped to the region (10px non-scaling stroke → 5px inside)
+          r.ct = el("path", { d: r.d, class: "x-ct", "clip-path": `url(#cfc${i})`, display: "none" }, gCt);
           r.cfo = el("path", { d: r.d, class: "x-cfo", "clip-path": `url(#cfc${i})`, display: "none" }, gConf);
           const fs = r.level === "district" ? 8.5 : 13, bx = r.label[0] + (r.name.length * fs) / 2 + 8;
           r.cfb = el("g", { class: "x-cfb", transform: `translate(${bx.toFixed(1)},${r.label[1]})`, display: "none" }, gCfB);
@@ -630,7 +631,7 @@
         });
         el("circle", { r: 3.5, class: "x-core" }, gFocusZ);
 
-        const swCss = (v) => { const [a, b] = parts(v); return b ? `repeating-linear-gradient(45deg,${col(a)} 0 4px,${col(b)} 4px 7px)` : col(a); };
+        const swCss = (v) => { const [a, b] = parts(v); return b ? `${col(a)};box-shadow:inset 0 0 0 2px ${col(b)}` : col(a); };
         const sw = (v) => `<span class="x-sw" style="background:${swCss(v)}"></span>`;
         const vname = (v) => parts(v).map(fname).join("·");
 
@@ -689,7 +690,7 @@
         });
 
         // castle layer: small notched squares coloured by the lord's allegiance
-        const CS = S.castles || [];
+        const CS = S.castles || [], CR = S.crests || {};
         const FX = (k) => FA[k] || FA.OTHER;
         const fnm = (k) => (FA[k] ? FA[k].name : k);
         const house = (s) => s.replace(/（[^）]*）/g, "");
@@ -701,21 +702,36 @@
           if (!st) return "";
           const [fac, conf] = st, H = c.hist || [];
           const ci = H.reduce((a, h, i) => (h.from <= f.year ? i : a), 0), why = H[ci] ? H[ci].why : "";
-          return `<b>${c.name} · ${house(c.lord)}</b><span class="x-tip-f">${csSw(fac)}${fnm(fac)}</span>` +
+          const cr = c.crest && CR[c.crest];
+          return `<b class="x-cs-tt">${cr ? `<img class="x-cs-ci" src="${cr.uri}" alt="">` : ""}<span>${c.name} · ${house(c.lord)}${cr ? `<br><span class="x-cs-cn">家纹：${cr.name}</span>` : ""}</span></b><span class="x-tip-f">${csSw(fac)}${fnm(fac)}</span>` +
             `<span class="x-tip-c">${gdot(conf)} 可信度：${conf}</span>${why ? `<span class="x-tip-n">${why}</span>` : ""}` +
             `<ul class="x-cs-h">${H.map((h, i) => `<li${i === ci ? ' class="is-cur"' : ""}><b>${h.from}</b>${fnm(h.fac)}</li>`).join("")}</ul>`;
         }
         CS.forEach((c) => {
-          // sizes in on-screen px; .x-cs-m and the labels scale by --u (map units per screen px)
-          const s = c.tier === 1 ? 14 : 11, d = glyph(s);
-          const g = (c.g = el("g", { class: "x-cs", transform: `translate(${c.xy[0]},${c.xy[1]})`, role: "img", "aria-label": c.name, style: "display:none" }, gCas));
+          // sizes in on-screen px at default zoom; .x-cs-m scales by --u × --cm, labels by --u × --cl
+          const t = c.tier === 1 ? 1 : c.tier === 2 ? 2 : 3, s = t === 1 ? 26 : t === 2 ? 20 : 9, h = s / 2;
+          const cr = c.crest && CR[c.crest];
+          const g = (c.g = el("g", { class: `x-cs x-cs-t${t}`, transform: `translate(${c.xy[0]},${c.xy[1]})`, role: "img", "aria-label": c.name, style: "display:none" }, gCas));
           const m = (c.m = el("g", { class: "x-cs-m" }, g));
-          el("circle", { r: s / 2 + 3, class: "x-cs-hit" }, m);
-          el("path", { d, class: "x-cs-halo" }, m);
-          c.mk = el("path", { d, class: "x-cs-f" }, m);
+          el("circle", { r: h + 3, class: "x-cs-hit" }, m);
+          if (t === 3) {
+            c.mk = el("rect", { x: -h, y: -h, width: s, height: s, class: "x-cs-f" }, m);
+          } else {
+            // tier 1: paper disc, faction ring, thin dark outer ring; tier 2: paper disc and faction ring
+            const rw = t === 1 ? 3 : 2.5, rr = t === 1 ? h - 0.45 - 0.35 - rw / 2 - 0.45 : h - rw / 2;
+            el("circle", { r: h, class: "x-cs-disc" }, m);
+            if (t === 1) el("circle", { r: h - 0.45, class: "x-cs-edge" }, m);
+            c.mk = el("circle", { r: r2(rr), class: "x-cs-f" }, m);
+            if (cr) {
+              const iw = r2(s * 0.7 * (t === 1 ? 0.95 : 1));
+              el("image", { href: cr.uri, x: -iw / 2, y: -iw / 2, width: iw, height: iw, preserveAspectRatio: "xMidYMid meet", "pointer-events": "none" }, m);
+            } else if (c.mono) {
+              el("text", { x: 0, y: 0.5, class: "x-cs-mono" }, m).textContent = c.mono;
+            }
+          }
           c.s = s;
-          const lb = el("text", c.tier === 1 ? { x: 0, y: r2(s / 2 + 10), class: "x-cs-l1" } : { x: r2(s / 2 + 4), y: 0, class: "x-cs-l2" }, g);
-          lb.textContent = c.tier === 1 ? c.name : house(c.lord);
+          const lb = el("text", { x: 0, y: 0, class: `x-cs-l${t}`, style: `--r:${h}` }, g);
+          lb.textContent = t === 2 ? house(c.lord) : c.name;
           g._tip = () => csTip(c);
           g.addEventListener("pointerenter", () => g.classList.add("is-hov"));
           g.addEventListener("pointerleave", (e) => { g.classList.remove("is-hov"); if (e.pointerType === "mouse" && tipFor === g) hideTip(); });
@@ -735,15 +751,39 @@
             c.g.style.display = st ? "" : "none";
             if (!st) { if (tipFor === c.g) hideTip(); return; }
             const [fac, conf] = st, a = FX(fac);
-            c.mk.style.fill = a.color;
-            c.mk.style.stroke = a.dark;
+            if (c.tier === 1 || c.tier === 2) c.mk.style.stroke = a.color;
+            else c.mk.style.fill = a.color;
             c.mk.classList.toggle("is-spec", conf === "推测");
             c.g.setAttribute("aria-label", `${c.name} · ${fnm(fac)} · ${conf}`);
             if (ring && FL.has(c.id) && !RM && c.g.animate) {
-              const o = el("circle", { r: c.s * 0.75, class: "x-cs-ring", stroke: a.color }, null);
+              const o = el("circle", { r: c.s * 0.55, class: "x-cs-ring", stroke: a.color }, null);
               c.m.insertBefore(o, c.m.firstChild);
               o.animate([{ transform: "scale(1)", opacity: 0.8 }, { transform: "scale(3)", opacity: 0 }], { duration: 800, easing: "ease-out", fill: "forwards" }).onfinish = () => o.remove();
             }
+          });
+          colSched();
+        }
+        // label collisions: region, place and house-node names and tier-1 castle names win; a tier-2 house label that overlaps one (or an earlier tier-2 label) hides until hovered
+        let colT = 0;
+        function colSched() { clearTimeout(colT); colT = setTimeout(colRun, 160); }
+        function colRun() {
+          const box = (e) => { const b = e.getBoundingClientRect(); return b.width && b.height ? [b.left - 1, b.top - 1, b.right + 1, b.bottom + 1] : null; };
+          const hit = (a, b) => a[0] < b[2] && b[0] < a[2] && a[1] < b[3] && b[1] < a[3];
+          const top = [];
+          const add = (e) => { const b = box(e); if (b) top.push(b); };
+          map.querySelectorAll("#labels .x-lb-p, #labels .x-lb-d, #labels .x-lb-pl").forEach((e) => { if (!concise || e.classList.contains("is-on")) add(e); });
+          map.querySelectorAll(".x-rnl").forEach(add);
+          const t2 = [];
+          CS.forEach((c) => {
+            if (c.g.style.display === "none") return;
+            const lb = c.g.lastChild;
+            if (c.tier === 1) add(lb);
+            else if (c.tier === 2) t2.push(lb);
+          });
+          t2.forEach((lb) => {
+            const b = box(lb), off = !!b && top.some((o) => hit(b, o));
+            lb.classList.toggle("is-cl", off);
+            if (b && !off) top.push(b);
           });
         }
 
@@ -807,10 +847,12 @@
           vb = v; map.setAttribute("viewBox", v.join(" "));
           const k = Math.max(1, W / v[2]);
           map.style.setProperty("--k", k.toFixed(4));
+          map.style.setProperty("--cm", Math.min(Math.sqrt(k), 2.2).toFixed(4));
+          map.style.setProperty("--cl", Math.min(Math.pow(k, 0.3), 1.5).toFixed(4));
           const mr = map.getBoundingClientRect(), px = Math.min(mr.width / v[2], mr.height / v[3]);
           if (px > 0) map.style.setProperty("--u", (1 / px).toFixed(4));
-          patZoom(+k.toFixed(4));
-          map.classList.toggle("x-zin", user ? k >= 1.8 : v[2] < W * 0.8);
+          map.classList.toggle("x-zin", k >= 1.8);
+          colSched();
           zInB.disabled = k >= ZMAX - 0.001; zOutB.disabled = k <= 1.001;
         };
         // --u depends on the map's on-screen size, so refresh it when the map resizes
@@ -1239,8 +1281,10 @@
           }
           if (sc === 1) wrap.querySelectorAll(".x-rp").forEach((p) => nsw(p, p.getAttribute("stroke-width")));
           const mx = 0.25 * x1 + 0.5 * cx + 0.25 * x2, my = 0.25 * y1 + 0.5 * cy + 0.25 * y2, ex = [];
-          if (s.bar) ex.push(txt(g, mx, my, "x-rx", "✕", s.c));
-          if (r.grade === "推测") ex.push(txt(g, mx + nx * 9, my + ny * 9, "x-rq", "?", s.c));
+          // on the map, the ✕ and ? marks keep their screen size at any zoom
+          const mark = (x, y, cls, ch) => (sc === 1 ? txt(el("g", { class: "x-cz" }, el("g", { transform: `translate(${r1(x)},${r1(y)})` }, g)), 0, 0, cls, ch, s.c) : txt(g, x, y, cls, ch, s.c));
+          if (s.bar) ex.push(mark(mx, my, "x-rx", "✕"));
+          if (r.grade === "推测") ex.push(mark(mx + nx * 9, my + ny * 9, "x-rq", "?"));
           const hit = el("path", { d, class: "x-rhit" }, g);
           bindTip(hit, () => relTip(r));
           return { g, wrap, d, ex };
@@ -1267,8 +1311,10 @@
           } else {
             const [x, y] = HP(h), nd = !!NUD[h];
             if (nd) el("line", { x1: o.xy[0], y1: o.xy[1], x2: x, y2: y, class: "x-rld" }, g);
-            el("circle", { cx: x, cy: y, r: 4.2, class: "x-rnd", fill: (FA[o.faction] || FA.OTHER).color }, g);
-            txt(g, x, y + (nd && y < o.xy[1] ? -11 : 11), "x-rnl", o.name);
+            // marker and name keep their screen size at any zoom
+            const z = el("g", { class: "x-cz" }, el("g", { transform: `translate(${x},${y})` }, g));
+            el("circle", { r: 4.2, class: "x-rnd", fill: (FA[o.faction] || FA.OTHER).color }, z);
+            txt(z, 0, nd && y < o.xy[1] ? -11 : 11, "x-rnl", o.name);
           }
           return g;
         }
@@ -1286,13 +1332,15 @@
             const grey = !FA[k0] || k0 === "OTHER" || k0 === "KOKUJIN";
             r.el.classList.toggle("is-grey", grey);
             r.el.classList.toggle("is-minor", !grey && !MAJOR.has(k0));
-            r.el.classList.toggle("is-hatch", parts(v).length > 1);
-            if (parts(v).length > 1) {
+            const ps = parts(v);
+            r.el.style.fill = col(ps[0]);
+            if (ps.length > 1) {
+              r.ct.style.stroke = col(ps[1]);
               if (anim && changed.has(r.id)) {
-                r.el.style.fill = col(parts(v)[0]);
-                setTimeout(() => { if (r.tok === tok) r.el.style.fill = pat(v); }, 800);
-              } else r.el.style.fill = pat(v);
-            } else r.el.style.fill = col(v);
+                r.ct.setAttribute("display", "none");
+                setTimeout(() => { if (r.tok === tok) r.ct.removeAttribute("display"); }, 800);
+              } else r.ct.removeAttribute("display");
+            } else r.ct.setAttribute("display", "none");
           });
           if (!pulseOn) return;
           f.changes.forEach((c) => {
@@ -1359,7 +1407,8 @@
           if (cl.label && regs.length) {
             const cx = regs.reduce((s, r) => s + r.label[0], 0) / regs.length, cy = regs.reduce((s, r) => s + r.label[1], 0) / regs.length;
             const w = cl.label.length * 15 + 20, h = 15;
-            const rb = el("g", { transform: `translate(${cx.toFixed(1)},${cy.toFixed(1)})` }, gRib), inner = el("g", {}, rb);
+            // the ribbon keeps its screen size at any zoom
+            const rb = el("g", { transform: `translate(${cx.toFixed(1)},${cy.toFixed(1)})` }, gRib), inner = el("g", {}, el("g", { class: "x-cz" }, rb));
             el("path", { d: `M${-w / 2 - 12},${-h}H${w / 2 + 12}L${w / 2 + 3},0L${w / 2 + 12},${h}H${-w / 2 - 12}L${-w / 2 - 3},0Z`, fill: c, stroke: PAPER, "stroke-width": 1.5, "fill-opacity": 0.94 }, inner);
             txt(inner, 0, 1, "x-rib", cl.label);
             if (anim) inner.animate([{ opacity: 0, transform: "scale(.6)" }, { opacity: 1, transform: "scale(1)" }], { duration: 500 * k, delay: delay + 900 * k, easing: "ease-out", fill: "both" });
@@ -1548,16 +1597,16 @@
 
         function legend(f) {
           const used = new Set(Object.values(f.state).flatMap(parts));
-          const hatchBg = "repeating-linear-gradient(45deg,#d8cfbd 0 3px,#8a8070 3px 6px)";
-          const csIc = `<svg class="x-cs-lg" viewBox="-6 -6 12 12" aria-hidden="true"><path d="${glyph(9)}" fill="none" stroke="currentColor" stroke-width="1.1"/></svg>`;
+          const ctSw = `<span class="x-sw" style="background:${col("MORI")};box-shadow:inset 0 0 0 2px ${col("AMAGO")}"></span>`;
+          const csIc = `<svg class="x-cs-lg" viewBox="-6 -6 12 12" aria-hidden="true"><circle r="5.5" fill="none" stroke="currentColor" stroke-width=".8"/><circle r="3.6" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>`;
           const hasCa = !$("app").classList.contains("x-no-ca");
           const chip = (icon, t) => `<span class="x-lgc" title="${t}" role="img" aria-label="${t}">${icon}<span class="x-lgt" aria-hidden="true">${t}</span></span>`;
           const minors = Object.keys(FA).filter((k) => used.has(k) && !MAJOR.has(k));
           let pop = `<b class="x-lgh">其他势力</b>` +
             (minors.length ? minors.map((k) => `<span>${sw(k)}${fname(k)}</span>`).join("") : `<span>本年无</span>`) +
             `<b class="x-lgh">图例说明</b>` +
-            `<span><span class="x-sw" style="background:${hatchBg}"></span>斜线＝两方争夺（两色各占一半）</span>` +
-            (hasCa ? `<span>${csIc}城池：颜色＝城主所属阵营（虚线＝推测）</span>` : "");
+            `<span>${ctSw}争夺：底色＝控制方，内描边＝挑战方</span>` +
+            (hasCa ? `<span>${csIc}城池：大圆＝大名本城，小圆＝国人本城（家纹，无公版家纹者以姓氏单字代替），小方块＝支城；圈色＝城主所属阵营，虚线＝推测</span>` : "");
           if (confOn) {
             const ic = { "确证": '<i class="x-cfi">✓</i>', "通说": '<i class="x-cfi is-none"></i>', "推测": '<i class="x-cfi">?</i>' };
             pop += `<div class="x-cfl">${Object.entries(GRADES).map(([g, d]) => `<span>${ic[g] || ""}<b>${g}</b>${d}</span>`).join("")}</div>`;
@@ -1565,7 +1614,7 @@
           if (ecoOn) pop += ecoLegend();
           $("legend").innerHTML =
             RACE.map((k) => chip(sw(k), fname(k))).join("") +
-            chip(`<span class="x-sw" style="background:${hatchBg}"></span>`, "争夺") +
+            chip(ctSw, "争夺") +
             (hasCa ? chip(csIc, "城池") : "") +
             `<button class="x-lgi" id="lgi" type="button" aria-expanded="${legOpen}" aria-controls="lgp" aria-label="图例说明" title="图例说明"><span aria-hidden="true">ⓘ</span></button>` +
             `<div class="x-lgp" id="lgp" role="dialog" aria-label="图例说明"${legOpen ? "" : " hidden"}>${pop}</div>`;
