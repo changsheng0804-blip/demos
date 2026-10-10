@@ -63,6 +63,10 @@ FACTIONS = {
  "CHOSOKABE":{"name": "长宗我部", "color": "#b0a6b8", "dark": "#62586c"},
  "TAKEDA_I":{"name": "因幡武田（亲毛利）", "color": "#c9c08f", "dark": "#7a7140"},
  "KOKUJIN": {"name": "国人割据", "color": "#ece5d4", "dark": "#9d9380"},
+ "ODA":     {"name": "织田", "color": "#3f8f6f", "dark": "#1f5a43"},
+ "UKITA":   {"name": "宇喜多", "color": "#a3705c", "dark": "#5e3a2b"},
+ "TOYOTOMI":{"name": "丰臣政权", "color": "#b3568c", "dark": "#6e2253"},
+ "TOKUGAWA":{"name": "东军诸大名", "color": "#3e5f7a", "dark": "#1e3448"},
  "OTHER":   {"name": "其他", "color": "#d9d3c7", "dark": "#9a9284"},
 }
 
@@ -73,9 +77,25 @@ PTS = {"吉田郡山城": (132.71, 34.67), "月山富田城": (133.20, 35.36), "
        "岩国": (132.18, 34.17), "且山城": (130.99, 34.02), "门司城": (130.96, 33.95),
        "府内": (131.61, 33.24), "伯耆": (133.62, 35.40), "播磨": (134.55, 34.90),
        "能岛": (133.02, 34.18), "竹原": (132.91, 34.34), "松尾城": (132.62, 34.85), "鸟坂": (132.58, 33.53), "布部山": (133.18, 35.30), "忍原": (132.36, 35.06), "备后北部": (133.00, 34.80), "须须万沼城": (131.83, 34.36), "美作": (133.95, 35.07), "隐岐": (133.25, 36.20), "丰后水道": (131.95, 33.70)}
+MAJORS_ = ["MORI", "OUCHI", "AMAGO", "OTOMO", "ODA", "TOYOTOMI", "TOKUGAWA"]
+PTS.update({"畿内方向": (134.80, 34.80), "鞆": (133.38, 34.38), "名护屋": (129.87, 33.53), "朝鲜方向": (129.85, 34.30)})
 # 每座城都能作箭头/战役的端点（按城名引用）
 from castles import CASTLES as _C0
 for _c in _C0: PTS.setdefault(_c["name"], _c["lonlat"])
+# 城所在国/郡：按坐标落在哪个国郡多边形里自动判定
+from shapely.geometry import Point as _Pt
+_RG = {n: load_geom(f"{S.K}K{k}.geojson") for n, k in S.PROV.items()}
+_RG.update({"安艺:" + n: load_geom(f"{S.K}G5400{i}.geojson") for n, i in S.AKI.items()})
+def region_of(lonlat):
+    pt_ = _Pt(*lonlat)
+    for n, g in _RG.items():
+        if g.contains(pt_): return n
+    return min(_RG, key=lambda n: _RG[n].distance(pt_))  # 海岸线简化导致落在海里时取最近
+CASTLE_GEO = {c["id"]: region_of(c["lonlat"]) for c in _C0}
+# 1600 关原：防长以外的城一律归东军系大名（转封在1600年末至1601年完成）
+for _c in _C0:
+    if CASTLE_GEO[_c["id"]] not in ("周防", "長門") and _c["hist"][-1][1] != "TOKUGAWA":
+        _c["hist"].append((1600, "TOKUGAWA", 2, "关原战后毛利减封至周防·长门，西军诸大名改易，城归东军系大名"))
 def pt(n): return P(*PTS[n])
 
 # extra per-keyframe layers, index-aligned with S.KEY
@@ -233,6 +253,11 @@ EVENT_CONF = {
  1563: (G1, "隆元死于1563年可证；死因（毒杀说）不明"), 1564: (G1, "将军调停可证"),
  1565: (G2, "据通说"), 1566: (G1, "文书可证"), 1568: (G2, "据通说"), 1569: (G1, "文书可证"),
  1570: (G1, "文书可证"), 1571: (G1, "可证"),
+ 1575: (G1, "备中兵乱有感状等文书"), 1576: (G1, "义昭御内书、木津川口之战有文书"), 1577: (G1, "信长朱印状等可证"),
+ 1578: (G1, "上月城开城有文书"), 1579: (G2, "宇喜多倒戈时间据研究推定"), 1580: (G1, "三木城开城可证"),
+ 1581: (G1, "吉川经家遗书等可证"), 1582: (G1, "高松城和睦、宗治切腹有文书"), 1585: (G1, "中国国分与四国征伐有朱印状"),
+ 1587: (G1, "九州国分有朱印状"), 1591: (G1, "1591年领知朱印状：112万石"), 1592: (G1, "可证"), 1597: (G1, "可证"),
+ 1598: (G1, "可证"), 1600: (G1, "关原之战与防长减封有大量文书；转封过程跨至1601年"),
 }
 
 def note_for(region, year):
@@ -374,6 +399,83 @@ NEW = [
       focus="温汤城", changes={}, arrows=[("MORI", "吉田郡山城", "温汤城", "siege", "围攻温汤城"), ("AMAGO", "石见银山", "温汤城", "attack", "尼子援军")],
       battles=[("温汤城", "小笠原长雄投降", "MORI"), ("石见银山", "降露坂之战", "AMAGO")], links=[],
       people=[("小笠原长雄", "MORI", "降毛利", "new")]),
+
+ # ---- 1572–1600：辉元时代（元就死后） ----
+ dict(year=1575, title="备中兵乱", desc="三村元亲倒向织田，毛利与宇喜多直家联手，五月攻陷备中松山城，三村氏灭亡。同年宇喜多逐浦上宗景，长宗我部元亲统一土佐。",
+      focus="备中松山城", changes={"備中": "MORI", "備前": "UKITA", "美作": "UKITA", "土佐": "CHOSOKABE"},
+      arrows=[("MORI", "神边城", "备中松山城", "attack", "小早川隆景讨三村")],
+      battles=[("备中松山城", "松山城陷落", "MORI")], links=[],
+      people=[("毛利辉元", "MORI", "亲政"), ("小早川隆景", "MORI", "主持山阳方面"), ("宇喜多直家", "UKITA", "与毛利结盟", "new")]),
+ dict(year=1576, title="义昭入鞆 · 毛织断交", desc="被信长逐出京都的将军足利义昭移居备后鞆，毛利接纳他并与织田断交。七月毛利水军在木津川口击破织田水军，向石山本愿寺运粮。",
+      focus="鞆", changes={},
+      arrows=[("MORI", "能岛城", "畿内方向", "naval", "木津川口：运粮石山本愿寺")],
+      battles=[("畿内方向", "第一次木津川口之战", "MORI")], links=[],
+      people=[("足利义昭", "OTHER", "移居鞆", "new"), ("织田信长", "ODA", "与毛利断交", "new")]),
+ dict(year=1577, title="秀吉入播磨", desc="信长命羽柴秀吉攻略中国。黑田孝高献出姬路城，秀吉攻陷上月城，交给尼子胜久、山中幸盛驻守。",
+      focus="上月城", changes={"播磨": "ODA/MORI"},
+      arrows=[("ODA", "畿内方向", "姬路城", "attack", "秀吉西进"), ("ODA", "姬路城", "上月城", "attack", "攻陷上月城")],
+      battles=[("上月城", "上月城陷落", "ODA")], links=[],
+      people=[("羽柴秀吉", "ODA", "中国攻略总大将", "new"), ("山中幸盛", "AMAGO", "入上月城")]),
+ dict(year=1578, title="上月城之战", desc="毛利大军围攻上月城，秀吉被迫放弃救援，七月开城，尼子胜久自尽，山中幸盛押送途中被杀，尼子再兴运动终结。同年别所长治在三木城反叛织田。",
+      focus="上月城", changes={"播磨": "ODA/MORI"},
+      arrows=[("MORI", "备中松山城", "上月城", "siege", "吉川元春、小早川隆景围城")],
+      battles=[("上月城", "上月城开城", "MORI")], links=[],
+      people=[("尼子胜久", "AMAGO", "自尽", "died"), ("山中幸盛", "AMAGO", "被杀", "died"), ("吉川元春", "MORI", "围上月城")]),
+ dict(year=1579, title="宇喜多倒戈", desc="宇喜多直家背弃毛利，归附织田，备前、美作成为织田一方的前线。伯耆的南条元续也与毛利决裂，毛利东线全面受压。",
+      focus="冈山城", changes={"美作": "UKITA/MORI", "伯耆": "MORI/ODA"},
+      arrows=[("UKITA", "冈山城", "备中高松城", "attack", "宇喜多压迫备中"), ("ODA", "羽衣石城", "尾高城", "attack", "南条倒向织田")],
+      battles=[], links=[],
+      people=[("宇喜多直家", "UKITA", "倒向织田"), ("南条元续", "ODA", "与毛利决裂", "new")]),
+ dict(year=1580, title="三木城陷落 · 但马平定", desc="秀吉以断粮战攻下三木城，别所长治自尽，播磨归织田；羽柴秀长平定但马。因幡山名丰国降织田出奔，家臣转迎毛利。九州方面，龙造寺趁大友耳川大败迅速扩张。",
+      focus="姬路城", changes={"播磨": "ODA", "但馬": "ODA", "因幡": "ODA/MORI", "肥前": "RYUZOJI", "筑後": "RYUZOJI/OTOMO"},
+      arrows=[("ODA", "姬路城", "鸟取城", "attack", "秀吉入因幡")],
+      battles=[("姬路城", "三木城开城（城在图外东侧）", "ODA")], links=[],
+      people=[("羽柴秀吉", "ODA", "平定播磨"), ("山名丰国", "YAMANA", "降织田出奔")]),
+ dict(year=1581, title="鸟取城饿杀", desc="吉川经家入鸟取城固守。秀吉事先高价收购因幡粮食后断粮围城，十月城中饥馑，经家以自尽换取城兵性命，因幡归织田。",
+      focus="鸟取城", changes={"因幡": "ODA"},
+      arrows=[("ODA", "姬路城", "鸟取城", "siege", "断粮围城"), ("MORI", "月山富田城", "尾高城", "attack", "元春救援不及")],
+      battles=[("鸟取城", "鸟取城开城", "ODA")], links=[],
+      people=[("吉川经家", "MORI", "自尽开城", "died"), ("宇喜多直家", "UKITA", "病逝", "died")]),
+ dict(year=1582, title="高松城水攻 · 本能寺", desc="秀吉筑堤引水围困备中高松城。六月二日信长死于本能寺，秀吉秘不发丧与毛利和睦，清水宗治切腹，秀吉回师畿内。同年毛利夺回羽衣石城；四国的长宗我部攻入阿波、讃岐。",
+      focus="备中高松城", changes={"備中": "MORI/ODA", "伯耆": "MORI", "阿波": "CHOSOKABE/MIYOSHI", "讃岐": "CHOSOKABE/MIYOSHI"},
+      arrows=[("ODA", "冈山城", "备中高松城", "siege", "水攻"), ("ODA", "备中高松城", "畿内方向", "retreat", "中国大返还")],
+      battles=[("备中高松城", "高松城和睦", None)], links=[],
+      people=[("清水宗治", "MORI", "切腹", "died"), ("织田信长", "ODA", "本能寺之变", "died"), ("安国寺惠琼", "MORI", "主持和谈", "new")]),
+ dict(year=1585, title="中国国分 · 四国征伐", desc="毛利与秀吉划定边界：备中东部、美作归宇喜多，伯耆东三郡归南条，毛利保有其余八国。毛利正式臣从秀吉，小早川隆景率军攻伊予，受封伊予；长宗我部只保土佐。",
+      focus="汤筑城", changes={"播磨": "TOYOTOMI", "但馬": "TOYOTOMI", "因幡": "TOYOTOMI", "備中": "MORI", "美作": "UKITA",
+                              "伊予": "MORI", "阿波": "TOYOTOMI", "讃岐": "TOYOTOMI", "土佐": "CHOSOKABE"},
+      arrows=[("MORI", "高山城·新高山城", "汤筑城", "naval", "隆景渡海攻伊予")],
+      battles=[("汤筑城", "河野氏开城", "MORI")], links=[("MORI", "TOYOTOMI", "从属")],
+      people=[("小早川隆景", "MORI", "受封伊予"), ("羽柴秀吉", "TOYOTOMI", "任关白")]),
+ dict(year=1587, title="九州国分", desc="毛利作为先锋参加九州征伐，吉川元春在丰前阵中病逝。战后隆景转封筑前，伊予交给丰臣大名；丰前归黑田孝高等，大友保丰后。",
+      focus="名岛城", changes={"筑前": "MORI", "筑後": "TOYOTOMI", "豊前": "TOYOTOMI", "豊後": "OTOMO", "肥前": "RYUZOJI", "伊予": "TOYOTOMI"},
+      arrows=[("MORI", "门司城", "名岛城", "attack", "毛利先锋渡海"), ("TOYOTOMI", "畿内方向", "门司城", "attack", "秀吉亲征")],
+      battles=[], links=[("MORI", "TOYOTOMI", "从属")],
+      people=[("吉川元春", "MORI", "阵中病逝", "died"), ("小早川隆景", "MORI", "转封筑前")]),
+ dict(year=1591, title="迁居广岛 · 112万石", desc="辉元离开山间的吉田郡山城，迁入太田川三角洲新筑的广岛城。秀吉发给毛利的领知朱印状确认安艺、周防、长门、石见、出云、备后、隐岐、伯耆三郡和备中一部，共112万石。",
+      focus="广岛城", changes={},
+      arrows=[("MORI", "吉田郡山城", "广岛城", "inherit", "迁居广岛")],
+      battles=[], links=[("MORI", "TOYOTOMI", "从属")],
+      people=[("毛利辉元", "MORI", "入广岛城")]),
+ dict(year=1592, title="文禄之役", desc="秀吉出兵朝鲜，在肥前名护屋筑城为大本营。毛利动员三万人，是最大的军役之一，辉元、隆景都渡海作战。",
+      focus="名护屋", changes={},
+      arrows=[("TOYOTOMI", "名护屋", "朝鲜方向", "naval", "渡海出兵"), ("MORI", "广岛城", "名护屋", "attack", "毛利三万人")],
+      battles=[], links=[("MORI", "TOYOTOMI", "从属")],
+      people=[("毛利辉元", "MORI", "渡海"), ("小早川隆景", "MORI", "碧蹄馆之战")]),
+ dict(year=1597, title="隆景之死", desc="小早川隆景病逝。他的养子小早川秀秋是秀吉正室的侄子，与毛利本家并无血缘，筑前从此脱离毛利一门。同年再度出兵朝鲜（庆长之役）。",
+      focus="名岛城", changes={"筑前": "TOYOTOMI"},
+      arrows=[("TOYOTOMI", "名护屋", "朝鲜方向", "naval", "庆长之役")],
+      battles=[], links=[("MORI", "TOYOTOMI", "从属")],
+      people=[("小早川隆景", "MORI", "病逝", "died"), ("小早川秀秋", "TOYOTOMI", "继承筑前", "new")]),
+ dict(year=1598, title="秀吉之死 · 五大老", desc="秀吉死去，遗命德川家康、前田利家、毛利辉元、宇喜多秀家、上杉景胜五大老辅佐年幼的秀赖，朝鲜之兵撤回。",
+      focus="广岛城", changes={},
+      arrows=[], battles=[], links=[("MORI", "TOYOTOMI", "从属")],
+      people=[("毛利辉元", "MORI", "列五大老"), ("德川家康", "TOKUGAWA", "五大老之首", "new")]),
+ dict(year=1600, title="关原 · 防长减封", desc="辉元被推为西军总大将，坐镇大坂城。九月十五日关原决战，吉川广家暗通东军，毛利主力在南宫山按兵不动，小早川秀秋阵前倒戈，西军一日溃败。战后毛利由112万石削为周防、长门两国约30万石。",
+      focus="广岛城", changes={**{r: "TOKUGAWA" for r in S.PROV if r not in ("周防", "長門")}, **{"安艺:" + n: "TOKUGAWA" for n in S.AKI}},
+      arrows=[("MORI", "广岛城", "畿内方向", "attack", "辉元入大坂城"), ("MORI", "广岛城", "山口·大内馆", "retreat", "减封防长（1604年筑萩城）")],
+      battles=[("畿内方向", "关原之战（在图外东方）", "TOKUGAWA")], links=[("MORI", "TOKUGAWA", "战败减封")],
+      people=[("毛利辉元", "MORI", "西军总大将，战后减封"), ("吉川广家", "MORI", "暗通东军", "new"), ("小早川秀秋", "TOKUGAWA", "阵前倒戈"), ("德川家康", "TOKUGAWA", "东军总帅")]),
 ]
 FR = sorted(FR + NEW, key=lambda f: f["year"])
 STATES2 = []; _s = dict(S.S0)
@@ -382,12 +484,16 @@ for f in FR:
 
 # ---- province colour derived from castles (Aki districts, Bingo, Iwami, Izumo) ----
 from castles import CASTLES as _CA
-CASTLE_REGION = {"koriyama": "安艺:高田", "ogurayama": "安艺:山縣", "kimura": "安艺:賀茂", "takayama": "安艺:豊田", "goryu": "安艺:高田", "takamatsu": "安艺:高宮", "ikiyama": "安艺:賀茂", "kashirazaki": "安艺:豊田", "kagamiyama": "安艺:賀茂", "kanayama": "安艺:沼田", "sakurao": "安艺:佐伯", "miyao": "安艺:佐伯", "kannabe": "備後", "hieoyama": "備後", "kouyama": "備後", "yamabuki": "石見", "nanao": "石見", "yunoyu": "石見", "honmyo": "石見", "toda": "出雲", "shiraga": "出雲", "mitoya": "出雲", "yamaguchi": "周防", "wakayama": "周防", "suzuma": "周防", "katsuyama": "長門", "moji": "豊前", "tachibana": "筑前", "funai": "豊後", "matsuyama": "備中", "noshima": "伊予", "kurushima": "伊予", "yuzuki": "伊予", "takasugi": "備後", "sanbonmatsu": "石見", "ueshi": "伯耆", "odaka": "伯耆", "ebi": "伯耆", "utsubuki": "伯耆"}
+CASTLE_REGION = {"koriyama": "安艺:高田", "ogurayama": "安艺:山縣", "kimura": "安艺:賀茂", "takayama": "安艺:豊田", "goryu": "安艺:高田", "takamatsu": "安艺:高宮", "ikiyama": "安艺:賀茂", "kashirazaki": "安艺:賀茂", "kagamiyama": "安艺:賀茂", "kanayama": "安艺:沼田", "sakurao": "安艺:佐伯", "miyao": "安艺:佐伯", "kannabe": "備後", "hieoyama": "備後", "kouyama": "備後", "yamabuki": "石見", "nanao": "石見", "yunoyu": "石見", "honmyo": "石見", "toda": "出雲", "shiraga": "出雲", "mitoya": "出雲", "yamaguchi": "周防", "wakayama": "周防", "suzuma": "周防", "katsuyama": "長門", "moji": "豊前", "tachibana": "筑前", "funai": "豊後", "matsuyama": "備中", "noshima": "伊予", "kurushima": "伊予", "yuzuki": "伊予", "takasugi": "備後", "sanbonmatsu": "石見", "ueshi": "伯耆", "odaka": "伯耆", "ebi": "伯耆", "utsubuki": "伯耆"}
+CASTLE_REGION = {**{k: v for k, v in CASTLE_GEO.items()}, **CASTLE_REGION}
+_mis = {k: (CASTLE_REGION[k], CASTLE_GEO[k]) for k in CASTLE_REGION if CASTLE_GEO.get(k) and CASTLE_REGION[k] != CASTLE_GEO[k]}
+if _mis: print("WARN 城池所属国与坐标不符:", _mis)
 CASTLE_DRIVEN = {r for r in CASTLE_REGION.values() if r and (r.startswith("安艺:") or r == "石見")}
 # weights: 大名本城 3 / 国人本城 2 / 支城 1; strategic exceptions below (avoid one small castle swinging a whole province)
 CASTLE_W = {"yamabuki": 3}
 # 同盟期（含首尾年）：毛利 1523–24 从属尼子，1525–1553 从属大内（1554 防芸引分）
-ALLIED = [("MORI", "AMAGO", 1523, 1524), ("MORI", "OUCHI", 1525, 1553)]
+ALLIED = [("MORI", "AMAGO", 1523, 1524), ("MORI", "OUCHI", 1525, 1553), ("MORI", "UKITA", 1575, 1578),
+          ("ODA", "UKITA", 1579, 1582), ("MORI", "TOYOTOMI", 1585, 1599), ("UKITA", "TOYOTOMI", 1583, 1599)]
 def _allied(a, b, yr):
     return any({a, b} == {x, y} and y0 <= yr <= y1 for x, y, y0, y1 in ALLIED)
 def _cfac(c, yr):
@@ -422,10 +528,10 @@ for i, (f, st) in enumerate(zip(FR, STATES2)):
                 gains.append({"region": r, "from": prev[r], "to": v})
     pw = S.power(st)
     frames.append({
-        "year": yr, "age": yr - 1497 + 1, "title": title, "desc": desc.replace("\n", ""),
+        "year": yr, "age": (yr - 1497 + 1) if yr <= 1571 else (yr - 1553 + 1), "ageWho": "元就" if yr <= 1571 else "辉元", "title": title, "desc": desc.replace("\n", ""),
         "focus": focus, "focusXY": pt(focus) if focus in PTS else None,
         "state": st, "changes": gains,
-        "power": {k: round(pw.get(k, 0), 3) for k in ["MORI", "OUCHI", "AMAGO", "OTOMO"]},
+        "power": {k: round(pw.get(k, 0), 3) for k in MAJORS_},
         "arrows": [{"faction": f, "from": pt(a), "to": pt(b), "fromName": a, "toName": b, "type": t, "label": l} for f, a, b, t, l in ex["arrows"]],
         "battles": [{"xy": pt(p), "place": p, "name": n, "winner": w} for p, n, w in ex["battles"]],
         "links": [{"from": a, "to": b, "type": t} for a, b, t in ex["links"]],
@@ -509,7 +615,10 @@ HOUSES = {  # id: (name, faction, lonlat or None, offmap anchor)
  "kono": ("河野", "KONO", (132.78, 33.85)), "tachibana": ("立花鉴载", "OTOMO", (130.47, 33.67)),
  "yamana": ("但马山名", "YAMANA", (134.80, 35.40)), "urakami": ("浦上", "URAGAMI", (134.15, 34.80)),
  "ryuzoji": ("龙造寺", "RYUZOJI", (130.30, 33.25)), "amagoR": ("尼子再兴军", "AMAGO", (133.05, 35.49)),
- "oda": ("织田（畿内）", "OTHER", (134.88, 35.05)), "bakufu": ("将军·朝廷（京都）", "OTHER", (134.88, 34.85)),
+ "oda": ("织田（畿内）", "ODA", (134.88, 35.05)), "bakufu": ("将军足利义昭", "OTHER", (133.38, 34.38)),
+ "ukita": ("宇喜多", "UKITA", (133.94, 34.67)), "hideyoshi": ("羽柴秀吉→丰臣", "TOYOTOMI", (134.69, 34.84)),
+ "tokugawa": ("德川家康", "TOKUGAWA", (134.88, 35.20)), "chosokabe": ("长宗我部", "CHOSOKABE", (133.55, 33.56)),
+ "nanjo": ("南条", "KOKUJIN", (133.90, 35.44)), "kobaH": ("小早川秀秋", "TOYOTOMI", (130.43, 33.65)),
 }
 # (a, b, type, from, to, label, grade). to=None -> through 1571. types: marriage adoption vassal alliance hostile truce secret purge
 RELS = [
@@ -572,36 +681,44 @@ RELATIONS = {
 }
 
 # ---------- camp view (阵营站队) ----------
-CAMPS = [("otomo", "大友阵营"), ("ouchi", "大内阵营"), ("mori", "毛利阵营"), ("amago", "尼子阵营"), ("neutral", "中立·其他")]
+CAMPS = [("otomo", "大友阵营"), ("ouchi", "大内阵营"), ("mori", "毛利阵营"), ("amago", "尼子阵营"), ("oda", "织田阵营"),
+         ("toyotomi", "丰臣政权"), ("seigun", "西军"), ("tokugawa", "东军"), ("neutral", "中立·其他")]  # 页面只显示当年有成员的列
 # house: list of (from, to, camp, grade, note-on-entering)   camp None = gone (灭亡/退场)
 CAMPLINE = {
- "mori":     [(1523,1524,"amago",G1,"从属尼子"),(1525,1553,"ouchi",G1,"转投大内"),(1554,1571,"mori",G1,"防芸引分，自立门户")],
- "kikkawa":  [(1523,1524,"amago",G2,""),(1525,1542,"ouchi",G2,"随毛利转投大内"),(1543,1546,"amago",G2,"月山撤退时倒向尼子"),(1547,1553,"ouchi",G1,"元春入嗣，成为毛利一门"),(1554,1571,"mori",G1,"随毛利自立")],
- "kobaT":    [(1523,1543,"ouchi",G1,""),(1544,1553,"ouchi",G1,"隆景入嗣，成为毛利一门"),(1554,1571,"mori",G1,"随毛利自立")],
+ "mori":     [(1523,1524,"amago",G1,"从属尼子"),(1525,1553,"ouchi",G1,"转投大内"),(1554,1584,"mori",G1,"防芸引分，自立门户"),(1585,1599,"toyotomi",G1,"中国国分后臣从丰臣"),(1600,1600,"seigun",G1,"辉元任西军总大将")],
+ "kikkawa":  [(1523,1524,"amago",G2,""),(1525,1542,"ouchi",G2,"随毛利转投大内"),(1543,1546,"amago",G2,"月山撤退时倒向尼子"),(1547,1553,"ouchi",G1,"元春入嗣，成为毛利一门"),(1554,1584,"mori",G1,"随毛利自立"),(1585,1599,"toyotomi",G1,"随毛利臣从丰臣"),(1600,1600,"seigun",G1,"广家名属西军，暗通东军")],
+ "kobaT":    [(1523,1543,"ouchi",G1,""),(1544,1553,"ouchi",G1,"隆景入嗣，成为毛利一门"),(1554,1584,"mori",G1,"随毛利自立"),(1585,1596,"toyotomi",G1,"隆景受封伊予、筑前，列丰臣大老"),(1597,1597,None,G1,"隆景病逝，家督归养子秀秋")],
  "kobaN":    [(1523,1549,"ouchi",G2,""),(1550,1553,"ouchi",G1,"被隆景统合"),(1554,1571,"mori",G1,"随毛利自立")],
- "shishido": [(1523,1533,"neutral",G3,"与毛利为敌"),(1534,1553,"ouchi",G2,"与毛利联姻，站到毛利一边"),(1554,1571,"mori",G1,"随毛利自立")],
- "kumagai":  [(1523,1532,"amago",G2,"随安艺武田"),(1533,1553,"ouchi",G2,"脱离武田，靠拢毛利"),(1554,1571,"mori",G1,"随毛利自立")],
+ "shishido": [(1523,1533,"neutral",G3,"与毛利为敌"),(1534,1553,"ouchi",G2,"与毛利联姻，站到毛利一边"),(1554,1584,"mori",G1,"随毛利自立"),(1585,1599,"toyotomi",G1,"随毛利臣从丰臣"),(1600,1600,"seigun",G1,"随辉元属西军")],
+ "kumagai":  [(1523,1532,"amago",G2,"随安艺武田"),(1533,1553,"ouchi",G2,"脱离武田，靠拢毛利"),(1554,1584,"mori",G1,"随毛利自立"),(1585,1599,"toyotomi",G1,"随毛利臣从丰臣"),(1600,1600,"seigun",G1,"随辉元属西军")],
  "takahashi":[(1523,1528,"amago",G3,""),(1529,1529,None,G2,"被毛利讨灭")],
  "takeda":   [(1523,1540,"amago",G1,""),(1541,1541,None,G1,"银山城陷落，安艺武田灭亡")],
  "ouchi":    [(1523,1556,"ouchi",G1,""),(1557,1557,None,G1,"大内义长自尽，大内氏灭亡")],
  "sue":      [(1523,1554,"ouchi",G1,""),(1555,1555,None,G1,"严岛战败自尽")],
- "naito":    [(1523,1556,"ouchi",G1,""),(1557,1571,"mori",G2,"大内灭亡后归属毛利")],
- "yoshimi":  [(1523,1553,"ouchi",G1,""),(1554,1571,"mori",G2,"反陶，与毛利联手")],
+ "naito":    [(1523,1556,"ouchi",G1,""),(1557,1584,"mori",G2,"大内灭亡后归属毛利"),(1585,1599,"toyotomi",G1,"随毛利臣从丰臣"),(1600,1600,"seigun",G1,"随辉元属西军")],
+ "yoshimi":  [(1523,1553,"ouchi",G1,""),(1554,1584,"mori",G2,"反陶，与毛利联手"),(1585,1599,"toyotomi",G1,"随毛利臣从丰臣"),(1600,1600,"seigun",G1,"随辉元属西军")],
  "eda":      [(1523,1552,"ouchi",G2,""),(1553,1553,"amago",G2,"倒向尼子"),(1554,1554,None,G2,"被毛利讨灭")],
  "honjo":    [(1523,1561,"amago",G2,""),(1562,1562,"mori",G1,"开城降毛利"),(1563,1563,None,G1,"降后被诛")],
  "amago":    [(1523,1566,"amago",G1,""),(1567,1567,None,G1,"月山富田城开城，尼子氏降伏")],
- "amagoR":   [(1569,1571,"amago",G1,"山中幸盛等拥尼子胜久再起")],
- "otomo":    [(1523,1571,"otomo",G1,"")],
+ "amagoR":   [(1569,1575,"amago",G1,"山中幸盛等拥尼子胜久再起"),(1576,1577,"oda",G1,"投靠织田，入上月城"),(1578,1578,None,G1,"上月城开城，胜久自尽、幸盛被杀")],
+ "otomo":    [(1523,1585,"otomo",G1,""),(1586,1592,"toyotomi",G1,"请秀吉援救，九州征伐后臣从"),(1593,1593,None,G1,"大友义统改易")],
  "tachibana":[(1523,1567,"otomo",G1,""),(1568,1569,"mori",G1,"叛大友，与毛利呼应"),(1570,1570,None,G1,"立花鉴载败亡")],
- "mimura":   [(1523,1554,"neutral",G3,""),(1555,1571,"mori",G2,"与毛利结盟")],
- "murakami": [(1523,1554,"neutral",G2,"海上独立势力"),(1555,1571,"mori",G2,"严岛之战协力（各家立场不一）")],
- "kono":     [(1523,1567,"neutral",G2,""),(1568,1571,"mori",G2,"受毛利援军")],
- "yamana":   [(1523,1568,"neutral",G2,""),(1569,1571,"amago",G2,"支援尼子再兴军")],
- "urakami":  [(1523,1568,"neutral",G2,""),(1569,1571,"otomo",G3,"与大友呼应，夹击毛利")],
- "ryuzoji":  [(1523,1571,"neutral",G2,"")],
- "oda":      [(1569,1571,"mori",G1,"应毛利之请出兵但马")],
+ "mimura":   [(1523,1554,"neutral",G3,""),(1555,1573,"mori",G2,"与毛利结盟"),(1574,1574,"oda",G1,"三村元亲倒向织田"),(1575,1575,None,G1,"备中兵乱，三村氏灭亡")],
+ "murakami": [(1523,1554,"neutral",G2,"海上独立势力"),(1555,1584,"mori",G2,"严岛之战协力（各家立场不一）"),(1585,1599,"toyotomi",G1,"随毛利臣从丰臣"),(1600,1600,"seigun",G1,"随辉元属西军")],
+ "kono":     [(1523,1567,"neutral",G2,""),(1568,1584,"mori",G2,"受毛利援军"),(1585,1585,None,G1,"四国征伐后河野氏改易")],
+ "yamana":   [(1523,1568,"neutral",G2,""),(1569,1574,"amago",G2,"支援尼子再兴军"),(1575,1579,"mori",G2,"芸但和睦"),(1580,1580,None,G1,"羽柴秀长平定但马")],
+ "urakami":  [(1523,1568,"neutral",G2,""),(1569,1573,"otomo",G3,"与大友呼应，夹击毛利"),(1574,1574,"oda",G2,"得信长认可"),(1575,1575,None,G2,"天神山城被宇喜多直家攻陷")],
+ "ryuzoji":  [(1523,1586,"neutral",G2,""),(1587,1599,"toyotomi",G2,"九州国分后臣从丰臣，锅岛主政"),(1600,1600,"tokugawa",G2,"锅岛转投东军")],
+ "oda":      [(1569,1575,"mori",G1,"应毛利之请出兵但马，两家友好"),(1576,1582,"oda",G1,"义昭投毛利，毛织断交"),(1583,1583,None,G1,"本能寺之变后织田政权由秀吉接手")],
+ "ukita":    [(1573,1574,"neutral",G2,"浦上家臣"),(1575,1578,"mori",G1,"与毛利结盟，逐浦上"),(1579,1582,"oda",G1,"直家倒向织田"),(1583,1599,"toyotomi",G1,"秀家为秀吉养子"),(1600,1600,"seigun",G1,"宇喜多秀家为西军主力")],
+ "hideyoshi":[(1577,1582,"oda",G1,"织田家中国攻略总大将"),(1583,1597,"toyotomi",G1,"统一天下"),(1598,1598,None,G1,"秀吉死去")],
+ "tokugawa": [(1598,1599,"toyotomi",G1,"五大老之首"),(1600,1600,"tokugawa",G1,"东军总帅")],
+ "chosokabe":[(1575,1584,"neutral",G2,"统一土佐，进出四国"),(1585,1599,"toyotomi",G1,"四国征伐后仅保土佐"),(1600,1600,"seigun",G1,"长宗我部盛亲属西军")],
+ "nanjo":    [(1575,1578,"mori",G1,"吉川元春安堵"),(1579,1582,"oda",G1,"与毛利决裂，倒向织田"),(1583,1599,"toyotomi",G2,"领伯耆东三郡")],
+ "kobaH":    [(1597,1599,"toyotomi",G1,"继隆景之后领有筑前"),(1600,1600,"tokugawa",G1,"关原阵前倒戈")],
+ "bakufu":   [(1576,1587,"mori",G1,"足利义昭移居鞆，依附毛利")],
 }
-LEADER = {"otomo": "otomo", "ouchi": "ouchi", "mori": "mori", "amago": "amago"}
+LEADER = {"otomo": "otomo", "ouchi": "ouchi", "mori": "mori", "amago": "amago", "oda": "oda", "toyotomi": "hideyoshi", "tokugawa": "tokugawa", "seigun": "mori"}
 # camp-to-camp relation per year: (campA, campB, type, from, to, label)
 CAMPREL = [
  ("ouchi","amago","hostile",1523,1556,"大内与尼子争霸"),
@@ -611,9 +728,13 @@ CAMPREL = [
  ("mori","amago","hostile",1554,1566,"毛利攻尼子"),
  ("mori","otomo","hostile",1557,1563,"争夺北九州"),
  ("mori","otomo","truce",1564,1567,"将军调停和睦"),
- ("mori","otomo","hostile",1568,1571,"再战筑前"),
+ ("mori","otomo","hostile",1568,1576,"再战筑前，后转为对峙"),
  ("mori","amago","hostile",1569,1571,"镇压尼子再兴"),
  ("otomo","amago","alliance",1569,1571,"反毛利包围"),
+ ("mori","oda","hostile",1576,1581,"毛织战争：石山合战与中国攻略"),
+ ("mori","oda","truce",1582,1582,"本能寺之变后与秀吉和睦"),
+ ("mori","toyotomi","truce",1583,1584,"中国国分交涉"),
+ ("seigun","tokugawa","hostile",1600,1600,"关原之战"),
 ]
 def camp_at(h, yr):
     for y0, y1, c, g, n in CAMPLINE[h]:
@@ -710,11 +831,11 @@ data = {
   "castles": castles,
   "relations": RELATIONS,
   "econ": ECON,
-  "meta": {"title": "毛利元就时代 · 西国势力沙盘 1523—1571", "viewBox": [0, 0, W, H],
+  "meta": {"title": "毛利氏 · 西国势力沙盘 1523—1600", "viewBox": [0, 0, W, H],
            "note": "示意：每国（安艺细分到郡）按主导势力着色；两色斜线＝两方争夺。领国数：完整控制计1、争夺各计0.5、安艺每郡计1/8。",
            "source": "边界：CODH 旧国·旧郡境界数据集（CC BY-NC）；势力归属为概略示意，军记数字仅供参考"},
   "grades": {"确证": "有同时代一手文书或多方史料一致", "通说": "研究中通行的看法，但边界或年份较模糊", "推测": "主要依据军记，或为沙盘按形势推定"},
-  "corrections": CORRECTIONS + ["城池汇总：安艺各郡与石见的颜色改由城池归属汇总得出（城主多数阵营；两方并存＝争夺），故个别年份与旧版不同", "家纹图像来自 Wikimedia Commons：一文字三星 CC0；平四目结、丸之内三引两 公有领域；大内菱、抱花杏叶、武田菱、隈笹 CC BY-SA 3.0（Mukai）；左三巴 CC BY-SA 3.0（BraneJ）；折敷三文字 CC BY-SA 4.0（Forewems）；五七桐七叶根笹 CC BY-SA 3.0（Houunji 1642）。无公版家纹的国人以姓氏单字代替"], "majors": ["MORI", "OUCHI", "AMAGO", "OTOMO"],
+  "corrections": CORRECTIONS + ["1572—1600：1585 年后毛利、宇喜多、南条等同为丰臣大名，地图按各自领国着色、不画成争夺；「丰臣政权」「东军诸大名」是多位大名的合并色", "1600 帧显示关原战后格局（防长以外的转封在 1600 年末至 1601 年完成）；毛利实际于 1604 年筑萩城", "备中东部、伯耆东三郡等边界在国郡层面无法精确表现，国色取多数一方，细节见城池", "城池汇总：安艺各郡与石见的颜色改由城池归属汇总得出（城主多数阵营；两方并存＝争夺），故个别年份与旧版不同", "家纹图像来自 Wikimedia Commons：一文字三星 CC0；平四目结、丸之内三引两 公有领域；大内菱、抱花杏叶、武田菱、隈笹 CC BY-SA 3.0（Mukai）；左三巴 CC BY-SA 3.0（BraneJ）；折敷三文字 CC BY-SA 4.0（Forewems）；五七桐七叶根笹 CC BY-SA 3.0（Houunji 1642）。无公版家纹的国人以姓氏单字代替"], "majors": MAJORS_,
   "factions": FACTIONS, "regions": regions, "akiOutline": aki_outline,
   "places": {n: {"xy": P(*v), "type": ("castle" if "城" in n else "place"), **({"castle": DUP[n]} if n in DUP else {})} for n, v in PTS.items() if n not in ("伯耆", "播磨", "丰后水道", "隐岐", "备后北部", "美作")},
   "seaLabels": [{"name": "日本海", "xy": P(131.2, 35.8)}, {"name": "濑户内海", "xy": P(131.75, 33.85)}, {"name": "周防滩", "xy": P(131.4, 33.95)}],
