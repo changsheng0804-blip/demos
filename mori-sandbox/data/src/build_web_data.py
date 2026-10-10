@@ -1,7 +1,8 @@
 """Build sandbox_data.js for the interactive 毛利元就 势力沙盘 page.
 All map geometry is pre-projected into an SVG viewBox; all facts live here."""
-import json, sys
-sys.path.insert(0, "/workspace/work/sengoku")
+import json, sys, os
+HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HERE)
 from shapely.geometry import shape, mapping
 from shapely.ops import unary_union
 import sandbox as S  # reuses KEY / STATES / FAC / geometry ids
@@ -354,6 +355,10 @@ CASTLE_REGION = {"koriyama": "安艺:高田", "ogurayama": "安艺:山縣", "kim
 CASTLE_DRIVEN = {r for r in CASTLE_REGION.values() if r and (r.startswith("安艺:") or r == "石見")}
 # weights: 大名本城 3 / 国人本城 2 / 支城 1; strategic exceptions below (avoid one small castle swinging a whole province)
 CASTLE_W = {"yamabuki": 3}
+# 同盟期（含首尾年）：毛利 1523–24 从属尼子，1525–1553 从属大内（1554 防芸引分）
+ALLIED = [("MORI", "AMAGO", 1523, 1524), ("MORI", "OUCHI", 1525, 1553)]
+def _allied(a, b, yr):
+    return any({a, b} == {x, y} and y0 <= yr <= y1 for x, y, y0, y1 in ALLIED)
 def _cfac(c, yr):
     v = [h for h in c["hist"] if h[0] <= yr]
     return v[-1][1] if v else None
@@ -368,6 +373,8 @@ for f, st in zip(FR, STATES2):
         for x, w in facs: cnt[x] = cnt.get(x, 0) + w
         old = st[r].split("/")
         order = sorted(cnt, key=lambda x: (-cnt[x], old.index(x) if x in old else 9))
+        # 同盟方不算"争夺"：两方当年结盟时只显示主控方
+        if len(order) > 1 and _allied(order[0], order[1], yr): order = [order[0]] + [x for x in order[2:] if not _allied(order[0], x, yr)]
         new = order[0] if len(order) == 1 else order[0] + "/" + order[1]
         if new != st[r]: DERIVED.setdefault(r, []).append((yr, st[r], new))
         st[r] = new
@@ -662,7 +669,7 @@ for f in frames:
     f["castles"] = st; f["castleFlips"] = flips
     prev = {k: v[0] for k, v in st.items()}
 
-_KU = json.load(open("/workspace/work/sengoku/kamon/uris.json")); _KM = json.load(open("/workspace/work/sengoku/kamon/meta.json"))
+_KU = json.load(open(os.path.join(HERE, "kamon", "uris.json"))); _KM = json.load(open(os.path.join(HERE, "kamon", "meta.json")))
 _KN = {"mori": "一文字三星（毛利）", "ouchi": "大内菱（大内·陶）", "amago": "平四目结（尼子）", "otomo": "抱花杏叶（大友·立花）", "takeda": "武田菱（安艺武田）",
        "kikkawa": "丸之内三引两（吉川）", "kobayakawa": "左三巴（小早川）", "masuda": "隈笹（益田，据日文维基）", "kono": "折敷三文字（河野）", "yamana": "五七桐七叶根笹（山名）"}
 crests = {k: {"uri": _KU[k], "name": _KN[k], "file": _KM[k]["file"], "license": _KM[k]["license"]} for k in _KU}
@@ -681,5 +688,5 @@ data = {
   "seaLabels": [{"name": "日本海", "xy": P(131.2, 35.8)}, {"name": "濑户内海", "xy": P(131.75, 33.85)}, {"name": "周防滩", "xy": P(131.4, 33.95)}],
   "frames": frames,
 }
-open("/workspace/work/sengoku/web/sandbox_data.js", "w").write("window.SANDBOX = " + json.dumps(data, ensure_ascii=False) + ";\n")
+open(os.path.join(HERE, "..", "sandbox_data.js"), "w", encoding="utf-8").write("window.SANDBOX = " + json.dumps(data, ensure_ascii=False) + ";\n")
 print("frames", len(frames), "regions", len(regions), "H", H)
