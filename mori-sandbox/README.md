@@ -1,4 +1,4 @@
-# 毛利元就 西国势力沙盘 1523—1571
+# 毛利氏 西国势力沙盘 1523—1600
 
 在线：https://changsheng0804-blip.github.io/demos/mori-sandbox/ · 录屏：`#rec=1550-1557`
 
@@ -8,7 +8,7 @@
 | `index.html` | 只有页面骨架与按钮；按顺序加载下列脚本 |
 | `css/sandbox.css` | 全部样式 |
 | `data/sandbox_data.js` | **唯一的史实数据**（由 `data/src/build_web_data.py` 生成，勿手改） |
-| `data/src/` | 数据源：`sandbox.py`（关键帧）、`castles.py`（39 城）、`fetch_kuni.py`（下载 CODH 边界到 `.cache/`）、`kamon/`（家纹）、`build_web_data.py`（汇总、可信度、经济、关系） |
+| `data/src/` | 数据源：`sandbox.py`（关键帧）、`castles.py`（46 城）、`fetch_kuni.py`（下载 CODH 边界到 `.cache/`）、`kamon/`（家纹）、`build_web_data.py`（汇总、可信度、经济、关系） |
 | `js/core.js` | 数据句柄、SVG 图层、国域、可信度、地名、提示框 |
 | `js/castles.js` | 家纹城标、归属变色、标签避让 |
 | `js/panel.js` | 势力消长、时间轴、走势图；全局状态 cur/playing/speed |
