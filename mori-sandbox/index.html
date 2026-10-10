@@ -13,14 +13,18 @@
       .x-map{position:relative;min-height:0;border-right:1px solid rgba(43,38,34,.18);overflow:hidden}
       .x-map>svg{position:absolute;inset:0;width:100%;height:100%;display:block}
       .x-title{position:absolute;top:14px;left:18px;margin:0;font:900 22px/1.3 var(--serif);letter-spacing:.04em;pointer-events:none;text-shadow:0 0 4px var(--paper),0 0 8px var(--paper)}
-      .x-reg{transition:fill 1.2s ease;stroke:var(--ink);stroke-opacity:.55;stroke-width:.7px;vector-effect:non-scaling-stroke;stroke-linejoin:round}
+      .x-terrain{pointer-events:none}
+      #regions{mix-blend-mode:multiply}
+      .x-reg{transition:fill 1.2s ease,fill-opacity .3s ease;fill-opacity:.5;stroke:var(--ink);stroke-opacity:.55;stroke-width:.7px;vector-effect:non-scaling-stroke;stroke-linejoin:round}
+      .x-reg.is-minor{fill-opacity:.35}
+      .x-reg:hover{fill-opacity:.7}
       .x-reg.is-district{stroke-width:.45px;stroke-dasharray:3 2;stroke-opacity:.6}
       .x-still .x-reg{transition:none}
       .x-aki{fill:none;stroke:var(--ink);stroke-width:1.4px;vector-effect:non-scaling-stroke;stroke-linejoin:round}
       .x-map text{paint-order:stroke;stroke:var(--paper);stroke-linejoin:round;fill:var(--ink);text-anchor:middle;dominant-baseline:middle;pointer-events:none}
       .x-lb-p{font:600 13px var(--serif);stroke-width:3px}
-      .x-lb-d{font:500 8.5px var(--sans),sans-serif;stroke-width:2.4px;fill-opacity:.85}
-      .x-lb-pl{font:500 8px var(--sans),sans-serif;stroke-width:2.2px;text-anchor:start!important}
+      .x-lb-d{font:500 8.5px var(--sans),sans-serif;stroke-width:2.8px;fill-opacity:.9}
+      .x-lb-pl{font:500 8px var(--sans),sans-serif;stroke-width:2.6px;text-anchor:start!important}
       .x-lb-sea{font:600 15px var(--serif);letter-spacing:.3em;stroke-width:3px;fill:#6f8399!important;fill-opacity:.8}
       .x-castle{fill:var(--paper);stroke:var(--ink);stroke-width:1.1px}
       .x-place{fill:var(--ink)}
@@ -146,6 +150,7 @@
       .x-dlg .x-src{font:var(--type-caption);color:#574f47}
       /* reliability layer */
       .x-reg.is-spec{fill-opacity:.75}
+      .x-reg.is-spec:hover{fill-opacity:.85}
       .x-cfo{fill:none;stroke:var(--ink);vector-effect:non-scaling-stroke;pointer-events:none}
       .x-cfo.is-spec{stroke-width:2.4px;stroke-dasharray:1 3;stroke-linecap:round;stroke-opacity:.4}
       .x-conf .x-cfo.is-spec{stroke-opacity:.7}
@@ -318,6 +323,25 @@
       .x-rec .x-rec-end{position:absolute;left:50%;bottom:16px;z-index:7;transform:translateX(-50%);margin:0;font:var(--type-caption);color:rgba(43,38,34,.45)}
       .x-rec .x-rec-end.is-on{display:block}
       @media (max-width:480px){.x-bar .x-ctrl:first-child{flex-wrap:wrap}.x-bar .x-ctrl:first-child>span{display:none}}
+      /* castle layer */
+      .x-cs{cursor:help}
+      .x-cs-hit{fill:transparent}
+      .x-cs-halo{fill:var(--paper);stroke:var(--paper);stroke-width:2.6px;stroke-linejoin:round}
+      .x-cs-f{stroke-width:.9px;stroke-linejoin:round;transition:fill .3s ease,stroke .3s ease}
+      .x-cs-f.is-spec{stroke-dasharray:1.6 1.1}
+      .x-still .x-cs-f{transition:none}
+      .x-map .x-cs-l1{font:600 9px var(--serif);stroke-width:2.6px}
+      .x-map .x-cs-l2{font:500 8px var(--serif);stroke-width:2.4px;text-anchor:start;opacity:0;transition:opacity .3s ease}
+      .x-zin .x-cs-l2,.x-cs.is-hov .x-cs-l2{opacity:1}
+      .x-rec .x-cs-l2{display:none}
+      .x-no-ca #castles{display:none}
+      .x-cs-ring{fill:none;stroke-width:1.4px;vector-effect:non-scaling-stroke;pointer-events:none}
+      .x-cs-h{list-style:none;margin:6px 0 0;padding:5px 0 0;border-top:1px solid rgba(43,38,34,.15);display:flex;flex-direction:column;gap:1px;color:#574f47}
+      .x-tip .x-cs-h b{display:inline;margin-right:6px;font:12px "Geist Mono",monospace}
+      .x-cs-h .is-cur{color:var(--ink);font-weight:600}
+      .x-cs-h .is-cur b{font-weight:600}
+      .x-cs-lg{flex:none;width:12px;height:12px;overflow:visible}
+      @media (max-width:820px){.x-cs-m{transform:scale(1.3)}}
     </style>
   </head>
   <body>
@@ -396,6 +420,7 @@
             <button type="button" data-ly="bt" aria-pressed="true">战役</button>
             <button type="button" data-ly="di" aria-pressed="true">郡界</button>
             <button type="button" data-ly="pe" aria-pressed="true">人物</button>
+            <button type="button" data-ly="ca" aria-pressed="true">城池</button>
             <button type="button" id="confBtn" aria-pressed="false">可信度</button>
             <button type="button" id="ecoBtn" aria-pressed="false">经济</button>
           </div>
@@ -469,11 +494,13 @@
 
         // layers
         const defs = el("defs", {}, map);
+        el("image", { href: "terrain_wide.webp", x: -165, y: -105.7, width: 1378.6, height: 1057.3, preserveAspectRatio: "none", class: "x-terrain", "pointer-events": "none", "aria-hidden": "true" }, map);
         const gR = el("g", { id: "regions" }, map);
         const gConf = el("g", { id: "conf" }, map);
         el("path", { d: S.akiOutline, class: "x-aki" }, map);
         const gClaim = el("g", { id: "claims" }, map);
         const gPulse = el("g", { id: "pulse" }, map);
+        const gCas = el("g", { id: "castles" }, map);
         const gEcoR = el("g", { id: "econRoutes", class: "x-eco-only" }, map);
         const gFx = el("g", { id: "fx" }, map);
         const gPl = el("g", { id: "places" }, map);
@@ -540,6 +567,7 @@
         }
         const PL = {};
         Object.entries(S.places).forEach(([n, p]) => {
+          if (p.castle) return; // drawn by the castle layer
           const [x, y] = p.xy, g = el("g", { class: "x-pl" }, gPl);
           if (p.type === "castle") el("rect", { x: x - 3, y: y - 3, width: 6, height: 6, class: "x-castle x-mk" }, g);
           else el("circle", { cx: x, cy: y, r: 2.4, class: "x-place x-mk" }, g);
@@ -614,6 +642,64 @@
           if (tipFor === li) hideTip(); else chipAt(li);
         });
 
+        // castle layer: small notched squares coloured by the lord's allegiance
+        const CS = S.castles || [];
+        const FX = (k) => FA[k] || FA.OTHER;
+        const fnm = (k) => (FA[k] ? FA[k].name : k);
+        const house = (s) => s.replace(/（[^）]*）/g, "");
+        const r2 = (v) => +v.toFixed(2);
+        const glyph = (s) => { const h = s / 2, n = s * 0.24, w = s * 0.3; return `M${r2(-h)},${r2(h)}V${r2(-h)}H${r2(-w / 2)}V${r2(-h + n)}H${r2(w / 2)}V${r2(-h)}H${r2(h)}V${r2(h)}Z`; };
+        const csSw = (k) => `<span class="x-sw" style="background:${FX(k).color}"></span>`;
+        function csTip(c) {
+          const f = F[cur], st = (f.castles || {})[c.id];
+          if (!st) return "";
+          const [fac, conf] = st, H = c.hist || [];
+          const ci = H.reduce((a, h, i) => (h.from <= f.year ? i : a), 0), why = H[ci] ? H[ci].why : "";
+          return `<b>${c.name} · ${house(c.lord)}</b><span class="x-tip-f">${csSw(fac)}${fnm(fac)}</span>` +
+            `<span class="x-tip-c">${gdot(conf)} 可信度：${conf}</span>${why ? `<span class="x-tip-n">${why}</span>` : ""}` +
+            `<ul class="x-cs-h">${H.map((h, i) => `<li${i === ci ? ' class="is-cur"' : ""}><b>${h.from}</b>${fnm(h.fac)}</li>`).join("")}</ul>`;
+        }
+        CS.forEach((c) => {
+          const s = c.tier === 1 ? 9 : 6, d = glyph(s);
+          const g = (c.g = el("g", { class: "x-cs", transform: `translate(${c.xy[0]},${c.xy[1]})`, role: "img", "aria-label": c.name, style: "display:none" }, gCas));
+          const m = el("g", { class: "x-cs-m" }, g);
+          el("circle", { r: s / 2 + 3, class: "x-cs-hit" }, m);
+          el("path", { d, class: "x-cs-halo" }, m);
+          c.mk = el("path", { d, class: "x-cs-f" }, m);
+          c.s = s;
+          const lb = el("text", c.tier === 1 ? { x: 0, y: r2(s / 2 + 7), class: "x-cs-l1" } : { x: r2(s / 2 + 3), y: 0, class: "x-cs-l2" }, g);
+          lb.textContent = c.tier === 1 ? c.name : house(c.lord);
+          g._tip = () => csTip(c);
+          g.addEventListener("pointerenter", () => g.classList.add("is-hov"));
+          g.addEventListener("pointerleave", (e) => { g.classList.remove("is-hov"); if (e.pointerType === "mouse" && tipFor === g) hideTip(); });
+          g.addEventListener("pointermove", (e) => { if (e.pointerType === "mouse") showTip(csTip(c), e.clientX, e.clientY, g); });
+          g.addEventListener("click", (e) => {
+            if (lastPT === "mouse") return;
+            e.stopPropagation();
+            if (tipFor === g) { hideTip(); g.classList.remove("is-hov"); } else { showTip(csTip(c), e.clientX, e.clientY, g); g.classList.add("is-hov"); }
+          });
+        });
+        // filt picks which castles to update; ring adds one soft ring to castles that flipped this frame
+        function castPaint(f, filt, ring) {
+          const C = f.castles || {}, FL = new Set(f.castleFlips || []);
+          CS.forEach((c) => {
+            if (filt && !filt(c)) return;
+            const st = C[c.id];
+            c.g.style.display = st ? "" : "none";
+            if (!st) { if (tipFor === c.g) hideTip(); return; }
+            const [fac, conf] = st, a = FX(fac);
+            c.mk.style.fill = a.color;
+            c.mk.style.stroke = a.dark;
+            c.mk.classList.toggle("is-spec", conf === "推测");
+            c.g.setAttribute("aria-label", `${c.name} · ${fnm(fac)} · ${conf}`);
+            if (ring && FL.has(c.id) && !RM && c.g.animate) {
+              const o = el("circle", { r: c.s * 0.75, class: "x-cs-ring", stroke: a.color }, null);
+              c.g.insertBefore(o, c.g.firstChild);
+              o.animate([{ transform: "scale(1)", opacity: 0.8 }, { transform: "scale(3)", opacity: 0 }], { duration: 800, easing: "ease-out", fill: "forwards" }).onfinish = () => o.remove();
+            }
+          });
+        }
+
         // power race
         const RACE = MAJORS;
         const PMAX = Math.max(...F.flatMap((f) => RACE.map((k) => f.power[k] || 0)));
@@ -667,7 +753,7 @@
         const RM = matchMedia("(prefers-reduced-motion: reduce)").matches, PAPER = "#f3ede1";
         const VB0 = S.meta.viewBox.slice(), W = VB0[2], H = VB0[3];
         let vb = VB0.slice(), camRaf = 0, fxG = null, fxT = 0, zoomT = 0, uid = 0;
-        const setVB = (v) => { vb = v; map.setAttribute("viewBox", v.join(" ")); };
+        const setVB = (v) => { vb = v; map.setAttribute("viewBox", v.join(" ")); map.classList.toggle("x-zin", v[2] < W * 0.8); };
         function cam(to, dur) {
           cancelAnimationFrame(camRaf);
           if (!dur || RM) return setVB(to);
@@ -1043,7 +1129,8 @@
           const changed = new Set(f.changes.map((c) => c.region));
           S.regions.forEach((r) => {
             if (filt && !filt(r)) return;
-            const v = f.state[r.id] || "OTHER", tok = ++r.tok;
+            const v = f.state[r.id] || "OTHER", tok = ++r.tok, k0 = parts(v)[0];
+            r.el.classList.toggle("is-minor", !MAJOR.has(k0) && (concise || k0 === "OTHER" || !FA[k0]));
             if (parts(v).length > 1) {
               if (anim && changed.has(r.id)) {
                 r.el.style.fill = col(parts(v)[0]);
@@ -1083,10 +1170,11 @@
         const subCoin = (s) => { subEl.innerHTML = '<span class="x-coin" aria-hidden="true"></span>'; subEl.append(s); subEl.classList.add("is-on"); };
         const beatLen = (f) => {
           const ne = newEv(f).length, nr = relNew(f).length;
-          const b = 900 + (quiet(f) ? 0 : 1100) + (f.claims ? 1800 : 0) + 1200 * ((f.arrows || []).length + (f.battles || []).length) + 1400 * nr + 1700 * ne + (quiet(f) && (ne || nr) ? 900 : 0);
+          const b = 900 + (quiet(f) ? 0 : 1100) + (flips(f).size ? 900 : 0) + (f.claims ? 1800 : 0) + 1200 * ((f.arrows || []).length + (f.battles || []).length) + 1400 * nr + 1700 * ne + (quiet(f) && (ne || nr) ? 900 : 0);
           return quiet(f) ? Math.max(b, 2400) : b;
         };
         const minLen = (f) => (quiet(f) ? 3500 : 5000);
+        const flips = (f) => new Set((f.castleFlips || []).filter((id) => (f.castles || {})[id]));
         const frameLen = (f) => (concise ? Math.max(minLen(f), beatLen(f) + (quiet(f) ? 1100 : 2600)) : minLen(f)) / speed;
 
         // claims overlay: dashed outlines drawn on, plus a ribbon label near the regions' centroid
@@ -1165,6 +1253,12 @@
           else {
             later(() => { if (chg.size) map.classList.add("x-dim"); paint(f, true, (r) => chg.has(r.id), true); }, t);
             t += 1100 * k;
+          }
+          // castle beat: flipped castles recolour with one ring, after the territory and before the arrows
+          const FLP = flips(f);
+          if (FLP.size) {
+            later(() => castPaint(f, (c) => FLP.has(c.id), true), t);
+            t += 900 * k;
           }
           if (f.claims) {
             const cl = f.claims;
@@ -1254,6 +1348,8 @@
           resetBeats();
           if (!anim) map.classList.add("x-still");
           marks(f);
+          if (concise && anim && !RM) { const FLP = flips(f); castPaint(f, (c) => !FLP.has(c.id), false); }
+          else castPaint(f, null, anim);
           relBend = relBends(f);
           if (concise) beats(f, anim);
           else paint(f, anim);
@@ -1310,6 +1406,8 @@
             $("legend").insertAdjacentHTML("beforeend", `<div class="x-cfl">${Object.entries(GRADES).map(([g, d]) => `<span>${ic[g] || ""}<b>${g}</b>${d}</span>`).join("")}</div>`);
           }
           if (ecoOn) $("legend").insertAdjacentHTML("beforeend", ecoLegend());
+          if (!$("app").classList.contains("x-no-ca"))
+            $("legend").insertAdjacentHTML("beforeend", `<span><svg class="x-cs-lg" viewBox="-6 -6 12 12" aria-hidden="true"><path d="${glyph(9)}" fill="none" stroke="currentColor" stroke-width="1.1"/></svg>城池：颜色＝城主所属阵营（虚线＝推测）</span>`);
           const b = $("lgx");
           if (b && concise) b.onclick = () => { legOpen = !legOpen; legend(F[cur]); $("lgx").focus(); };
         }
@@ -1401,6 +1499,10 @@
           const on = b.getAttribute("aria-pressed") !== "true";
           b.setAttribute("aria-pressed", on);
           $("app").classList.toggle("x-no-" + b.dataset.ly, !on);
+          if (b.dataset.ly === "ca") {
+            if (!on && tipFor && tipFor.classList && tipFor.classList.contains("x-cs")) hideTip();
+            legend(F[cur]);
+          }
         }));
         // recording mode: clean 16:9 stage, frames played back at a fixed length each
         const app = $("app"), recDlg = $("recDlg"), recEnd = $("recEnd");
