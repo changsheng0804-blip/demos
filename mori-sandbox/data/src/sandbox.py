@@ -1,20 +1,28 @@
 """毛利元就时代 西国势力沙盘：按关键年份渲染关键帧，再用 ffmpeg 合成视频。
 数据为示意：每国按主导势力着色，"A/B" 表示两方争夺（底色A、斜线B）；安艺按郡细分。"""
-import json, copy, matplotlib
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-from matplotlib import font_manager as fm
-import matplotlib.patheffects as pe
-from matplotlib.patches import Polygon, Rectangle, FancyBboxPatch, Circle
-F = "/workspace/work/fonts/"
-for f in ["NotoSansCJKsc-Regular.otf", "NotoSansCJKsc-Bold.otf", "NotoSerifCJKsc-Bold.otf"]:
-    fm.fontManager.addfont(F + f)
-SANS = fm.FontProperties(fname=F + "NotoSansCJKsc-Regular.otf")
-BOLD = fm.FontProperties(fname=F + "NotoSansCJKsc-Bold.otf")
-SERIF = fm.FontProperties(fname=F + "NotoSerifCJKsc-Bold.otf")
-plt.rcParams["hatch.linewidth"] = 2.2
+import json, copy, os
+HERE = os.path.dirname(os.path.abspath(__file__))
+try:
+    import matplotlib
+    _MPL = True
+except ImportError:  # 网页数据构建不需要 matplotlib；只有渲染静态帧时需要
+    _MPL = False
+if _MPL:
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    from matplotlib import font_manager as fm
+    import matplotlib.patheffects as pe
+    from matplotlib.patches import Polygon, Rectangle, FancyBboxPatch, Circle
+    F = os.environ.get("FONT_DIR", "/workspace/work/fonts/")
+    for f in [] if not os.path.isdir(F) else ["NotoSansCJKsc-Regular.otf", "NotoSansCJKsc-Bold.otf", "NotoSerifCJKsc-Bold.otf"]:
+        fm.fontManager.addfont(F + f)
+    SANS = fm.FontProperties(fname=F + "NotoSansCJKsc-Regular.otf")
+    BOLD = fm.FontProperties(fname=F + "NotoSansCJKsc-Bold.otf")
+    SERIF = fm.FontProperties(fname=F + "NotoSerifCJKsc-Bold.otf")
+    plt.rcParams["hatch.linewidth"] = 2.2
 PAPER = "#f3ede1"; INK = "#2b2622"; RED = "#b0402c"; MUTE = "#8a8073"; SEA = "#d9e2e0"
-K = "/workspace/work/kuni/"; OUT = "/workspace/work/sengoku/frames/"
+K = os.environ.get("KUNI_DIR", os.path.join(HERE, ".cache", "kuni")) + "/"; OUT = os.path.join(HERE, ".cache", "frames") + "/"
 
 FAC = {  # key: (name, color)
     "MORI": ("毛利", "#e3a23b"), "OUCHI": ("大内", "#c98f97"), "AMAGO": ("尼子", "#8ea3c9"),
