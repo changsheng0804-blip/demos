@@ -10,14 +10,17 @@
       .x-app{--paper:#f3ede1;--ink:#2b2622;--accent:#b0402c;--gold:#b8892b;--serif:"Noto Serif SC","Songti SC","STSong","SimSun",serif;
         position:fixed;inset:0;display:grid;grid-template-columns:minmax(0,1fr) 10px clamp(220px,var(--x-pw,300px),45vw);grid-template-rows:minmax(0,1fr) auto;background:var(--paper);color:var(--ink);
         font-family:var(--sans),"PingFang SC","Noto Sans SC","Microsoft YaHei",sans-serif;z-index:1}
-      .x-map{position:relative;min-height:0;border-right:1px solid rgba(43,38,34,.18);overflow:hidden}
+      .x-map{position:relative;min-height:0;border-right:1px solid rgba(43,38,34,.18);overflow:hidden;background:#d6e1e3}
       .x-map>svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+      #map{background:#d6e1e3}
       .x-title{position:absolute;top:14px;left:18px;margin:0;font:900 22px/1.3 var(--serif);letter-spacing:.04em;pointer-events:none;text-shadow:0 0 4px var(--paper),0 0 8px var(--paper)}
       .x-terrain{pointer-events:none}
       #regions{mix-blend-mode:multiply}
-      .x-reg{transition:fill 1.2s ease,fill-opacity .3s ease;fill-opacity:.5;stroke:var(--ink);stroke-opacity:.55;stroke-width:.7px;vector-effect:non-scaling-stroke;stroke-linejoin:round}
-      .x-reg.is-minor{fill-opacity:.35}
-      .x-reg:hover{fill-opacity:.7}
+      .x-reg{transition:fill 1.2s ease,fill-opacity .3s ease;fill-opacity:.68;stroke:var(--ink);stroke-opacity:.55;stroke-width:.7px;vector-effect:non-scaling-stroke;stroke-linejoin:round}
+      .x-reg.is-minor{fill-opacity:.45}
+      .x-reg.is-grey{fill-opacity:.25}
+      .x-reg.is-hatch{fill-opacity:.68}
+      .x-reg:hover{fill-opacity:.82}
       .x-reg.is-district{stroke-width:.45px;stroke-dasharray:3 2;stroke-opacity:.6}
       .x-still .x-reg{transition:none}
       .x-aki{fill:none;stroke:var(--ink);stroke-width:1.4px;vector-effect:non-scaling-stroke;stroke-linejoin:round}
@@ -34,8 +37,21 @@
       @keyframes xfloat{0%{opacity:0;transform:translateY(4px)}20%{opacity:1}70%{opacity:1}100%{opacity:0;transform:translateY(-30px)}}
       .x-focus circle{fill:none;stroke:var(--accent);stroke-width:2px;vector-effect:non-scaling-stroke}
       .x-focus .x-core{fill:var(--accent);stroke:var(--paper)}
-      .x-legend{position:absolute;left:14px;bottom:14px;display:flex;flex-direction:column;gap:3px;padding:8px 10px;background:rgba(243,237,225,.88);border:1px solid rgba(43,38,34,.2);border-radius:var(--r-s);font:var(--type-caption);max-height:60%;overflow:auto}
+      .x-legend{position:absolute;top:14px;right:14px;z-index:6;display:flex;align-items:center;gap:10px;height:24px;padding:0 4px 0 9px;background:rgba(243,237,225,.9);border:1px solid rgba(43,38,34,.2);border-radius:var(--r-pill);font:500 12px/1 var(--sans),sans-serif;white-space:nowrap}
       .x-legend span{display:flex;align-items:center;gap:6px}
+      .x-legend .x-lgc{gap:4px}
+      .x-legend .x-lgc .x-sw{width:10px;height:10px;border-radius:2px}
+      .x-legend .x-lgc .x-cs-lg{width:10px;height:10px}
+      .x-lgi{display:inline-grid;place-items:center;flex:none;width:44px;height:44px;margin:-10px -10px -10px -12px;padding:0;border:0;background:none;color:var(--ink);font:600 14px/1 var(--sans);cursor:pointer}
+      .x-lgi>span{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%}
+      .x-lgi[aria-expanded="true"]>span{background:var(--ink);color:var(--paper)}
+      .x-lgi:focus-visible{outline:none}
+      .x-lgi:focus-visible>span{outline:2px solid var(--accent);outline-offset:1px}
+      .x-lgp{position:absolute;top:calc(100% + 6px);right:0;display:flex;flex-direction:column;gap:4px;width:max-content;max-width:min(300px,calc(100vw - 40px));max-height:min(60vh,420px);overflow:auto;padding:10px 12px;background:var(--paper);border:1px solid rgba(43,38,34,.25);border-radius:var(--r-s);box-shadow:0 10px 30px rgba(43,38,34,.25);font:var(--type-caption);line-height:1.45;white-space:normal}
+      .x-lgp[hidden]{display:none}
+      .x-lgp b.x-lgh{display:block;margin-top:4px;font:600 12px var(--serif);color:rgba(43,38,34,.75)}
+      .x-lgp b.x-lgh:first-child{margin-top:0}
+      @media (max-width:480px){.x-legend{gap:7px;padding-left:7px}.x-lgc .x-lgt{display:none}}
       .x-sw{display:inline-block;width:12px;height:12px;border-radius:3px;border:1px solid rgba(43,38,34,.4);flex:none;vertical-align:-2px}
       .x-note-dlg{width:min(420px,calc(100% - 32px))}
       .x-overlay{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);padding:16px 30px;min-height:var(--tap);border:0;border-radius:var(--r-pill);background:var(--accent);color:#fff;font:900 22px var(--serif);letter-spacing:.1em;cursor:pointer;box-shadow:0 10px 30px rgba(43,38,34,.3)}
@@ -117,12 +133,11 @@
       .x-concise .x-pl:not(.is-on) .x-mk{display:none}
       .x-concise .x-pl:not(.is-on) .x-dotm{display:inline}
       .x-concise .x-ar>g,.x-concise .x-bt>g{transition:opacity .4s ease}
-      .x-concise .x-legend{top:14px;right:14px;left:auto;bottom:auto}
       .x-sub{position:absolute;left:50%;bottom:28px;transform:translateX(-50%);width:max-content;max-width:86%;margin:0;padding:8px 18px;border-radius:var(--r-s);background:rgba(43,38,34,.82);color:#fff;font:600 18px/1.4 var(--serif);text-align:center;pointer-events:none;opacity:0;transition:opacity .35s ease}
       .x-sub.is-on{opacity:1}
       .x-aff{display:inline-flex;align-items:center;gap:6px;margin:4px 6px 2px 0;padding:4px 12px;border:1px solid rgba(43,38,34,.25);border-radius:var(--r-pill);font:var(--type-caption);background:rgba(255,255,255,.4)}
       #aff{margin:6px 0 4px}
-      .x-more{display:inline-flex;align-items:center;min-height:var(--tap);margin:-12px 0;padding:0 6px;border:0;background:none;color:var(--accent);font:600 13px var(--sans);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+      .x-more{display:inline-flex;align-items:center;justify-content:center;min-width:var(--tap);min-height:var(--tap);margin:-12px 0;padding:0 6px;border:0;background:none;color:var(--accent);font:600 13px var(--sans);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
       .x-tg{min-height:var(--tap);margin-top:8px;padding:0 14px;border:1px solid rgba(43,38,34,.3);border-radius:var(--r-pill);background:transparent;color:var(--ink);font:600 12px var(--sans);cursor:pointer}
       .x-tg[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
       .x-chips .x-plus{padding:0}
@@ -149,8 +164,7 @@
       .x-dlg p{margin:0 0 6px}
       .x-dlg .x-src{font:var(--type-caption);color:#574f47}
       /* reliability layer */
-      .x-reg.is-spec{fill-opacity:.75}
-      .x-reg.is-spec:hover{fill-opacity:.85}
+      .x-reg.is-spec,.x-reg.is-spec:hover{fill-opacity:.82}
       .x-cfo{fill:none;stroke:var(--ink);vector-effect:non-scaling-stroke;pointer-events:none}
       .x-cfo.is-spec{stroke-width:2.4px;stroke-dasharray:1 3;stroke-linecap:round;stroke-opacity:.4}
       .x-conf .x-cfo.is-spec{stroke-opacity:.7}
@@ -330,8 +344,8 @@
       .x-cs-f{stroke-width:.9px;stroke-linejoin:round;transition:fill .3s ease,stroke .3s ease}
       .x-cs-f.is-spec{stroke-dasharray:1.6 1.1}
       .x-still .x-cs-f{transition:none}
-      .x-map .x-cs-l1{font:600 9px var(--serif);stroke-width:2.6px}
-      .x-map .x-cs-l2{font:500 8px var(--serif);stroke-width:2.4px;text-anchor:start;opacity:0;transition:opacity .3s ease}
+      .x-map .x-cs-l1{font:600 13px var(--serif);stroke-width:3px}
+      .x-map .x-cs-l2{font:600 12px var(--serif);stroke-width:3px;text-anchor:start;opacity:0;transition:opacity .3s ease}
       .x-zin .x-cs-l2,.x-cs.is-hov .x-cs-l2{opacity:1}
       .x-rec .x-cs-l2{display:none}
       .x-no-ca #castles{display:none}
@@ -341,7 +355,24 @@
       .x-cs-h .is-cur{color:var(--ink);font-weight:600}
       .x-cs-h .is-cur b{font-weight:600}
       .x-cs-lg{flex:none;width:12px;height:12px;overflow:visible}
-      @media (max-width:820px){.x-cs-m{transform:scale(1.3)}}
+      /* manual zoom & pan: labels and markers counter-scaled by 1/k; castles by --u (map units per screen px) */
+      #map{--k:1;--u:1;touch-action:none;user-select:none;-webkit-user-select:none}
+      .x-grabbing #map,.x-grabbing #map *{cursor:grabbing!important}
+      #map .x-lb-p{font-size:calc(13px / var(--k));stroke-width:calc(3px / var(--k))}
+      #map .x-lb-d{font-size:calc(8.5px / var(--k));stroke-width:calc(2.8px / var(--k))}
+      #map .x-lb-pl{font-size:calc(8px / var(--k));stroke-width:calc(2.6px / var(--k));transform:translateX(calc(5px / var(--k) - 5px))}
+      #map .x-lb-sea{font-size:calc(15px / var(--k));stroke-width:calc(3px / var(--k))}
+      #map .x-fxl,#map .x-fxb{font-size:calc(12px / var(--k));stroke-width:calc(3.5px / var(--k))}
+      #map .x-cs-m,#map .x-cs-l1,#map .x-cs-l2{transform:scale(var(--u))}
+      #map .x-cz{transform:scale(calc(1 / var(--k)))}
+      #map .x-cz .x-fxl,#map .x-cz .x-fxb{font-size:12px;stroke-width:3.5px}
+      .x-zm{position:absolute;right:14px;bottom:14px;z-index:6;display:flex;flex-direction:column;overflow:hidden;border:1px solid rgba(43,38,34,.25);border-radius:8px;box-shadow:0 2px 8px rgba(43,38,34,.12)}
+      .x-zm button{width:28px;height:28px;padding:0;border:0;background:rgba(243,237,225,.82);color:var(--ink);font:600 15px/1 var(--sans);cursor:pointer}
+      .x-zm button+button{border-top:1px solid rgba(43,38,34,.2)}
+      .x-zm button:hover:not(:disabled){background:rgba(236,228,212,.95)}
+      .x-zm button:disabled{color:rgba(43,38,34,.35);cursor:default}
+      .x-zm button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+      .x-rec .x-zm,.x-map.x-camp-on .x-zm,.x-map.x-fam-on .x-zm{display:none!important}
     </style>
   </head>
   <body>
@@ -370,6 +401,9 @@
           <h1 class="x-title" id="mtitle"></h1>
           <p class="x-sub" id="sub" aria-live="polite"></p>
           <div class="x-legend" id="legend"></div>
+          <div class="x-zm" role="group" aria-label="地图缩放">
+            <button type="button" id="zIn" aria-label="放大" title="放大">＋</button><button type="button" id="zOut" aria-label="缩小" title="缩小">－</button><button type="button" id="zRe" aria-label="重置视图" title="重置视图并恢复自动镜头">⟲</button>
+          </div>
           <button class="x-overlay" id="overlay" type="button">▶ 播放</button>
           <p class="x-rec-yr" id="recYr" aria-hidden="true"></p>
           <div class="x-rec-lg" id="recLg" aria-hidden="true"></div>
@@ -494,7 +528,7 @@
 
         // layers
         const defs = el("defs", {}, map);
-        el("image", { href: "terrain_wide.webp", x: -165, y: -105.7, width: 1378.6, height: 1057.3, preserveAspectRatio: "none", class: "x-terrain", "pointer-events": "none", "aria-hidden": "true" }, map);
+        el("image", { href: "terrain_soft.webp", x: -165, y: -105.7, width: 1378.6, height: 1057.3, preserveAspectRatio: "none", class: "x-terrain", "pointer-events": "none", "aria-hidden": "true" }, map);
         const gR = el("g", { id: "regions" }, map);
         const gConf = el("g", { id: "conf" }, map);
         el("path", { d: S.akiOutline, class: "x-aki" }, map);
@@ -511,12 +545,23 @@
         const gRib = el("g", { id: "ribbon" }, map);
         const gFocus = el("g", { id: "focus", class: "x-focus" }, map);
 
+        // hatch stripes keep their on-screen width: patterns scale by 1/k, updated once per frame on zoom
+        const PATS = [];
+        let patK = 1, patRaf = 0;
+        const patT = () => `rotate(45) scale(${(1 / patK).toFixed(4)})`;
+        function patZoom(k) {
+          if (k === patK) return;
+          patK = k;
+          if (!patRaf) patRaf = requestAnimationFrame(() => { patRaf = 0; const t = patT(); PATS.forEach((p) => p.setAttribute("patternTransform", t)); });
+        }
         function pat(v) {
           const [a, b] = parts(v), id = "p-" + (concise ? "c-" : "") + a + "-" + b;
           if (!document.getElementById(id)) {
-            const p = el("pattern", { id, patternUnits: "userSpaceOnUse", width: 8, height: 8, patternTransform: "rotate(45)" }, defs);
-            el("rect", { width: 8, height: 8, fill: col(a) }, p);
-            el("rect", { width: 3.5, height: 8, fill: col(b) }, p);
+            const fc = (k) => (FA[k] || FA.OTHER).color;
+            const p = el("pattern", { id, patternUnits: "userSpaceOnUse", width: 10, height: 10, patternTransform: patT() }, defs);
+            PATS.push(p);
+            el("rect", { width: 10, height: 10, fill: fc(a) }, p);
+            el("rect", { width: 5, height: 10, fill: fc(b) }, p);
           }
           return "url(#" + id + ")";
         }
@@ -568,21 +613,22 @@
         const PL = {};
         Object.entries(S.places).forEach(([n, p]) => {
           if (p.castle) return; // drawn by the castle layer
-          const [x, y] = p.xy, g = el("g", { class: "x-pl" }, gPl);
-          if (p.type === "castle") el("rect", { x: x - 3, y: y - 3, width: 6, height: 6, class: "x-castle x-mk" }, g);
-          else el("circle", { cx: x, cy: y, r: 2.4, class: "x-place x-mk" }, g);
-          el("circle", { cx: x, cy: y, r: 1.6, class: "x-dotm" }, g);
+          const [x, y] = p.xy, g = el("g", { class: "x-pl", transform: `translate(${x},${y})` }, gPl), z = el("g", { class: "x-cz" }, g);
+          if (p.type === "castle") el("rect", { x: -3, y: -3, width: 6, height: 6, class: "x-castle x-mk" }, z);
+          else el("circle", { r: 2.4, class: "x-place x-mk" }, z);
+          el("circle", { r: 1.6, class: "x-dotm" }, z);
           const t = el("text", { x: x + 5, y, class: "x-lb-pl" }, gLb);
           t.textContent = n;
           PL[n] = { g, t };
         });
         // focus ring
+        const gFocusZ = el("g", { class: "x-cz" }, gFocus);
         [0, 0.8].forEach((d) => {
-          const c = el("circle", { r: 6 }, gFocus);
+          const c = el("circle", { r: 6 }, gFocusZ);
           el("animate", { attributeName: "r", values: "6;26", dur: "1.6s", begin: d + "s", repeatCount: "indefinite" }, c);
           el("animate", { attributeName: "opacity", values: "1;0", dur: "1.6s", begin: d + "s", repeatCount: "indefinite" }, c);
         });
-        el("circle", { r: 3.5, class: "x-core" }, gFocus);
+        el("circle", { r: 3.5, class: "x-core" }, gFocusZ);
 
         const swCss = (v) => { const [a, b] = parts(v); return b ? `repeating-linear-gradient(45deg,${col(a)} 0 4px,${col(b)} 4px 7px)` : col(a); };
         const sw = (v) => `<span class="x-sw" style="background:${swCss(v)}"></span>`;
@@ -660,14 +706,15 @@
             `<ul class="x-cs-h">${H.map((h, i) => `<li${i === ci ? ' class="is-cur"' : ""}><b>${h.from}</b>${fnm(h.fac)}</li>`).join("")}</ul>`;
         }
         CS.forEach((c) => {
-          const s = c.tier === 1 ? 9 : 6, d = glyph(s);
+          // sizes in on-screen px; .x-cs-m and the labels scale by --u (map units per screen px)
+          const s = c.tier === 1 ? 14 : 11, d = glyph(s);
           const g = (c.g = el("g", { class: "x-cs", transform: `translate(${c.xy[0]},${c.xy[1]})`, role: "img", "aria-label": c.name, style: "display:none" }, gCas));
-          const m = el("g", { class: "x-cs-m" }, g);
+          const m = (c.m = el("g", { class: "x-cs-m" }, g));
           el("circle", { r: s / 2 + 3, class: "x-cs-hit" }, m);
           el("path", { d, class: "x-cs-halo" }, m);
           c.mk = el("path", { d, class: "x-cs-f" }, m);
           c.s = s;
-          const lb = el("text", c.tier === 1 ? { x: 0, y: r2(s / 2 + 7), class: "x-cs-l1" } : { x: r2(s / 2 + 3), y: 0, class: "x-cs-l2" }, g);
+          const lb = el("text", c.tier === 1 ? { x: 0, y: r2(s / 2 + 10), class: "x-cs-l1" } : { x: r2(s / 2 + 4), y: 0, class: "x-cs-l2" }, g);
           lb.textContent = c.tier === 1 ? c.name : house(c.lord);
           g._tip = () => csTip(c);
           g.addEventListener("pointerenter", () => g.classList.add("is-hov"));
@@ -694,7 +741,7 @@
             c.g.setAttribute("aria-label", `${c.name} · ${fnm(fac)} · ${conf}`);
             if (ring && FL.has(c.id) && !RM && c.g.animate) {
               const o = el("circle", { r: c.s * 0.75, class: "x-cs-ring", stroke: a.color }, null);
-              c.g.insertBefore(o, c.g.firstChild);
+              c.m.insertBefore(o, c.m.firstChild);
               o.animate([{ transform: "scale(1)", opacity: 0.8 }, { transform: "scale(3)", opacity: 0 }], { duration: 800, easing: "ease-out", fill: "forwards" }).onfinish = () => o.remove();
             }
           });
@@ -752,20 +799,116 @@
         // fx layer
         const RM = matchMedia("(prefers-reduced-motion: reduce)").matches, PAPER = "#f3ede1";
         const VB0 = S.meta.viewBox.slice(), W = VB0[2], H = VB0[3];
-        let vb = VB0.slice(), camRaf = 0, fxG = null, fxT = 0, zoomT = 0, uid = 0;
-        const setVB = (v) => { vb = v; map.setAttribute("viewBox", v.join(" ")); map.classList.toggle("x-zin", v[2] < W * 0.8); };
-        function cam(to, dur) {
-          cancelAnimationFrame(camRaf);
+        let vb = VB0.slice(), camRaf = 0, camTo = VB0, fxG = null, fxT = 0, zoomT = 0, uid = 0;
+        // user: manual zoom/pan active, which suspends the playback camera
+        let user = false;
+        const ZMAX = 6, ZB = [-165, -105, 1213, 951], zInB = $("zIn"), zOutB = $("zOut");
+        const setVB = (v) => {
+          vb = v; map.setAttribute("viewBox", v.join(" "));
+          const k = Math.max(1, W / v[2]);
+          map.style.setProperty("--k", k.toFixed(4));
+          const mr = map.getBoundingClientRect(), px = Math.min(mr.width / v[2], mr.height / v[3]);
+          if (px > 0) map.style.setProperty("--u", (1 / px).toFixed(4));
+          patZoom(+k.toFixed(4));
+          map.classList.toggle("x-zin", user ? k >= 1.8 : v[2] < W * 0.8);
+          zInB.disabled = k >= ZMAX - 0.001; zOutB.disabled = k <= 1.001;
+        };
+        // --u depends on the map's on-screen size, so refresh it when the map resizes
+        window.addEventListener("x-refit", () => setVB(vb));
+        window.addEventListener("resize", () => setVB(vb));
+        setVB(vb);
+        function cam(to, dur, force) {
+          if (user && !force) return;
+          cancelAnimationFrame(camRaf); camRaf = 0; camTo = to;
           if (!dur || RM) return setVB(to);
           const from = vb.slice(), t0 = performance.now();
           const step = (n) => {
             let k = Math.min(1, (n - t0) / dur);
             const e = k < 0.5 ? 2 * k * k : 1 - (-2 * k + 2) ** 2 / 2;
             setVB(from.map((a, j) => a + (to[j] - a) * e));
-            if (k < 1) camRaf = requestAnimationFrame(step);
+            camRaf = k < 1 ? requestAnimationFrame(step) : 0;
           };
           camRaf = requestAnimationFrame(step);
         }
+        // manual zoom & pan, all through the viewBox
+        const zK = (v) => W / v[2];
+        const zKc = (k) => Math.max(1, Math.min(ZMAX, k));
+        const zCl = (a, lo, hi) => (hi < lo ? (lo + hi) / 2 : Math.max(lo, Math.min(hi, a)));
+        const zClamp = (v) => [zCl(v[0], ZB[0], ZB[2] - v[2]), zCl(v[1], ZB[1], ZB[3] - v[3]), v[2], v[3]];
+        const zFit = (r, w, h) => Math.min(r.width / w, r.height / h);
+        // the map point under a screen point, for view v
+        const zPt = (v, cx, cy) => {
+          const r = map.getBoundingClientRect(), s = zFit(r, v[2], v[3]);
+          return [v[0] + (cx - r.left - (r.width - v[2] * s) / 2) / s, v[1] + (cy - r.top - (r.height - v[3] * s) / 2) / s];
+        };
+        // the view at zoom k that puts map point P under screen point (cx, cy)
+        const zPlace = (P, cx, cy, k) => {
+          const r = map.getBoundingClientRect(), w = W / k, h = H / k, s = zFit(r, w, h);
+          return zClamp([P[0] - (cx - r.left - (r.width - w * s) / 2) / s, P[1] - (cy - r.top - (r.height - h * s) / 2) / s, w, h]);
+        };
+        const zSet = (to, dur) => { user = true; $("overlay").hidden = true; cam(to, dur, true); };
+        function zoomBy(f, cx, cy, dur) {
+          const base = camRaf && user ? camTo : vb;
+          if (cx == null) { const r = map.getBoundingClientRect(); cx = r.left + r.width / 2; cy = r.top + r.height / 2; }
+          zSet(zPlace(zPt(base, cx, cy), cx, cy, zKc(zK(base) * f)), dur);
+        }
+        function zReset(dur) { user = false; $("overlay").hidden = true; cam(VB0, dur); }
+        const zLive = () => !$("app").classList.contains("x-rec");
+        map.addEventListener("wheel", (e) => {
+          if (!zLive()) return;
+          e.preventDefault();
+          hideTip();
+          const dy = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 400 : 1);
+          zoomBy(Math.exp(-dy * (e.ctrlKey ? 0.01 : 0.0018)), e.clientX, e.clientY, 0);
+        }, { passive: false });
+        map.addEventListener("dblclick", (e) => { if (!zLive()) return; e.preventDefault(); zoomBy(2, e.clientX, e.clientY, 260); });
+        const zP = new Map();
+        let zG = null, zMoved = false;
+        function zBegin() {
+          const p = [...zP.values()];
+          if (p.length === 1) zG = { P: zPt(vb, p[0][0], p[0][1]), s: p[0], k: zK(vb) };
+          else if (p.length >= 2) {
+            const [a, b] = p, mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2;
+            zG = { P: zPt(vb, mx, my), d: Math.hypot(a[0] - b[0], a[1] - b[1]) || 1, k: zK(vb), pinch: true };
+          } else zG = null;
+        }
+        const zGrab = (on) => map.parentNode.classList.toggle("x-grabbing", on);
+        map.addEventListener("pointerdown", (e) => {
+          if (!zLive() || (e.pointerType === "mouse" && e.button !== 0)) return;
+          if (e.pointerType === "mouse") zP.clear();
+          if (!zP.size) zMoved = false;
+          zP.set(e.pointerId, [e.clientX, e.clientY]);
+          zBegin();
+        });
+        map.addEventListener("pointermove", (e) => {
+          if (!zG || !zP.has(e.pointerId)) return;
+          zP.set(e.pointerId, [e.clientX, e.clientY]);
+          const p = [...zP.values()];
+          if (zG.pinch && p.length >= 2) {
+            const [a, b] = p, d = Math.hypot(a[0] - b[0], a[1] - b[1]) || 1;
+            if (!zMoved) { zMoved = true; hideTip(); }
+            zSet(zPlace(zG.P, (a[0] + b[0]) / 2, (a[1] + b[1]) / 2, zKc((zG.k * d) / zG.d)), 0);
+          } else if (!zG.pinch) {
+            if (!zMoved) {
+              if (Math.hypot(e.clientX - zG.s[0], e.clientY - zG.s[1]) < 4) return;
+              zMoved = true; hideTip(); zGrab(true);
+              try { map.setPointerCapture(e.pointerId); } catch (_) {}
+            }
+            zSet(zPlace(zG.P, e.clientX, e.clientY, zG.k), 0);
+          }
+        });
+        const zUp = (e) => {
+          if (!zP.delete(e.pointerId)) return;
+          zBegin();
+          if (!zP.size) zGrab(false);
+        };
+        window.addEventListener("pointerup", zUp);
+        window.addEventListener("pointercancel", zUp);
+        // a drag ends in a click; keep it from opening tooltips
+        map.addEventListener("click", (e) => { if (zMoved) { e.stopPropagation(); e.preventDefault(); zMoved = false; } }, true);
+        zInB.onclick = () => zoomBy(1.6, null, null, 260);
+        zOutB.onclick = () => zoomBy(1 / 1.6, null, null, 260);
+        $("zRe").onclick = () => zReset(450);
         function frameBox(P, zmax) {
           const xs = P.map((p) => p[0]), ys = P.map((p) => p[1]), pad = 70;
           const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
@@ -782,6 +925,7 @@
           }
           return `url(#${id})`;
         }
+        const nsw = (e, w) => (e.style.strokeWidth = `calc(${w}px / var(--k, 1))`);
         const mkA = (anim) => (e, kf, o) => anim && e.animate(kf, { fill: "both", easing: "ease-in-out", ...o });
         const txt = (p, x, y, cls, s, fill) => { const t = el("text", { x, y, class: cls }, p); t.textContent = s; if (fill) t.style.fill = fill; return t; };
         function drawFx(f, anim, k = 1) {
@@ -800,7 +944,8 @@
             const q = (t) => [(1 - t) ** 2 * x1 + 2 * t * (1 - t) * cx + t * t * x2, (1 - t) ** 2 * y1 + 2 * t * (1 - t) * cy + t * t * y2];
             const [mx, my] = q(0.5);
             if (a.type === "siege") {
-              const s = el("g", { transform: `translate(${x2},${y2})` + (concise ? " scale(.6)" : "") }, gA), rot = el("g", {}, s);
+              const sz = el("g", { class: "x-cz" }, el("g", { transform: `translate(${x2},${y2})` }, gA));
+              const s = el("g", concise ? { transform: "scale(.6)" } : {}, sz), rot = el("g", {}, s);
               el("circle", { r: 28, fill: "none", stroke: c, "stroke-width": 3, "stroke-dasharray": "5 6" }, rot);
               for (let j = 0; j < 8; j++) {
                 const an = (j * Math.PI) / 4, co = Math.cos(an), si = Math.sin(an);
@@ -808,7 +953,7 @@
               }
               if (!RM) rot.animate([{ transform: "rotate(0deg)" }, { transform: "rotate(360deg)" }], { duration: 9000, iterations: Infinity });
               fadeIn(s, delay);
-              if (a.label) fadeIn(txt(gA, x2, y2 + 52, "x-fxl", a.label, c), delay);
+              if (a.label) fadeIn(txt(sz, 0, 52, "x-fxl", a.label, c), delay);
               return gA;
             }
             const wrap = el("g", {}, gA);
@@ -825,10 +970,13 @@
             else if (a.type === "naval") S2({ "stroke-width": 3, "stroke-dasharray": "2 6", "stroke-linecap": "round" });
             else if (a.type === "inherit") {
               S2({ "stroke-width": 5 });
-              el("path", { d, fill: "none", stroke: PAPER, "stroke-width": 1.8 }, wrap);
-              el("circle", { cx: mx, cy: my, r: 9, fill: c, stroke: PAPER, "stroke-width": 1.5 }, wrap);
-              txt(wrap, mx, my + 0.5, "x-badge", "继");
+              nsw(el("path", { d, fill: "none", stroke: PAPER }, wrap), 1.8);
+              const bz = el("g", { class: "x-cz" }, el("g", { transform: `translate(${mx},${my})` }, wrap));
+              el("circle", { r: 9, fill: c, stroke: PAPER, "stroke-width": 1.5 }, bz);
+              txt(bz, 0, 0.5, "x-badge", "继");
             }
+            // keep the on-screen thickness at any zoom; the marker scales with the stroke, so heads stay in proportion
+            nsw(line, line.getAttribute("stroke-width"));
             if (anim) {
               const m = el("mask", { id: "fxm" + ++uid, maskUnits: "userSpaceOnUse", x: -3000, y: -3000, width: 7000, height: 7000 }, md);
               const mp = el("path", { d, fill: "none", stroke: "#fff", "stroke-width": 30 }, m), l = mp.getTotalLength();
@@ -838,8 +986,9 @@
             }
             if (a.type === "naval") {
               const boat = el("g", {}, gA), len = line.getTotalLength(), sx = x2 < x1 ? -1 : 1;
-              el("path", { d: "M-8,0H8L5,4H-5Z", fill: c }, boat);
-              el("path", { d: "M0,-1V-12L7,-3Z", fill: PAPER, stroke: c, "stroke-width": 1 }, boat);
+              const bz = el("g", { class: "x-cz" }, boat);
+              el("path", { d: "M-8,0H8L5,4H-5Z", fill: c }, bz);
+              el("path", { d: "M0,-1V-12L7,-3Z", fill: PAPER, stroke: c, "stroke-width": 1 }, bz);
               const put = (t) => { const p = line.getPointAtLength(t * len); boat.setAttribute("transform", `translate(${p.x},${p.y - 2}) scale(${sx},1)`); };
               put(anim ? 0 : 1);
               if (anim) {
@@ -859,7 +1008,7 @@
         function drawBattle(gB, b, anim, k, delay) {
           const A = mkA(anim), fadeIn = (e, d) => A(e, [{ opacity: 0 }, { opacity: 1 }], { duration: 400 * k, delay: d });
           {
-            const o = el("g", { transform: `translate(${b.xy[0]},${b.xy[1]})` }, gB);
+            const o0 = el("g", { transform: `translate(${b.xy[0]},${b.xy[1]})` }, gB), o = el("g", { class: "x-cz" }, o0);
             [0, 1].forEach((r) => {
               const c = el("circle", { r: 10, fill: "none", stroke: "#b0402c", "stroke-width": 2, "vector-effect": "non-scaling-stroke", opacity: 0 }, o);
               const an = A(c, [{ transform: "scale(1)", opacity: 0.85 }, { transform: "scale(3.6)", opacity: 0 }], { duration: 1400 * k, delay: delay + r * 450 * k, easing: "ease-out", fill: "none" });
@@ -881,7 +1030,7 @@
               el("path", { d: "M19.5,-16L33,-11.5L19.5,-7Z", fill: col(b.winner), stroke: dk(b.winner), "stroke-width": 0.8 }, fl);
               fadeIn(fl, delay + 450 * k);
             }
-            return o;
+            return o0;
           }
         }
         function fx(f, anim) {
@@ -938,6 +1087,7 @@
           if (r.kind === "sea") setA(line, { stroke: SEA, "stroke-width": 1.8, "stroke-dasharray": "12 7", "stroke-opacity": 0.75 });
           else if (r.kind === "silver") setA(line, { stroke: AG, "stroke-width": 2.2, "stroke-dasharray": "0.1 5" });
           else setA(line, { stroke: TRD, "stroke-width": 1.1, "stroke-dasharray": "5 4", "stroke-linecap": "butt", "marker-end": "url(#eco-ah)" });
+          nsw(line, line.getAttribute("stroke-width"));
           if (r.kind === "trade") { const e = r.points[r.points.length - 1]; txt(g, e[0] + 12, e[1] + 2, "x-eco-tl", r.name); }
           else if (!RM) {
             const len = line.getTotalLength ? line.getTotalLength() : 600, dur = (len / 14).toFixed(1);
@@ -954,19 +1104,21 @@
         });
         (E.navy || []).forEach((n) => {
           const b = el("g", { class: "x-boat x-eco-only", transform: `translate(${n.xy[0]},${n.xy[1]})`, role: "img", "aria-label": n.name }, gEcoN);
-          el("circle", { r: 7, fill: "transparent" }, b);
-          el("path", { d: "M-5,0H5L3.2,2.6H-3.2Z", fill: NAVY }, b);
-          el("path", { d: "M0,-0.6V-7L4.4,-1.8Z", fill: "#f3ede1", stroke: NAVY, "stroke-width": 0.7 }, b);
+          const bz = el("g", { class: "x-cz" }, b);
+          el("circle", { r: 7, fill: "transparent" }, bz);
+          el("path", { d: "M-5,0H5L3.2,2.6H-3.2Z", fill: NAVY }, bz);
+          el("path", { d: "M0,-0.6V-7L4.4,-1.8Z", fill: "#f3ede1", stroke: NAVY, "stroke-width": 0.7 }, bz);
           bindTip(b, () => `<b>${n.name}</b><span class="x-tip-n">${n.note}</span>`);
         });
         const EN = {}, LEFT = new Set(["yunotsu"]);
         E.nodes.forEach((n) => {
           const g = el("g", { class: "x-eco-n" + (n.id === "ginzan" ? "" : " x-eco-only"), transform: `translate(${n.xy[0]},${n.xy[1]})`, role: "img", "aria-label": n.name }, gEcoN);
-          const ring = el("circle", { r: 6.5, class: "x-ring" }, g);
-          el("g", { class: "x-ic" }, g).innerHTML = ICON[n.kind] || "";
-          const t = LEFT.has(n.id) ? txt(g, -9, 0, "x-eco-lb", n.name) : txt(g, 0, 13, "x-eco-lb", n.name);
+          const z = el("g", { class: "x-cz" }, g);
+          const ring = el("circle", { r: 6.5, class: "x-ring" }, z);
+          el("g", { class: "x-ic" }, z).innerHTML = ICON[n.kind] || "";
+          const t = LEFT.has(n.id) ? txt(z, -9, 0, "x-eco-lb", n.name) : txt(z, 0, 13, "x-eco-lb", n.name);
           if (LEFT.has(n.id)) t.style.textAnchor = "end";
-          const o = (EN[n.id] = { n, g, ring, owner: null });
+          const o = (EN[n.id] = { n, g, z, ring, owner: null });
           bindTip(g, () => {
             const k = o.owner || "OTHER";
             return `<b>${n.name}</b><span class="x-tip-f">${KIND[n.kind] || ""} · ${n.region} · ${sw(k)}${fname(k)}</span><span class="x-tip-n">${n.desc}</span>`;
@@ -974,8 +1126,8 @@
         });
         function ping(o, k, n) {
           if (RM) return;
-          const c = el("circle", { r: 6.5, fill: "none", stroke: ringC(k), "stroke-width": 2 }, o.g);
-          o.g.insertBefore(c, o.ring);
+          const c = el("circle", { r: 6.5, fill: "none", stroke: ringC(k), "stroke-width": 2 }, o.z);
+          o.z.insertBefore(c, o.ring);
           c.animate([{ transform: "scale(1)", opacity: 0.9 }, { transform: "scale(3)", opacity: 0 }], { duration: 1100, iterations: n, easing: "ease-out" }).onfinish = () => c.remove();
           o.ring.animate([{ strokeWidth: "2px" }, { strokeWidth: "4px" }, { strokeWidth: "2px" }], { duration: 900, iterations: n });
         }
@@ -1085,6 +1237,7 @@
             if (s.dash) p.setAttribute("stroke-dasharray", s.dash.split(" ").map((v) => v * sc).join(" "));
             if (s.arrow && sc === 1) p.setAttribute("marker-end", relHead(r.type));
           }
+          if (sc === 1) wrap.querySelectorAll(".x-rp").forEach((p) => nsw(p, p.getAttribute("stroke-width")));
           const mx = 0.25 * x1 + 0.5 * cx + 0.25 * x2, my = 0.25 * y1 + 0.5 * cy + 0.25 * y2, ex = [];
           if (s.bar) ex.push(txt(g, mx, my, "x-rx", "✕", s.c));
           if (r.grade === "推测") ex.push(txt(g, mx + nx * 9, my + ny * 9, "x-rq", "?", s.c));
@@ -1130,7 +1283,10 @@
           S.regions.forEach((r) => {
             if (filt && !filt(r)) return;
             const v = f.state[r.id] || "OTHER", tok = ++r.tok, k0 = parts(v)[0];
-            r.el.classList.toggle("is-minor", !MAJOR.has(k0) && (concise || k0 === "OTHER" || !FA[k0]));
+            const grey = !FA[k0] || k0 === "OTHER" || k0 === "KOKUJIN";
+            r.el.classList.toggle("is-grey", grey);
+            r.el.classList.toggle("is-minor", !grey && !MAJOR.has(k0));
+            r.el.classList.toggle("is-hatch", parts(v).length > 1);
             if (parts(v).length > 1) {
               if (anim && changed.has(r.id)) {
                 r.el.style.fill = col(parts(v)[0]);
@@ -1392,25 +1548,32 @@
 
         function legend(f) {
           const used = new Set(Object.values(f.state).flatMap(parts));
-          const stripe = `<span><span class="x-sw" style="background:repeating-linear-gradient(45deg,#d8cfbd 0 4px,#8a8070 4px 7px)"></span>斜线＝两方争夺</span>`;
+          const hatchBg = "repeating-linear-gradient(45deg,#d8cfbd 0 3px,#8a8070 3px 6px)";
+          const csIc = `<svg class="x-cs-lg" viewBox="-6 -6 12 12" aria-hidden="true"><path d="${glyph(9)}" fill="none" stroke="currentColor" stroke-width="1.1"/></svg>`;
+          const hasCa = !$("app").classList.contains("x-no-ca");
+          const chip = (icon, t) => `<span class="x-lgc" title="${t}" role="img" aria-label="${t}">${icon}<span class="x-lgt" aria-hidden="true">${t}</span></span>`;
           const minors = Object.keys(FA).filter((k) => used.has(k) && !MAJOR.has(k));
-          const tg = minors.length ? `<button class="x-lgx" id="lgx" type="button" aria-expanded="${legOpen}">${legOpen ? "收起" : "展开"}</button>` : "";
-          $("legend").innerHTML = concise
-            ? RACE.map((k) => `<span>${sw(k)}${fname(k)}</span>`).join("") +
-              `<span><span class="x-sw" style="background:${MUTE.OTHER[0]}"></span>其他势力${tg}</span>` +
-              (legOpen && minors.length ? `<div class="x-lgm">${minors.map((k) => `<span>${sw(k)}${fname(k)}</span>`).join("")}</div>` : "") +
-              stripe
-            : Object.keys(FA).filter((k) => used.has(k)).map((k) => `<span>${sw(k)}${fname(k)}</span>`).join("") + stripe;
+          let pop = `<b class="x-lgh">其他势力</b>` +
+            (minors.length ? minors.map((k) => `<span>${sw(k)}${fname(k)}</span>`).join("") : `<span>本年无</span>`) +
+            `<b class="x-lgh">图例说明</b>` +
+            `<span><span class="x-sw" style="background:${hatchBg}"></span>斜线＝两方争夺（两色各占一半）</span>` +
+            (hasCa ? `<span>${csIc}城池：颜色＝城主所属阵营（虚线＝推测）</span>` : "");
           if (confOn) {
             const ic = { "确证": '<i class="x-cfi">✓</i>', "通说": '<i class="x-cfi is-none"></i>', "推测": '<i class="x-cfi">?</i>' };
-            $("legend").insertAdjacentHTML("beforeend", `<div class="x-cfl">${Object.entries(GRADES).map(([g, d]) => `<span>${ic[g] || ""}<b>${g}</b>${d}</span>`).join("")}</div>`);
+            pop += `<div class="x-cfl">${Object.entries(GRADES).map(([g, d]) => `<span>${ic[g] || ""}<b>${g}</b>${d}</span>`).join("")}</div>`;
           }
-          if (ecoOn) $("legend").insertAdjacentHTML("beforeend", ecoLegend());
-          if (!$("app").classList.contains("x-no-ca"))
-            $("legend").insertAdjacentHTML("beforeend", `<span><svg class="x-cs-lg" viewBox="-6 -6 12 12" aria-hidden="true"><path d="${glyph(9)}" fill="none" stroke="currentColor" stroke-width="1.1"/></svg>城池：颜色＝城主所属阵营（虚线＝推测）</span>`);
-          const b = $("lgx");
-          if (b && concise) b.onclick = () => { legOpen = !legOpen; legend(F[cur]); $("lgx").focus(); };
+          if (ecoOn) pop += ecoLegend();
+          $("legend").innerHTML =
+            RACE.map((k) => chip(sw(k), fname(k))).join("") +
+            chip(`<span class="x-sw" style="background:${hatchBg}"></span>`, "争夺") +
+            (hasCa ? chip(csIc, "城池") : "") +
+            `<button class="x-lgi" id="lgi" type="button" aria-expanded="${legOpen}" aria-controls="lgp" aria-label="图例说明" title="图例说明"><span aria-hidden="true">ⓘ</span></button>` +
+            `<div class="x-lgp" id="lgp" role="dialog" aria-label="图例说明"${legOpen ? "" : " hidden"}>${pop}</div>`;
+          $("lgi").onclick = (e) => { e.stopPropagation(); legOpen = !legOpen; legend(F[cur]); $("lgi").focus(); };
+          $("lgp").onclick = (e) => e.stopPropagation();
         }
+        document.addEventListener("click", () => { if (legOpen) { legOpen = false; legend(F[cur]); } });
+        document.addEventListener("keydown", (e) => { if (e.key === "Escape" && legOpen) { legOpen = false; legend(F[cur]); $("lgi").focus(); } });
 
         // sources dialog
         const dlg = $("srcDlg");
@@ -1449,6 +1612,7 @@
           i = Math.max(0, Math.min(F.length - 1, i));
           if (i === cur) return;
           const anim = cur >= 0 && i === cur + 1;
+          if (manual) user = false; // a manual year change hands the view back to the playback camera
           cur = i;
           chipsOpen = false;
           render(i, anim);
@@ -1489,7 +1653,7 @@
           $("trendTg").setAttribute("aria-pressed", on);
         };
         $("prev").onclick = () => go(cur - 1, true);
-        $("next").onclick = () => go(cur + 1, true);
+        $("next").onclick = () => { $("overlay").hidden = true; go(cur + 1, true); };
         document.querySelectorAll("[data-sp]").forEach((b) => (b.onclick = () => {
           speed = +b.dataset.sp;
           document.querySelectorAll("[data-sp]").forEach((x) => x.setAttribute("aria-pressed", x === b));
@@ -1530,6 +1694,7 @@
           $(o.view === "camp" ? "vCamp" : "vMap").click();
           hideTip();
           if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+          user = false;
           app.classList.add("x-rec");
           recEnd.classList.remove("is-on");
           speed = 1; cur = a; chipsOpen = false;
