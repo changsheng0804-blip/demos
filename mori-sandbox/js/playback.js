@@ -172,7 +172,8 @@ function beats(f, anim) {
 }
 
 function panel(f) {
-  $("age").textContent = concise ? `元就 ${f.age} 岁` : `元就 ${f.age} 岁（虚岁）`;
+  const who = f.ageWho || "元就";
+  $("age").textContent = concise ? `${who} ${f.age} 岁` : `${who} ${f.age} 岁（虚岁）`;
   const m = f.desc.match(/^[^。！？]*[。！？]/), first = m ? m[0] : f.desc, more = concise && first.length < f.desc.length;
   $("desc").textContent = more && !descOpen ? first : f.desc;
   const dt = $("descTg");
@@ -221,12 +222,16 @@ function render(i, anim) {
   if (tipFor === eg) hideTip();
   confPaint(f);
   panel(f);
-  RACE.slice().sort((a, b) => (f.power[b] || 0) - (f.power[a] || 0)).forEach((k, n) => {
+  // 只排当年在场的势力（领国数为 0 的条隐藏）
+  let n = 0;
+  RACE.slice().sort((a, b) => (f.power[b] || 0) - (f.power[a] || 0)).forEach((k) => {
     const v = f.power[k] || 0, d = rows[k];
-    d.style.top = n * 32 + "px";
-    d.querySelector(".x-fill").style.width = (v / PMAX) * 100 + "%";
+    d.style.display = v > 0 ? "" : "none"; if (!(v > 0)) return;
+    d.style.top = n++ * 32 + "px";
+    d.querySelector(".x-fill").style.width = Math.min(1, v / PMAX) * 100 + "%";
     d.querySelector(".x-val").textContent = v.toFixed(1);
   });
+  $("race").style.height = Math.max(n, 1) * 32 + "px";
   $("links").innerHTML = f.links.length
     ? f.links.map((l) => `${sw(l.from)}${fname(l.from)} <i>→（${l.type}）→</i> ${sw(l.to)}${fname(l.to)}`).join("<br>")
     : `${sw("MORI")}毛利 独立`;
@@ -258,8 +263,9 @@ function legend(f) {
     pop += `<div class="x-cfl">${Object.entries(GRADES).map(([g, d]) => `<span>${ic[g] || ""}<b>${g}</b>${d}</span>`).join("")}</div>`;
   }
   if (ecoOn) pop += ecoLegend();
+  const rl = $("recLg"); if (rl) rl.innerHTML = RACE.filter((k) => used.has(k)).map((k) => `<span>${sw(k)}${fname(k)}</span>`).join("");
   $("legend").innerHTML =
-    RACE.map((k) => chip(sw(k), fname(k))).join("") +
+    RACE.filter((k) => used.has(k)).map((k) => chip(sw(k), fname(k))).join("") +
     chip(ctSw, "争夺") +
     (hasCa ? chip(csIc, "城池") : "") +
     `<button class="x-lgi" id="lgi" type="button" aria-expanded="${legOpen}" aria-controls="lgp" aria-label="图例说明" title="图例说明"><span aria-hidden="true">ⓘ</span></button>` +
