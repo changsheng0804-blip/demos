@@ -57,8 +57,9 @@ font-family:var(--sans),"PingFang SC","Noto Sans SC","Microsoft YaHei",sans-seri
       .x-chips li{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border:1px solid rgba(43,38,34,.25);border-radius:var(--r-pill);font:var(--type-caption);background:rgba(255,255,255,.35)}
       .x-chips b{font-weight:600}
       .x-none{font:var(--type-caption);color:#574f47;margin:0}
-      .x-race{position:relative;height:128px}
-      .x-row{position:absolute;left:0;right:0;height:26px;display:grid;grid-template-columns:40px 1fr 40px;align-items:center;gap:8px;transition:top .8s ease;font:var(--type-label)}
+      .x-race{position:relative;height:128px;transition:height .4s ease}
+      .x-row>span:first-child{min-width:40px;white-space:nowrap}
+      .x-row{position:absolute;left:0;right:0;height:26px;display:grid;grid-template-columns:auto 1fr 40px;align-items:center;gap:8px;transition:top .8s ease;font:var(--type-label)}
       .x-track{height:14px;border-radius:4px;background:rgba(43,38,34,.07);overflow:hidden}
       .x-fill{height:100%;border-radius:4px;transition:width 1s ease}
       .x-val{font-family:"Geist Mono",monospace;text-align:right}
