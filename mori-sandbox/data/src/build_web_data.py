@@ -350,8 +350,10 @@ for f in FR:
 
 # ---- province colour derived from castles (Aki districts, Bingo, Iwami, Izumo) ----
 from castles import CASTLES as _CA
-CASTLE_REGION = {"koriyama": "安艺:高田", "ogurayama": "安艺:山縣", "kimura": "安艺:賀茂", "takayama": "安艺:豊田", "goryu": "安艺:高田", "takamatsu": "安艺:高宮", "ikiyama": "安艺:賀茂", "kashirazaki": "安艺:豊田", "kagamiyama": "安艺:賀茂", "kanayama": "安艺:沼田", "sakurao": "安艺:佐伯", "miyao": "安艺:佐伯", "kannabe": "備後", "hieoyama": "備後", "kouyama": "備後", "yamabuki": "石見", "nanao": "石見", "yunoyu": "石見", "honmyo": "石見", "toda": "出雲", "shiraga": "出雲", "mitoya": "出雲", "yamaguchi": "周防", "wakayama": "周防", "suzuma": "周防", "katsuyama": "長門", "moji": "豊前", "tachibana": "筑前", "funai": "豊後", "matsuyama": "備中", "noshima": "伊予", "kurushima": "伊予", "yuzuki": "伊予"}
+CASTLE_REGION = {"koriyama": "安艺:高田", "ogurayama": "安艺:山縣", "kimura": "安艺:賀茂", "takayama": "安艺:豊田", "goryu": "安艺:高田", "takamatsu": "安艺:高宮", "ikiyama": "安艺:賀茂", "kashirazaki": "安艺:豊田", "kagamiyama": "安艺:賀茂", "kanayama": "安艺:沼田", "sakurao": "安艺:佐伯", "miyao": "安艺:佐伯", "kannabe": "備後", "hieoyama": "備後", "kouyama": "備後", "yamabuki": "石見", "nanao": "石見", "yunoyu": "石見", "honmyo": "石見", "toda": "出雲", "shiraga": "出雲", "mitoya": "出雲", "yamaguchi": "周防", "wakayama": "周防", "suzuma": "周防", "katsuyama": "長門", "moji": "豊前", "tachibana": "筑前", "funai": "豊後", "matsuyama": "備中", "noshima": "伊予", "kurushima": "伊予", "yuzuki": "伊予", "takasugi": "備後", "sanbonmatsu": "石見", "ueshi": "伯耆", "odaka": "伯耆", "ebi": "伯耆", "utsubuki": "伯耆"}
 CASTLE_DRIVEN = {r for r in CASTLE_REGION.values() if r and (r.startswith("安艺:") or r == "石見")}
+# weights: 大名本城 3 / 国人本城 2 / 支城 1; strategic exceptions below (avoid one small castle swinging a whole province)
+CASTLE_W = {"yamabuki": 3}
 def _cfac(c, yr):
     v = [h for h in c["hist"] if h[0] <= yr]
     return v[-1][1] if v else None
@@ -359,11 +361,11 @@ DERIVED = {}
 for f, st in zip(FR, STATES2):
     yr = f["year"]
     for r in CASTLE_DRIVEN:
-        facs = [_cfac(c, yr) for c in _CA if CASTLE_REGION[c["id"]] == r]
-        facs = [x for x in facs if x]
+        facs = [(_cfac(c, yr), CASTLE_W.get(c["id"], {1: 3, 2: 2, 3: 1}[c["tier"]])) for c in _CA if CASTLE_REGION[c["id"]] == r]
+        facs = [x for x in facs if x[0]]
         if not facs: continue
         cnt = {}
-        for x in facs: cnt[x] = cnt.get(x, 0) + 1
+        for x, w in facs: cnt[x] = cnt.get(x, 0) + w
         old = st[r].split("/")
         order = sorted(cnt, key=lambda x: (-cnt[x], old.index(x) if x in old else 9))
         new = order[0] if len(order) == 1 else order[0] + "/" + order[1]
