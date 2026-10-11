@@ -31,6 +31,13 @@ const sleep = (t) => new Promise((r) => setTimeout(r, t));
     await sleep(2500); if (ok) await p.screenshot({ path: out + `/view_${v}.png` });
   }
   await p.close();
+  // 抉择模式：1555 提问（地图应停在 1554、不显示标题/箭头）→ 选 A → 揭晓 → 看后来
+  p = await open(1600, 950, '#decide=6'); await sleep(3000); await p.screenshot({ path: out + '/decide_ask.png' });
+  await p.click('.x-dec-o button'); await sleep(600); await p.screenshot({ path: out + '/decide_reveal.png' });
+  const dy = await p.evaluate(() => SANDBOX.frames[cur].year); if (dy !== 1554) errs.push('decide ask year ' + dy);
+  await p.click('.x-dec-go'); await sleep(4500); await p.screenshot({ path: out + '/decide_after.png' });
+  await p.close();
+  p = await open(390, 844, '#decide=3'); await sleep(3000); await p.screenshot({ path: out + '/decide_phone.png', fullPage: true }); await p.close();
   p = await open(390, 844); await sleep(3000); await p.screenshot({ path: out + '/phone.png' }); await p.close();
   p = await open(1920, 1080, '#rec=1550-1551'); await sleep(5000); await p.screenshot({ path: out + '/rec.png' }); await p.close();
   fs.writeFileSync(out + '/errors.json', JSON.stringify(errs, null, 1)); console.log('errors:', errs.length, errs.slice(0, 5));
