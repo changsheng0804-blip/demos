@@ -715,6 +715,7 @@ _KU = json.load(open(os.path.join(HERE, "kamon", "uris.json"))); _KM = json.load
 _KN = {"mori": "一文字三星（毛利）", "ouchi": "大内菱（大内·陶）", "amago": "平四目结（尼子）", "otomo": "抱花杏叶（大友·立花）", "takeda": "武田菱（安艺武田）",
        "kikkawa": "丸之内三引两（吉川）", "kobayakawa": "左三巴（小早川）", "masuda": "隈笹（益田，据日文维基）", "kono": "折敷三文字（河野）", "yamana": "五七桐七叶根笹（山名）"}
 crests = {k: {"uri": _KU[k], "name": _KN[k], "file": _KM[k]["file"], "license": _KM[k]["license"]} for k in _KU}
+from decisions import DECISIONS  # 元就的六次抉择（视角层，不改变任何国色/城池）
 data = {
   "crests": crests,
   "castles": castles,
@@ -729,6 +730,7 @@ data = {
   "places": {n: {"xy": P(*v), "type": ("castle" if "城" in n else "place"), **({"castle": DUP[n]} if n in DUP else {})} for n, v in PTS.items() if n not in ("伯耆", "播磨", "丰后水道", "隐岐", "备后北部", "美作")},
   "seaLabels": [{"name": "日本海", "xy": P(131.2, 35.8)}, {"name": "濑户内海", "xy": P(131.75, 33.85)}, {"name": "周防滩", "xy": P(131.4, 33.95)}],
   "frames": frames,
+  "decisions": DECISIONS,
 }
 open(os.path.join(HERE, "..", "sandbox_data.js"), "w", encoding="utf-8").write("window.SANDBOX = " + json.dumps(data, ensure_ascii=False) + ";\n")
 print("frames", len(frames), "regions", len(regions), "H", H)
