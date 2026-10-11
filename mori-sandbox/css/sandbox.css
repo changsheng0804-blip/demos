@@ -383,3 +383,33 @@ font-family:var(--sans),"PingFang SC","Noto Sans SC","Microsoft YaHei",sans-seri
       .x-zm button:disabled{color:rgba(43,38,34,.35);cursor:default}
       .x-zm button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
       .x-rec .x-zm,.x-map.x-camp-on .x-zm,.x-map.x-fam-on .x-zm{display:none!important}
+      /* 抉择模式：面板换成抉择卡；提问阶段隐藏标题、字幕和箭头战役，避免地图剧透 */
+      .x-decb{min-height:var(--tap);border:1px solid rgba(43,38,34,.3);border-radius:var(--r-s);background:var(--paper);color:var(--ink);font:600 14px var(--sans);cursor:pointer;padding:0 12px}
+      .x-decb:hover{background:#ece4d4}
+      .x-decb[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--paper)}
+      .x-decide .x-panel>:not(.x-dec){display:none!important}
+      .x-dec-ask .x-map .x-title,.x-dec-ask .x-sub,.x-dec-ask #fx,.x-dec-ask #pulse{visibility:hidden}
+      .x-dec{display:flex;flex-direction:column;gap:12px}
+      .x-dec-hd{display:flex;justify-content:space-between;align-items:center;font:600 12px var(--sans);color:#8a8073;letter-spacing:.02em}
+      .x-dec-x{border:0;background:none;font-size:16px;cursor:pointer;color:var(--ink);min-width:32px;min-height:32px}
+      .x-dec-t{margin:0;font:900 22px/1.3 var(--serif);color:var(--ink)}
+      .x-dec p{margin:0;font-size:14px;line-height:1.65}
+      .x-dec .x-h{margin:4px 0 0}
+      .x-dec-k{margin:0;padding-left:1.1em;font-size:14px;line-height:1.6}
+      .x-dec-u{color:#8a8073;font-style:italic}
+      .x-dec-o{display:flex;flex-direction:column;gap:8px}
+      .x-dec-o button{display:flex;gap:10px;text-align:left;border:1px solid rgba(43,38,34,.3);border-radius:var(--r-s);background:var(--paper);color:var(--ink);padding:10px 12px;cursor:pointer;font:600 14px/1.45 var(--sans)}
+      .x-dec-o button:hover,.x-dec-o button:focus-visible{border-color:var(--ink);background:#ece4d4}
+      .x-dec-o b{font:900 16px var(--serif);color:var(--accent)}
+      .x-dec-o small{display:block;margin-top:3px;font-weight:400;font-size:12.5px;color:#6f665b}
+      .x-dec-me,.x-dec-his{border-left:3px solid #b7b0a3;padding:2px 0 2px 12px;display:flex;flex-direction:column;gap:6px}
+      .x-dec-his{border-color:var(--accent)}
+      .x-dec-lb{font-weight:700}
+      .x-dec-sim{font-size:12px!important;color:#b7791f}
+      .x-dec-src{font-size:12.5px!important;color:#6f665b}
+      .x-dec-lg{font-size:12.5px!important;color:#6f665b;background:#ece4d4;padding:6px 8px;border-radius:var(--r-s)}
+      .x-dec-go{min-height:var(--tap);border:0;border-radius:var(--r-s);background:var(--ink);color:var(--paper);font:600 14px var(--sans);cursor:pointer}
+      .x-dec-nav{display:flex;justify-content:space-between;gap:8px;margin-top:4px}
+      .x-dec-nav button{flex:1;min-height:36px;border:1px solid rgba(43,38,34,.3);border-radius:var(--r-s);background:none;color:var(--ink);font:600 13px var(--sans);cursor:pointer}
+      .x-dec-nav button:disabled{opacity:.35;cursor:default}
+      .x-node.is-choice::after{content:"";position:absolute;left:50%;top:-9px;width:7px;height:7px;background:var(--accent);transform:translateX(-50%) rotate(45deg);pointer-events:none}
