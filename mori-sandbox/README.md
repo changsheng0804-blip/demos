@@ -18,6 +18,7 @@
 | `js/playback.js` | 逐帧播放、年份、争夺、claims |
 | `js/ui.js` | 史料说明、手机图层、录屏、面板、最大化、快捷键、启动 |
 | `js/views.js` | 阵营 / 家族视图 |
+| `js/decide.js` | 「抉择」模式（数据在 `data/src/decisions.py`） |
 | `vendor/` | Hark 基础样式与脚本 |
 | `assets/terrain_soft.webp` | 国土地理院 DEM 地形底图 |
 | `tools/qa.js` | 自动验收截图 |
