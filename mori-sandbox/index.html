@@ -28,6 +28,7 @@
           <div class="x-seg" role="group" aria-label="视图">
             <button type="button" id="vMap" aria-pressed="true">地图</button><button type="button" id="vCamp" aria-pressed="false">阵营</button><button type="button" id="vFam" aria-pressed="false">家族</button>
           </div>
+          <button type="button" class="x-decb" id="decBtn" aria-pressed="false" title="站在元就的位置上做选择">抉择</button>
           <button type="button" class="x-maxb" id="maxBtn" aria-pressed="false" aria-label="地图最大化" title="地图最大化（F）"><span aria-hidden="true">⤢</span></button>
           </div>
           <button type="button" class="x-restore" id="maxOff" title="还原布局（Esc 或 F）">还原</button>
@@ -44,6 +45,7 @@
         </div>
         <div class="x-grip" id="grip" role="separator" aria-orientation="vertical" aria-label="调整说明面板宽度" aria-valuemin="220" aria-valuenow="300" tabindex="0" title="拖动调整面板宽度"></div>
         <aside class="x-panel" aria-live="polite">
+          <div class="x-dec" id="dec" hidden></div>
           <div>
             <p class="x-year" id="yr"></p>
             <h2 class="x-ftitle"><span id="ft"></span><span class="x-gp" id="eg" tabindex="0" role="button"></span></h2>
@@ -144,5 +146,6 @@
     <script src="js/playback.js"></script>
     <script src="js/ui.js"></script>
     <script src="js/views.js"></script>
+    <script src="js/decide.js"></script>
   </body>
 </html>
