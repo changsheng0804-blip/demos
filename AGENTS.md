@@ -13,16 +13,12 @@
 | 目录 | 内容 | 主入口 |
 |------|------|--------|
 | `2k-oil-painting-studio/` | 2K 交互式油画工作室（纯画笔原位无缝演进） | `index.html` |
-| `prompt-showdown/` | 同提示词 · 三家模型对决（对比页 + 3 份模型产物）（半成品，2026-10-16 起不上展示页） | `index.html` |
 | `3d-physics-playground/` | 3D 物理游戏平台 | `立体物理游戏平台.html` |
 | `agent-readable-documents/` | 意图与承诺可视化文档（demo v2） | `demo-v2.html` |
-| `forge-strength-local-demo/` | 锻造力量私教单文件演示（半成品，2026-10-16 起不上展示页） | `index.html` |
 | `pascal-scene-viewer/` | Pascal 场景查看器（构建产物） | `viewer/v1/` |
 | `yeyulongwu/` | 一夜鱼龙舞粒子动画（多版本） | `index.html` |
 | `fourier-series-video/` | 傅里叶级数中文旁白科普视频（mp4 + 播放页） | `index.html` |
 | `diffusion-model-video/` | 扩散模型中文旁白科普视频（mp4 + 播放页） | `index.html` |
-| `cloud-diffusion/` | 看云：预计算扩散轨迹播放（WebGL1，数据 clouds.bin + clouds.json）（半成品，2026-10-16 起不上展示页） | `index.html` |
-| `diffusion-particles/` | 粒子扩散交互原型（WebGL2，模型权重内嵌 model.js）（半成品，2026-10-16 起不上展示页） | `index.html` |
 | `shijing/` | 诗境：诗句生成动态水墨画 + 古筝曲（单文件，场景剧本内嵌 SCENE_SRC；加 `?skip` 跳过开场） | `index.html` |
 | `rubik-graph/` | 拧魔方，其实是在地图上找路：通俗科普版（二阶三步 + 三阶四段 Thistlethwaite 实解）+ 进阶版 `advanced.html`；算法在 cube-core.js（二阶）/ cube3-core.js（三阶） | `index.html` |
 | `mori-sandbox/` | 毛利元就 西国势力沙盘 1523—1571（逐年势力动画；`#rec=起-止` 录屏模式）。模块化：js/*.js 按序加载共享作用域，数据 data/sandbox_data.js 由 data/src/*.py 生成；改前读该目录 README.md 与 DESIGN.md，改后跑 tools/qa.js | `index.html` |
@@ -43,7 +39,7 @@
 | `works/china-territory-sandbox/` | 中国历代疆域沙盘 | `china-territory-sandbox/` |
 | `works/hanjiang-brush/` | 寒江独钓 · 一笔一笔 | `hanjiang-brush/` |
 
-**模型产物类演示的规则**（如 `prompt-showdown/`）：
+**模型产物类演示的规则**（多个模型产物对比的演示）：
 - 每个模型一个子目录（`deepseek-v4-pro/`、`gemini-36-flash/`、`gemini-37-flash/`），各放 `index.html` + 本地资源
 - 禁止依赖外部 CDN（three.js / gsap / 字体须本地化到 `lib/`），否则国内访问会失效
 - 对比页 `index.html` 是入口，含耗时/成本/体积对照表

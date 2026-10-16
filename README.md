@@ -25,10 +25,8 @@ $experience-to-intent 我有一个还说不清的产品想法。请先给我可�
 | 演示 | 说明 | 打开 |
 |------|------|------|
 | 2K 交互式油画工作室 | 纯画笔原位无缝演进系统，2K 分辨率逐层笔触合成与实时探针比对 | [打开](2k-oil-painting-studio/index.html) |
-| 同提示词·三家模型对决 | DeepSeek V4 Pro / Gemini 3.6 / 3.7 同提示词产物对比 | [打开](prompt-showdown/index.html) |
 | 3D 物理游戏平台 | 中文 3D 物理游戏单页应用 | [打开](3d-physics-playground/立体物理游戏平台.html) |
 | 意图与承诺可视化文档 | 让意图和承诺的关系可见的交互文档（demo v2） | [打开](agent-readable-documents/demo-v2.html) |
-| 锻造力量私教 | 本地单文件演示 | [打开](forge-strength-local-demo/index.html) |
 | Pascal 场景查看器 | 单户两层住宅 3D 场景查看器 | [打开](pascal-scene-viewer/viewer/v1/) |
 | 雾岭王城 · 城堡小镇 | 可自由游览的三维城堡小镇展示版 | [打开](castle-town-showcase/) |
 | 一夜鱼龙舞 | 参数方程粒子光流动画 | [打开](yeyulongwu/index.html) |
@@ -36,8 +34,6 @@ $experience-to-intent 我有一个还说不清的产品想法。请先给我可�
 | 体验驱动意图收敛 · 先看见，再决定 | 从真实试玩中发现条件，并把判断变成下一轮 AI 约束的可复用工作方式 | [打开](体验驱动意图收敛-ExperienceToIntent/index.html) |
 | 傅里叶级数科普视频 | 约 8 分钟中文旁白动画：历史、原理与真实应用 | [打开](fourier-series-video/index.html) |
 | 扩散模型科普视频 | 约 9 分钟中文旁白动画：原理、小实验与 Stable Diffusion 实拍过程 | [打开](diffusion-model-video/index.html) |
-| 看云 | 乱云随一个词凝成龙/鲸鱼/兔子/城堡，可倒放、可半路改口，轨迹由真实小扩散模型预先算好 | [打开](cloud-diffusion/index.html) |
-| 粒子扩散（原型） | 真实训练的小扩散模型在浏览器里驱动上万粒子，从噪声聚成“傅”字、教堂、鲸鱼 | [打开](diffusion-particles/index.html) |
 | 诗境 · 一句诗，一幅画，一支曲 | 输入诗句生成会动的水墨画并谱成古筝曲，已精读 109 首名篇 | [打开](shijing/index.html) |
 | 拧魔方，其实是在地图上找路 | 通俗科普：二阶魔方整张地图 BFS 一路下坡回家；三阶魔方拆成四张小地图（Thistlethwaite）现场解开（附进阶版） | [打开](rubik-graph/index.html) |
 
