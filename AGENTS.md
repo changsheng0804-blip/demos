@@ -22,7 +22,7 @@
 | `fourier-series-video/` | 傅里叶级数中文旁白科普视频（mp4 + 播放页） | `index.html` |
 | `diffusion-model-video/` | 扩散模型中文旁白科普视频（mp4 + 播放页） | `index.html` |
 | `cloud-diffusion/` | 看云：预计算扩散轨迹播放（WebGL1，数据 clouds.bin + clouds.json）（半成品，2026-10-16 起不上展示页） | `index.html` |
-| `diffusion-particles/` | 粒子扩散交互原型（WebGL2，模型权重内嵌 model.js） | `index.html` |
+| `diffusion-particles/` | 粒子扩散交互原型（WebGL2，模型权重内嵌 model.js）（半成品，2026-10-16 起不上展示页） | `index.html` |
 | `shijing/` | 诗境：诗句生成动态水墨画 + 古筝曲（单文件，场景剧本内嵌 SCENE_SRC；加 `?skip` 跳过开场） | `index.html` |
 | `rubik-graph/` | 拧魔方，其实是在地图上找路：通俗科普版（二阶三步 + 三阶四段 Thistlethwaite 实解）+ 进阶版 `advanced.html`；算法在 cube-core.js（二阶）/ cube3-core.js（三阶） | `index.html` |
 | `mori-sandbox/` | 毛利元就 西国势力沙盘 1523—1571（逐年势力动画；`#rec=起-止` 录屏模式）。模块化：js/*.js 按序加载共享作用域，数据 data/sandbox_data.js 由 data/src/*.py 生成；改前读该目录 README.md 与 DESIGN.md，改后跑 tools/qa.js | `index.html` |
