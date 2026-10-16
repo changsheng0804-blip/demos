@@ -28,6 +28,23 @@
 | `mori-sandbox/` | 毛利元就 西国势力沙盘 1523—1571（逐年势力动画；`#rec=起-止` 录屏模式）。模块化：js/*.js 按序加载共享作用域，数据 data/sandbox_data.js 由 data/src/*.py 生成；改前读该目录 README.md 与 DESIGN.md，改后跑 tools/qa.js | `index.html` |
 | `fluffy-yeti/` | 毛绒雪人 Three.js shell 毛发交互（单文件，three r160 已用 esbuild 内嵌；点击挥手+^ ^笑眼、抚摸毛发；Web Audio 实时合成抚摸声/呼噜/点击声，无音频文件，右下角 #snd 静音） | `index.html` |
 
+## 外部仓库收录（只链接，不复制）
+
+展示页 `index.html` 底部「另一账号的作品」分区收录用户另一个账号的作品，卡片链接到原站并注明来源仓库。改这些作品请去源仓库，不要把文件复制进本仓库。
+
+源仓库：`changrong996-droid/changrong996-droid.github.io`（站点 https://changrong996-droid.github.io/ ）
+
+| 源目录 | 内容 | 卡片链接到 |
+|------|------|--------|
+| `works/a380-atlas/` | A380 解剖图集 · 整机 | `a380-atlas/a380-full/a380-full-light.html` |
+| `works/f35b-stovl/` | F-35B 短距起飞/垂直降落 | `f35b-stovl/topics.html` |
+| `works/optimus-prime-mp10/` | MP-10 擎天柱 · 变形动画 | `optimus-prime-mp10/` |
+| `works/bumblebee-mp21/` | MP-21 大黄蜂 · 变形动画 | `bumblebee-mp21/` |
+| `works/optimus-prime-g1/` | G1 擎天柱 · 结构图解 | `optimus-prime-g1/` |
+| `works/china-territory-sandbox/` | 中国历代疆域沙盘 | `china-territory-sandbox/` |
+| `works/hanjiang-brush/` | 寒江独钓 · 一笔一笔 | `hanjiang-brush/` |
+| `works/pelican-bike/` | 鹈鹕骑单车 | `pelican-bike/` |
+
 **模型产物类演示的规则**（如 `prompt-showdown/`）：
 - 每个模型一个子目录（`deepseek-v4-pro/`、`gemini-36-flash/`、`gemini-37-flash/`），各放 `index.html` + 本地资源
 - 禁止依赖外部 CDN（three.js / gsap / 字体须本地化到 `lib/`），否则国内访问会失效
