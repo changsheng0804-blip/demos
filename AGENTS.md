@@ -26,7 +26,7 @@
 | `shijing/` | 诗境：诗句生成动态水墨画 + 古筝曲（单文件，场景剧本内嵌 SCENE_SRC；加 `?skip` 跳过开场） | `index.html` |
 | `rubik-graph/` | 拧魔方，其实是在地图上找路：通俗科普版（二阶三步 + 三阶四段 Thistlethwaite 实解）+ 进阶版 `advanced.html`；算法在 cube-core.js（二阶）/ cube3-core.js（三阶） | `index.html` |
 | `mori-sandbox/` | 毛利元就 西国势力沙盘 1523—1571（逐年势力动画；`#rec=起-止` 录屏模式）。模块化：js/*.js 按序加载共享作用域，数据 data/sandbox_data.js 由 data/src/*.py 生成；改前读该目录 README.md 与 DESIGN.md，改后跑 tools/qa.js | `index.html` |
-| `fluffy-yeti/` | 毛绒雪人 Three.js shell 毛发交互（单文件，three r160 已用 esbuild 内嵌；点击挥手、抚摸毛发） | `index.html` |
+| `fluffy-yeti/` | 毛绒雪人 Three.js shell 毛发交互（单文件，three r160 已用 esbuild 内嵌；点击挥手+^ ^笑眼、抚摸毛发；Web Audio 实时合成抚摸声/呼噜/点击声，无音频文件，右下角 #snd 静音） | `index.html` |
 
 **模型产物类演示的规则**（如 `prompt-showdown/`）：
 - 每个模型一个子目录（`deepseek-v4-pro/`、`gemini-36-flash/`、`gemini-37-flash/`），各放 `index.html` + 本地资源
